@@ -32,18 +32,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`dark ${display.variable} ${body.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`light ${display.variable} ${body.variable}`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('campushub_theme')||'dark';document.documentElement.classList.remove('dark','light');document.documentElement.classList.add(t);}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('campushub_theme')||'light';document.documentElement.classList.remove('dark','light');document.documentElement.classList.add(t);}catch(e){}})()`,
           }}
         />
       </head>
-      <body className="font-body antialiased bg-slate-50 dark:bg-void-950 text-slate-800 dark:text-slate-200 flex flex-col min-h-screen selection:bg-signal-500/30 selection:text-white transition-colors duration-200">
+      <body className="font-body antialiased bg-kalvium-bg dark:bg-kalvium-dark-bg text-kalvium-text dark:text-kalvium-dark-text flex flex-col min-h-screen selection:bg-kalvium-coral/20 selection:text-kalvium-coral transition-colors duration-200">
         <AuthProvider>
           <ThemeProvider>
-            <div className="scanline-overlay" />
             <ScrollProgress />
             <SmoothScroll>
               <div className="sticky top-0 z-40 w-full">
@@ -52,22 +51,27 @@ export default function RootLayout({
               </div>
               <main className="flex-1">{children}</main>
 
-              <footer className="relative border-t border-slate-200 dark:border-white/5 bg-white/90 dark:bg-void-950/90 py-12 px-6 sm:px-10 text-xs text-slate-500 dark:text-slate-400 transition-colors duration-200">
+              <footer className="relative border-t border-kalvium-border dark:border-kalvium-dark-border bg-kalvium-surface dark:bg-kalvium-dark-surface py-12 px-6 sm:px-10 text-xs text-kalvium-muted dark:text-kalvium-dark-muted transition-colors duration-200">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
                   <div>
-                    <p className="font-display font-bold text-sm text-slate-900 dark:text-white mb-1">
-                      CAMPUSHUB
-                    </p>
-                    <p className="text-slate-500 dark:text-slate-400 max-w-md">
+                    <div className="flex items-center justify-center md:justify-start gap-1.5 mb-1.5">
+                      <span className="font-display font-bold text-base text-kalvium-text dark:text-kalvium-dark-text tracking-tight">
+                        CampusHub
+                      </span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-kalvium-coral" />
+                    </div>
+                    <p className="text-kalvium-muted dark:text-kalvium-dark-muted max-w-md text-xs leading-relaxed">
                       "AI makes event creation faster. Human verification makes event discovery trustworthy."
                     </p>
                   </div>
-                  <div className="flex items-center gap-4 sm:gap-6 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                    <span>POSTER TRUTH</span>
-                    <span>→</span>
-                    <span>AI EXTRACTION</span>
-                    <span>→</span>
-                    <span className="text-verified-emerald font-bold">✓ CAMPUS VERIFIED</span>
+                  <div className="flex items-center gap-3 sm:gap-4 text-xs text-kalvium-muted dark:text-kalvium-dark-muted font-medium">
+                    <span>Poster Truth</span>
+                    <span className="text-kalvium-border dark:text-kalvium-dark-border">→</span>
+                    <span>AI Extraction</span>
+                    <span className="text-kalvium-border dark:text-kalvium-dark-border">→</span>
+                    <span className="text-kalvium-success font-semibold inline-flex items-center gap-1">
+                      ✓ Campus Verified
+                    </span>
                   </div>
                 </div>
               </footer>

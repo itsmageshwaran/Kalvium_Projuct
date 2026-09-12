@@ -1,8 +1,0 @@
-{
-  "/api/saved/route": "app/api/saved/route.js",
-  "/dashboard/student/page": "app/dashboard/student/page.js",
-  "/events/page": "app/events/page.js",
-  "/dashboard/organizer/page": "app/dashboard/organizer/page.js",
-  "/page": "app/page.js",
-  "/api/events/route": "app/api/events/route.js"
-}

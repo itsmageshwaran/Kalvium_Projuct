@@ -23,24 +23,24 @@ export default function TerminalBadge({
   };
 
   const variantStyles = {
-    verified: "border-emerald-500/30 dark:border-phosphor-green/40 text-emerald-700 dark:text-phosphor-bright bg-emerald-500/10",
-    amber: "border-amber-500/30 dark:border-amber-warm/40 text-amber-700 dark:text-amber-warm bg-amber-500/10",
-    coral: "border-red-500/30 dark:border-coral-red/40 text-red-600 dark:text-coral-red bg-red-500/10",
-    cyan: "border-cyan-500/30 dark:border-cyan-electric/40 text-cyan-700 dark:text-cyan-electric bg-cyan-500/10",
-    neutral: "border-slate-300 dark:border-terminal-700 text-slate-600 dark:text-slate-400 bg-slate-100/80 dark:bg-terminal-850",
+    verified: "border-kalvium-success-border bg-kalvium-success-tint text-kalvium-success",
+    amber: "border-kalvium-warning-border bg-kalvium-warning-tint text-kalvium-warning",
+    coral: "border-kalvium-coral/30 bg-kalvium-coral-tint text-kalvium-coral",
+    cyan: "border-kalvium-coral/30 bg-kalvium-coral-tint text-kalvium-coral",
+    neutral: "border-kalvium-border dark:border-kalvium-dark-border text-kalvium-muted dark:text-kalvium-dark-muted bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt",
   };
 
   const dotStyles = {
-    verified: "phosphor-dot",
-    amber: "amber-dot",
-    coral: "coral-dot",
-    cyan: "cyan-dot",
-    neutral: "w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500",
+    verified: "w-1.5 h-1.5 rounded-full bg-kalvium-success",
+    amber: "w-1.5 h-1.5 rounded-full bg-kalvium-warning",
+    coral: "w-1.5 h-1.5 rounded-full bg-kalvium-coral",
+    cyan: "w-1.5 h-1.5 rounded-full bg-kalvium-coral",
+    neutral: "w-1.5 h-1.5 rounded-full bg-kalvium-muted",
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-mono font-medium rounded-sm border uppercase select-none transition-colors ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
+      className={`inline-flex items-center gap-1.5 font-medium rounded-full border select-none transition-colors ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
     >
       {showDot && <span className={dotStyles[variant]} />}
       {icon && <span className="shrink-0">{icon}</span>}

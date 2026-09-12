@@ -57,11 +57,11 @@ export default function MagneticButton({
 
   const variantStyles = {
     solid:
-      "bg-signal-500 hover:bg-signal-600 text-white shadow-lg shadow-signal-500/25 active:scale-95",
+      "bg-kalvium-coral hover:bg-kalvium-coral-hover text-white shadow-sm active:scale-95",
     outline:
-      "border border-slate-300 dark:border-white/15 hover:border-signal-500/50 dark:hover:border-signal-400/50 bg-slate-900/5 dark:bg-white/5 hover:bg-slate-900/10 dark:hover:bg-white/10 text-slate-900 dark:text-white active:scale-95",
+      "border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral dark:hover:border-kalvium-coral bg-white dark:bg-kalvium-dark-surface text-kalvium-text dark:text-kalvium-dark-text active:scale-95",
     ghost:
-      "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 active:scale-95",
+      "text-kalvium-text dark:text-kalvium-dark-text hover:text-kalvium-coral hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt active:scale-95",
   };
 
   const buttonInner = (

@@ -85,7 +85,7 @@ A persistent **DEMO EVALUATION BAR** is pinned to the header for instant present
 - **Framework**: Next.js 14.2 (App Router, Server Components & Route Handlers)
 - **Language**: TypeScript 5.6
 - **Database**: SQLite via Prisma ORM (`prisma/schema.prisma`)
-- **Styling**: Tailwind CSS (Kalvium-inspired dark obsidian palette, Space Grotesk / Plus Jakarta Sans display typography, custom glow badges)
+- **Styling**: Tailwind CSS (Authentic Kalvium visual language: warm cream `#FAF6F0` background, crisp paper-white cards, signature Kalvium coral `#E8492D` accents, verified forest green `#2F855A`, warm amber `#B7791F` clash warnings, hairline borders `#E7E2D8`, Space Grotesk display & Inter body typography).
 - **AI Poster Analyzer**: Google Gemini 1.5/2.0 Flash Vision integration (`GEMINI_API_KEY`) paired with a calibrated local fallback OCR/heuristics engine for 100% offline reliability.
 - **Clash Engine**: Exact interval collision math: `eventA.start < eventB.end && eventB.start < eventA.end`.
 - **Icons & Micro-interactions**: Lucide React, Canvas Confetti.

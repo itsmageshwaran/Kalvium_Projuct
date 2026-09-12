@@ -14,7 +14,7 @@ export default function ThemeToggle({ className = "" }: { className?: string }) 
 
   if (!mounted) {
     return (
-      <div className={`w-8 h-8 rounded-sm border border-slate-200 dark:border-terminal-700 bg-slate-100 dark:bg-terminal-850 ${className}`} />
+      <div className={`w-9 h-9 rounded-full border border-kalvium-border dark:border-kalvium-dark-border bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt ${className}`} />
     );
   }
 
@@ -24,11 +24,7 @@ export default function ThemeToggle({ className = "" }: { className?: string }) 
     <button
       type="button"
       onClick={toggleTheme}
-      className={`relative p-2 rounded-sm border transition-all duration-150 active:translate-y-0.5 flex items-center justify-center ${
-        isDark
-          ? "border-terminal-700 bg-terminal-850 text-amber-400 hover:text-amber-300 hover:border-terminal-500 shadow-sm"
-          : "border-slate-300 bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 hover:border-slate-400 shadow-sm"
-      } ${className}`}
+      className={`relative p-2 rounded-full border transition-all duration-150 active:scale-95 flex items-center justify-center border-kalvium-border dark:border-kalvium-dark-border bg-white dark:bg-kalvium-dark-surface hover:border-kalvium-coral text-kalvium-ink dark:text-kalvium-dark-ink shadow-soft-xs ${className}`}
       title={isDark ? "Switch to Light theme" : "Switch to Dark theme"}
       aria-label={isDark ? "Switch to Light theme" : "Switch to Dark theme"}
     >
@@ -37,13 +33,13 @@ export default function ThemeToggle({ className = "" }: { className?: string }) 
           className={`w-4 h-4 absolute inset-0 transition-transform duration-500 ease-cinematic ${
             isDark
               ? "rotate-90 scale-0 opacity-0"
-              : "rotate-0 scale-100 opacity-100 text-amber-500"
+              : "rotate-0 scale-100 opacity-100 text-kalvium-coral"
           }`}
         />
         <Moon
           className={`w-4 h-4 absolute inset-0 transition-transform duration-500 ease-cinematic ${
             isDark
-              ? "rotate-0 scale-100 opacity-100 text-indigo-300"
+              ? "rotate-0 scale-100 opacity-100 text-kalvium-warning"
               : "-rotate-90 scale-0 opacity-0"
           }`}
         />

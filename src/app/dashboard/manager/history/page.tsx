@@ -43,8 +43,20 @@ export default function ManagerAuditHistoryPage() {
 
   if (!user || user.role !== "CAMPUS_MANAGER") {
     return (
-      <div className="max-w-md mx-auto px-4 py-20 text-center text-slate-400">
-        Access restricted to Campus Managers.
+      <div className="max-w-md mx-auto px-4 py-24 text-center">
+        <div className="p-8 rounded-3xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-sm text-center">
+          <ShieldCheck className="w-10 h-10 text-kalvium-success mx-auto mb-3" />
+          <h2 className="text-xl font-display font-black text-kalvium-ink dark:text-kalvium-dark-ink mb-2">Access Restricted</h2>
+          <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mb-6">
+            Access to the immutable audit trail is restricted to Campus Managers.
+          </p>
+          <Link
+            href="/login"
+            className="inline-flex items-center px-5 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold transition shadow-soft-xs"
+          >
+            Sign In with Manager Credentials
+          </Link>
+        </div>
       </div>
     );
   }
@@ -58,7 +70,7 @@ export default function ManagerAuditHistoryPage() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <Link
         href="/dashboard/manager"
-        className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white mb-6 transition"
+        className="inline-flex items-center gap-2 text-xs font-semibold text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-coral mb-6 transition"
       >
         <ArrowLeft className="w-4 h-4" />
         <span>Back to Verification Queue</span>
@@ -66,43 +78,43 @@ export default function ManagerAuditHistoryPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
         <div>
-          <span className="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20">
+          <span className="text-xs font-sans uppercase tracking-widest text-kalvium-success font-bold bg-kalvium-success-tint px-3 py-1 rounded-full border border-kalvium-success-border">
             Immutable Audit Trail
           </span>
-          <h1 className="text-3xl font-display font-black text-white tracking-tight mt-1">
+          <h1 className="text-3xl font-display font-black text-kalvium-ink dark:text-kalvium-dark-ink tracking-tight mt-1">
             Campus Verification History
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-kalvium-muted dark:text-kalvium-dark-muted mt-1">
             Complete record of manager verification actions, approval stamps, and decline rationales.
           </p>
         </div>
 
         {/* Filter Buttons */}
-        <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-1 rounded-xl text-xs">
+        <div className="flex items-center gap-1 bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border p-1 rounded-full text-xs shadow-soft-xs">
           <button
             onClick={() => setFilterAction("ALL")}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition ${
-              filterAction === "ALL" ? "bg-slate-800 text-white" : "text-slate-400 hover:text-white"
+            className={`px-3 py-1.5 rounded-full font-semibold transition ${
+              filterAction === "ALL" ? "bg-kalvium-coral text-white" : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-ink"
             }`}
           >
             All ({history.length})
           </button>
           <button
             onClick={() => setFilterAction("APPROVED")}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition ${
+            className={`px-3 py-1.5 rounded-full font-semibold transition ${
               filterAction === "APPROVED"
-                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                : "text-slate-400 hover:text-white"
+                ? "bg-kalvium-success-tint text-kalvium-success border border-kalvium-success-border"
+                : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-ink"
             }`}
           >
             Approved
           </button>
           <button
             onClick={() => setFilterAction("DECLINED")}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition ${
+            className={`px-3 py-1.5 rounded-full font-semibold transition ${
               filterAction === "DECLINED"
-                ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
-                : "text-slate-400 hover:text-white"
+                ? "bg-kalvium-coral-tint text-kalvium-coral border border-kalvium-coral/30"
+                : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-ink"
             }`}
           >
             Declined
@@ -111,20 +123,20 @@ export default function ManagerAuditHistoryPage() {
       </div>
 
       {loading ? (
-        <div className="py-20 text-center text-slate-400 text-sm">Loading audit history...</div>
+        <div className="py-20 text-center text-kalvium-muted dark:text-kalvium-dark-muted text-sm">Loading audit history...</div>
       ) : filteredHistory.length === 0 ? (
-        <div className="p-12 text-center bg-slate-900/50 border border-slate-800 rounded-2xl">
-          <p className="text-xs text-slate-400">No records found matching filter.</p>
+        <div className="p-12 text-center bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border rounded-2xl shadow-soft-xs">
+          <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted">No records found matching filter.</p>
         </div>
       ) : (
         <div className="space-y-4">
           {filteredHistory.map((entry) => (
             <div
               key={entry.id}
-              className={`p-5 rounded-2xl border transition ${
+              className={`p-5 rounded-2xl border transition shadow-soft-xs ${
                 entry.action === "APPROVED"
-                  ? "bg-slate-900/80 border-emerald-500/30"
-                  : "bg-slate-900/80 border-rose-500/30"
+                  ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-success-border/60 hover:border-kalvium-success"
+                  : "bg-white dark:bg-kalvium-dark-surface border-kalvium-coral/30 hover:border-kalvium-coral/60"
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -132,50 +144,50 @@ export default function ManagerAuditHistoryPage() {
                   <img
                     src={entry.event.posterUrl}
                     alt={entry.event.title}
-                    className="w-16 h-16 rounded-xl object-cover bg-slate-950 shrink-0 border border-slate-800"
+                    className="w-16 h-16 rounded-xl object-cover bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt shrink-0 border border-kalvium-border dark:border-kalvium-dark-border"
                   />
                   <div>
                     <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                       {entry.action === "APPROVED" ? (
-                        <span className="text-[10px] font-mono uppercase tracking-wider font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded flex items-center gap-1">
+                        <span className="text-[10px] font-sans uppercase tracking-wider font-bold bg-kalvium-success-tint text-kalvium-success border border-kalvium-success-border px-2.5 py-0.5 rounded-full flex items-center gap-1">
                           <CheckCircle2 className="w-3 h-3" />
                           Approved & Certified
                         </span>
                       ) : (
-                        <span className="text-[10px] font-mono uppercase tracking-wider font-bold bg-rose-500/20 text-rose-400 border border-rose-500/40 px-2 py-0.5 rounded flex items-center gap-1">
+                        <span className="text-[10px] font-sans uppercase tracking-wider font-bold bg-kalvium-coral-tint text-kalvium-coral border border-kalvium-coral/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                           <XCircle className="w-3 h-3" />
                           Declined
                         </span>
                       )}
 
-                      <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
+                      <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-kalvium-muted dark:text-kalvium-dark-muted bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-2.5 py-0.5 rounded-full">
                         {entry.event.category}
                       </span>
                     </div>
 
-                    <h3 className="text-base font-bold text-white mb-1">{entry.event.title}</h3>
-                    <p className="text-xs text-slate-400">
+                    <h3 className="text-base font-bold text-kalvium-ink dark:text-kalvium-dark-ink mb-1">{entry.event.title}</h3>
+                    <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
                       Event Date: {entry.event.date} • Venue: {entry.event.venue}
                     </p>
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="text-[11px] font-mono text-slate-400 block">
+                  <span className="text-[11px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted block">
                     {new Date(entry.timestamp).toLocaleString()}
                   </span>
-                  <span className="text-xs text-slate-300 font-semibold mt-0.5 block">
+                  <span className="text-xs text-kalvium-ink dark:text-kalvium-dark-ink font-semibold mt-0.5 block">
                     Manager: {entry.manager.name}
                   </span>
                 </div>
               </div>
 
               {/* Action Notes */}
-              <div className="mt-4 pt-3 border-t border-slate-800/80 text-xs text-slate-300 flex items-start gap-2">
-                <span className="font-semibold text-slate-400 shrink-0">
+              <div className="mt-4 pt-3 border-t border-kalvium-border dark:border-kalvium-dark-border text-xs text-kalvium-ink/90 dark:text-kalvium-dark-ink/90 flex items-start gap-2">
+                <span className="font-bold text-kalvium-muted dark:text-kalvium-dark-muted shrink-0">
                   {entry.action === "APPROVED" ? "Audit Log:" : "Decline Reason & Notes:"}
                 </span>
-                <span className="text-slate-200">
+                <span className="text-kalvium-ink/80 dark:text-kalvium-dark-ink/80">
                   {entry.reason ? `${entry.reason} — ` : ""}
                   {entry.notes || "No additional notes"}
                 </span>

@@ -43,14 +43,14 @@ export default function OrganizerDashboardPage() {
   if (!user || user.role === "STUDENT") {
     return (
       <div className="max-w-md mx-auto px-4 py-24 text-center">
-        <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800">
-          <p className="text-base font-bold text-white mb-2">Organizer Access Required</p>
-          <p className="text-xs text-slate-400 mb-6">
+        <div className="p-8 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium-md">
+          <p className="text-base font-bold text-kalvium-text dark:text-kalvium-dark-text mb-2">Organizer Access Required</p>
+          <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mb-6">
             Please log in as an Organizer or switch to "Robotics Club (Organizer)" using the top demo bar.
           </p>
           <Link
             href="/login"
-            className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold"
+            className="px-5 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm transition"
           >
             Sign In
           </Link>
@@ -67,26 +67,26 @@ export default function OrganizerDashboardPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
         <div>
-          <span className="text-xs font-mono uppercase tracking-widest text-amber-400 font-bold bg-amber-500/10 px-2.5 py-0.5 rounded border border-amber-500/20">
+          <span className="text-xs font-sans uppercase tracking-widest text-kalvium-coral font-bold bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint px-2.5 py-0.5 rounded-full border border-kalvium-coral/20">
             Organizer Studio
           </span>
-          <h1 className="text-3xl sm:text-4xl font-display font-black text-white tracking-tight mt-1">
+          <h1 className="text-3xl sm:text-4xl font-display font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight mt-1">
             {user.name}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-kalvium-muted dark:text-kalvium-dark-muted mt-1">
             Submit event posters for AI extraction, monitor submissions, and track Campus Manager verification.
           </p>
         </div>
 
         <button
           onClick={() => setActiveTab(activeTab === "CREATE" ? "SUBMISSIONS" : "CREATE")}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-glow-brand transition shrink-0 active:scale-95"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm transition shrink-0 active:scale-95"
         >
           {activeTab === "CREATE" ? (
             <span>View Submissions</span>
           ) : (
             <>
-              <Sparkles className="w-4 h-4 text-amber-300" />
+              <Sparkles className="w-4 h-4 text-amber-100" />
               <span>+ Create with AI</span>
             </>
           )}
@@ -94,27 +94,27 @@ export default function OrganizerDashboardPage() {
       </div>
 
       {/* 2 Primary Task-Focused Workspace Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-4 mb-8">
+      <div className="flex items-center gap-2 border-b border-kalvium-border dark:border-kalvium-dark-border pb-4 mb-8">
         <button
           onClick={() => setActiveTab("SUBMISSIONS")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-2 ${
             activeTab === "SUBMISSIONS"
-              ? "bg-indigo-600 text-white shadow-glow-brand"
-              : "bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800"
+              ? "bg-kalvium-coral text-white shadow-sm"
+              : "bg-white dark:bg-kalvium-dark-surface text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
           }`}
         >
           <span>Your Submissions</span>
-          <span className="px-2 py-0.5 rounded-md bg-white/20 text-white text-[10px] font-mono font-bold">
+          <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-sans font-bold">
             {events.length}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab("CREATE")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-2 ${
             activeTab === "CREATE"
-              ? "bg-indigo-600 text-white shadow-glow-brand"
-              : "bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800"
+              ? "bg-kalvium-coral text-white shadow-sm"
+              : "bg-white dark:bg-kalvium-dark-surface text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
           }`}
         >
           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
@@ -137,36 +137,36 @@ export default function OrganizerDashboardPage() {
         <div className="space-y-6 animate-fade-in">
           {/* Status Metrics Strip */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="p-4 rounded-2xl bg-slate-900/70 border border-amber-500/30 bg-amber-950/10">
-              <span className="text-[11px] font-mono text-amber-400 uppercase tracking-wider font-semibold block mb-1">
+            <div className="p-4 rounded-2xl border border-kalvium-warning-border bg-kalvium-warning-tint dark:bg-kalvium-dark-warning-tint">
+              <span className="text-[11px] font-sans text-kalvium-warning uppercase tracking-wider font-semibold block mb-1">
                 Pending Verification
               </span>
-              <p className="text-2xl sm:text-3xl font-display font-black text-amber-400">{stats.pending}</p>
+              <p className="text-2xl sm:text-3xl font-display font-bold text-kalvium-warning">{stats.pending}</p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-900/70 border border-emerald-500/30 bg-emerald-950/10">
-              <span className="text-[11px] font-mono text-emerald-400 uppercase tracking-wider font-semibold block mb-1">
+            <div className="p-4 rounded-2xl border border-kalvium-success-border bg-kalvium-success-tint dark:bg-kalvium-dark-success-tint">
+              <span className="text-[11px] font-sans text-kalvium-success uppercase tracking-wider font-semibold block mb-1">
                 Approved & Public
               </span>
-              <p className="text-2xl sm:text-3xl font-display font-black text-emerald-400">{stats.approved}</p>
+              <p className="text-2xl sm:text-3xl font-display font-bold text-kalvium-success">{stats.approved}</p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-900/70 border border-rose-500/30 bg-rose-950/10">
-              <span className="text-[11px] font-mono text-rose-400 uppercase tracking-wider font-semibold block mb-1">
+            <div className="p-4 rounded-2xl border border-kalvium-coral/30 bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint">
+              <span className="text-[11px] font-sans text-kalvium-coral uppercase tracking-wider font-semibold block mb-1">
                 Declined
               </span>
-              <p className="text-2xl sm:text-3xl font-display font-black text-rose-400">{stats.declined}</p>
+              <p className="text-2xl sm:text-3xl font-display font-bold text-kalvium-coral">{stats.declined}</p>
             </div>
           </div>
 
           {/* Submissions List Header */}
           <div className="flex items-center justify-between pt-2">
-            <h2 className="text-sm font-display font-extrabold uppercase tracking-wider text-slate-300">
+            <h2 className="text-sm font-display font-bold uppercase tracking-wider text-kalvium-text dark:text-kalvium-dark-text">
               Submission History
             </h2>
             <button
               onClick={fetchOrganizerData}
-              className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 transition active:scale-95"
+              className="text-xs text-kalvium-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text flex items-center gap-1.5 transition active:scale-95"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Refresh</span>
@@ -174,18 +174,18 @@ export default function OrganizerDashboardPage() {
           </div>
 
           {loading ? (
-            <div className="py-20 text-center text-slate-400 text-sm">
+            <div className="py-20 text-center text-kalvium-muted text-sm">
               Loading your submissions...
             </div>
           ) : events.length === 0 ? (
-            <div className="py-16 text-center bg-slate-900/40 border border-slate-800 rounded-2xl p-8">
-              <p className="text-sm font-bold text-white mb-2">No event submissions yet</p>
-              <p className="text-xs text-slate-400 mb-6">
+            <div className="py-16 text-center bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border rounded-2xl p-8 shadow-kalvium-sm">
+              <p className="text-sm font-bold text-kalvium-text dark:text-kalvium-dark-text mb-2">No event submissions yet</p>
+              <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mb-6">
                 Upload your promotional poster and let the AI analyzer extract structured event details.
               </p>
               <button
                 onClick={() => setActiveTab("CREATE")}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow-glow-brand active:scale-95 transition"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm active:scale-95 transition"
               >
                 <PlusCircle className="w-4 h-4" />
                 <span>Post Your First Event with AI</span>
@@ -196,25 +196,25 @@ export default function OrganizerDashboardPage() {
               {events.map((ev: any) => (
                 <div
                   key={ev.id}
-                  className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-slate-700 transition space-y-4"
+                  className="p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral/40 shadow-kalvium-sm transition space-y-4"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-start gap-4 min-w-0">
                       <img
                         src={ev.posterUrl || "/images/placeholder.svg"}
                         alt={ev.title}
-                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover bg-slate-950 shrink-0 border border-slate-800"
+                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt shrink-0 border border-kalvium-border dark:border-kalvium-dark-border"
                       />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="text-[10px] font-mono uppercase bg-slate-800 text-indigo-300 px-2 py-0.5 rounded font-bold">
+                          <span className="text-[10px] font-sans uppercase bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-coral px-2.5 py-0.5 rounded-full border border-kalvium-border font-semibold">
                             {ev.category}
                           </span>
                           {renderStatusBadge(ev.status)}
                           {ev.status === "APPROVED" && <CampusVerifiedBadge size="sm" />}
                         </div>
-                        <h3 className="text-base font-bold text-white mb-1 truncate">{ev.title}</h3>
-                        <p className="text-xs text-slate-400">
+                        <h3 className="text-base font-bold text-kalvium-text dark:text-kalvium-dark-text mb-1 truncate">{ev.title}</h3>
+                        <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
                           {ev.date} • {ev.startTime} – {ev.endTime} • {ev.venue}
                         </p>
                       </div>
@@ -224,7 +224,7 @@ export default function OrganizerDashboardPage() {
                       {ev.status === "APPROVED" && (
                         <Link
                           href={`/events/${ev.id}`}
-                          className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-indigo-400 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-500/20 transition"
+                          className="px-4 py-1.5 rounded-full text-xs font-semibold text-kalvium-coral bg-kalvium-coral-tint hover:bg-kalvium-coral/20 border border-kalvium-coral/30 transition"
                         >
                           Public Page →
                         </Link>
@@ -234,17 +234,17 @@ export default function OrganizerDashboardPage() {
 
                   {/* Decline Feedback Banner */}
                   {ev.status === "DECLINED" && (
-                    <div className="p-4 rounded-xl bg-rose-950/30 border border-rose-500/40 text-xs text-rose-200 space-y-1">
-                      <div className="flex items-center gap-1.5 font-bold text-rose-400">
+                    <div className="p-4 rounded-xl bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint border border-kalvium-coral/30 text-xs text-kalvium-coral space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold">
                         <XCircle className="w-4 h-4" />
                         <span>Declined by Campus Manager</span>
                       </div>
-                      <p className="text-slate-300">
-                        <span className="font-semibold text-rose-300">Reason:</span>{" "}
+                      <p className="text-kalvium-text dark:text-kalvium-dark-text">
+                        <span className="font-semibold text-kalvium-coral">Reason:</span>{" "}
                         {ev.declineReason || "Event information could not be verified."}
                       </p>
                       {ev.declineCustomNotes && (
-                        <p className="text-slate-400 text-[11px] pt-1 border-t border-rose-900/50">
+                        <p className="text-kalvium-muted text-[11px] pt-1 border-t border-kalvium-coral/20">
                           Manager feedback: {ev.declineCustomNotes}
                         </p>
                       )}
@@ -264,27 +264,27 @@ function renderStatusBadge(status: string) {
   switch (status) {
     case "APPROVED":
       return (
-        <span className="text-[10px] font-mono uppercase tracking-wider font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded">
+        <span className="text-[10px] font-medium uppercase tracking-wider bg-kalvium-success-tint text-kalvium-success border border-kalvium-success-border px-2.5 py-0.5 rounded-full">
           Approved
         </span>
       );
     case "PENDING":
       return (
-        <span className="text-[10px] font-mono uppercase tracking-wider font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded flex items-center gap-1">
+        <span className="text-[10px] font-medium uppercase tracking-wider bg-kalvium-warning-tint text-kalvium-warning border border-kalvium-warning-border px-2.5 py-0.5 rounded-full flex items-center gap-1">
           <Clock className="w-3 h-3" />
           Pending Verification
         </span>
       );
     case "DECLINED":
       return (
-        <span className="text-[10px] font-mono uppercase tracking-wider font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded flex items-center gap-1">
+        <span className="text-[10px] font-medium uppercase tracking-wider bg-kalvium-coral-tint text-kalvium-coral border border-kalvium-coral/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
           <XCircle className="w-3 h-3" />
           Declined
         </span>
       );
     default:
       return (
-        <span className="text-[10px] font-mono uppercase tracking-wider font-bold bg-slate-800 text-slate-400 px-2 py-0.5 rounded">
+        <span className="text-[10px] font-medium uppercase tracking-wider bg-kalvium-surface-alt text-kalvium-muted border border-kalvium-border px-2.5 py-0.5 rounded-full">
           Draft
         </span>
       );

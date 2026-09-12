@@ -141,12 +141,12 @@ export default function EventDetailPage() {
   if (error || !event) {
     return (
       <div className="max-w-xl mx-auto px-4 py-24 text-center">
-        <div className="glass p-8 rounded-3xl border border-white/10 shadow-2xl">
-          <p className="font-display text-lg font-bold text-white mb-2">Event Not Found</p>
-          <p className="text-sm text-slate-400 mb-6">{error || "This event could not be found."}</p>
+        <div className="bg-white dark:bg-kalvium-dark-surface p-8 rounded-3xl border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium-md">
+          <p className="font-display text-lg font-bold text-kalvium-text dark:text-kalvium-dark-text mb-2">Event Not Found</p>
+          <p className="text-sm text-kalvium-muted dark:text-kalvium-dark-muted mb-6">{error || "This event could not be found."}</p>
           <Link
             href="/events"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-signal-500 text-white text-xs font-semibold active:scale-95 transition"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-semibold active:scale-95 transition shadow-sm"
           >
             <ArrowLeft size={16} />
             <span>Back to Discovery</span>
@@ -164,29 +164,29 @@ export default function EventDetailPage() {
       {/* Back button */}
       <Link
         href="/events"
-        className="group inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white mb-8 transition duration-200"
+        className="group inline-flex items-center gap-2 text-xs font-semibold text-kalvium-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text mb-8 transition duration-200"
       >
         <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" />
         <span>Back to Events</span>
       </Link>
 
-      {/* Cinematic Poster Hero */}
+      {/* Poster Hero */}
       <motion.div
         initial={{ clipPath: "inset(0 0 100% 0)" }}
         animate={{ clipPath: "inset(0 0 0% 0)" }}
         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-        className="relative aspect-[16/9] w-full overflow-hidden rounded-3xl bg-void-900 border border-white/10 shadow-2xl"
+        className="relative aspect-[16/9] w-full overflow-hidden rounded-3xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium-md"
       >
         <img
           src={event.posterUrl}
           alt={event.title}
           className="h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-void-950 via-void-950/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
         {/* Top Badges */}
         <div className="absolute top-4 left-4 flex items-center gap-2">
-          <span className="rounded-full bg-void-950/80 px-3 py-1 text-xs font-semibold text-white backdrop-blur border border-white/10">
+          <span className="rounded-full bg-white/90 dark:bg-kalvium-dark-surface/90 px-3 py-1 text-xs font-semibold text-kalvium-text dark:text-kalvium-dark-text backdrop-blur border border-kalvium-border dark:border-kalvium-dark-border shadow-xs">
             {event.category}
           </span>
           {event.status === "APPROVED" && <CampusVerifiedBadge animate />}
@@ -204,16 +204,16 @@ export default function EventDetailPage() {
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
           <div>
             {startingSoon && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-flare-500/10 px-3 py-1 text-xs font-bold text-flare-400 border border-flare-400/25 mb-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint px-3 py-1 text-xs font-bold text-kalvium-coral border border-kalvium-coral/30 mb-3">
                 <Flame size={14} className="animate-pulse" />
                 <span>Starting soon ({countdown})</span>
               </span>
             )}
-            <h1 className="font-display text-display-lg font-bold text-white tracking-tight leading-tight">
+            <h1 className="font-display text-display-lg font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight leading-tight">
               {event.title}
             </h1>
-            <p className="mt-2 text-sm text-slate-400">
-              Organized by <span className="text-white font-medium">{event.organizerName || event.organizer?.name || "Campus Club"}</span>
+            <p className="mt-2 text-sm text-kalvium-muted dark:text-kalvium-dark-muted">
+              Organized by <span className="text-kalvium-text dark:text-kalvium-dark-text font-semibold">{event.organizerName || event.organizer?.name || "Campus Club"}</span>
             </p>
           </div>
 
@@ -221,10 +221,10 @@ export default function EventDetailPage() {
             <button
               onClick={handleSaveToggle}
               disabled={saving}
-              className={`rounded-full px-6 py-3 text-sm font-semibold flex items-center gap-2 transition active:scale-95 shadow-lg ${
+              className={`rounded-full px-6 py-3 text-sm font-semibold flex items-center gap-2 transition active:scale-95 shadow-sm ${
                 isSaved
-                  ? "bg-signal-500 text-white shadow-signal-500/25 hover:bg-signal-600"
-                  : "bg-white text-void-950 hover:bg-slate-200"
+                  ? "bg-kalvium-coral text-white hover:bg-kalvium-coral-hover shadow-sm"
+                  : "bg-white dark:bg-kalvium-dark-surface text-kalvium-text dark:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt"
               }`}
             >
               {isSaved ? (
@@ -244,61 +244,61 @@ export default function EventDetailPage() {
 
         {/* Info Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="glass rounded-2xl p-4 border border-white/10">
-            <span className="flex items-center gap-2 text-xs font-medium text-slate-400 mb-1">
-              <Calendar size={14} className="text-flare-400" />
+          <div className="bg-white dark:bg-kalvium-dark-surface rounded-2xl p-4 border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium-sm">
+            <span className="flex items-center gap-2 text-xs font-medium text-kalvium-muted dark:text-kalvium-dark-muted mb-1">
+              <Calendar size={14} className="text-kalvium-coral" />
               Date
             </span>
-            <p className="font-display font-semibold text-white">{event.date}</p>
-            <p className="text-xs text-slate-400 mt-0.5">{countdown}</p>
+            <p className="font-display font-semibold text-kalvium-text dark:text-kalvium-dark-text">{event.date}</p>
+            <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">{countdown}</p>
           </div>
 
-          <div className="glass rounded-2xl p-4 border border-white/10">
-            <span className="flex items-center gap-2 text-xs font-medium text-slate-400 mb-1">
-              <Clock size={14} className="text-signal-400" />
+          <div className="bg-white dark:bg-kalvium-dark-surface rounded-2xl p-4 border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium-sm">
+            <span className="flex items-center gap-2 text-xs font-medium text-kalvium-muted dark:text-kalvium-dark-muted mb-1">
+              <Clock size={14} className="text-kalvium-coral" />
               Time Window
             </span>
-            <p className="font-display font-semibold text-white">{event.startTime} – {event.endTime}</p>
-            <p className="text-xs text-slate-400 mt-0.5">Clash protected</p>
+            <p className="font-display font-semibold text-kalvium-text dark:text-kalvium-dark-text">{event.startTime} – {event.endTime}</p>
+            <p className="text-xs text-kalvium-success font-medium mt-0.5">Clash protected</p>
           </div>
 
-          <div className="glass rounded-2xl p-4 border border-white/10">
-            <span className="flex items-center gap-2 text-xs font-medium text-slate-400 mb-1">
-              <MapPin size={14} className="text-verified-400" />
+          <div className="bg-white dark:bg-kalvium-dark-surface rounded-2xl p-4 border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium-sm">
+            <span className="flex items-center gap-2 text-xs font-medium text-kalvium-muted dark:text-kalvium-dark-muted mb-1">
+              <MapPin size={14} className="text-kalvium-success" />
               Campus Venue
             </span>
-            <p className="font-display font-semibold text-white truncate">{event.venue}</p>
-            <p className="text-xs text-slate-400 mt-0.5">On campus</p>
+            <p className="font-display font-semibold text-kalvium-text dark:text-kalvium-dark-text truncate">{event.venue}</p>
+            <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">On campus</p>
           </div>
         </div>
 
         {/* Summary & Description */}
-        <div className="glass rounded-3xl p-6 sm:p-8 space-y-6 border border-white/10">
+        <div className="bg-white dark:bg-kalvium-dark-surface rounded-3xl p-6 sm:p-8 space-y-6 border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium-sm">
           <div>
-            <h2 className="font-display text-lg font-bold text-white mb-2">About this event</h2>
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+            <h2 className="font-display text-lg font-bold text-kalvium-text dark:text-kalvium-dark-text mb-2">About this event</h2>
+            <p className="text-sm sm:text-base text-kalvium-muted dark:text-kalvium-dark-muted leading-relaxed font-normal">
               {event.description || event.summary}
             </p>
           </div>
 
           {event.summary && event.summary !== event.description && (
-            <div className="rounded-2xl bg-void-950/40 p-4 border border-white/5">
-              <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
+            <div className="rounded-2xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt p-4 border border-kalvium-border dark:border-kalvium-dark-border">
+              <h3 className="text-xs font-sans font-bold uppercase tracking-wider text-kalvium-muted dark:text-kalvium-dark-muted mb-1">
                 AI Structured Summary
               </h3>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              <p className="text-xs sm:text-sm text-kalvium-text dark:text-kalvium-dark-text leading-relaxed">
                 {event.summary}
               </p>
             </div>
           )}
 
           {/* Additional details: tags, contact, registration */}
-          <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-white/5 text-xs text-slate-400">
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-kalvium-border dark:border-kalvium-dark-border text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
             {event.tags && (
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-mono text-slate-500 uppercase">Tags:</span>
+                <span className="font-sans font-semibold text-kalvium-muted uppercase">Tags:</span>
                 {event.tags.split(",").map((t: string) => (
-                  <span key={t} className="rounded-full bg-white/5 px-2.5 py-0.5 text-slate-300 border border-white/5">
+                  <span key={t} className="rounded-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-2.5 py-0.5 text-kalvium-text dark:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border">
                     {t.trim()}
                   </span>
                 ))}
@@ -310,7 +310,7 @@ export default function EventDetailPage() {
                 href={event.registrationUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 font-semibold text-signal-400 hover:text-signal-300"
+                className="inline-flex items-center gap-1.5 font-semibold text-kalvium-coral hover:underline"
               >
                 <span>External Registration</span>
                 <ExternalLink size={14} />

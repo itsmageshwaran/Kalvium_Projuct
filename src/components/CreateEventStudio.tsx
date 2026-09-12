@@ -213,11 +213,8 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
               }
             }}
             onClick={() => fileInputRef.current?.click()}
-            className="glass group relative border-2 border-dashed border-white/15 hover:border-signal-400 rounded-3xl p-10 text-center transition-all duration-300 ease-cinematic cursor-pointer overflow-hidden shadow-2xl hover:shadow-signal-500/20 active:scale-[0.995]"
+            className="group relative border-2 border-dashed border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral dark:hover:border-kalvium-coral bg-white dark:bg-kalvium-dark-surface rounded-3xl p-10 text-center transition-all duration-300 cursor-pointer overflow-hidden shadow-kalvium-sm hover:shadow-kalvium-md active:scale-[0.995]"
           >
-            {/* Radar Sweep Effect */}
-            <div className="pointer-events-none absolute -inset-[100%] animate-sweep bg-[conic-gradient(from_0deg,transparent_0_340deg,rgba(111,91,255,0.15)_360deg)]" />
-
             <input
               type="file"
               ref={fileInputRef}
@@ -230,17 +227,17 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
               className="hidden"
             />
 
-            <div className="relative z-10 w-16 h-16 rounded-2xl bg-signal-500/10 border border-signal-500/20 text-signal-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 group-hover:border-signal-400/40 transition-all duration-300 ease-cinematic shadow-sm">
-              <Upload className="w-8 h-8 group-hover:-translate-y-0.5 transition-transform duration-300" />
+            <div className="relative z-10 w-16 h-16 rounded-2xl bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint border border-kalvium-coral/20 text-kalvium-coral flex items-center justify-center mx-auto mb-4 group-hover:scale-105 transition-all duration-300 shadow-sm">
+              <Upload className="w-7 h-7 group-hover:-translate-y-0.5 transition-transform duration-300" />
             </div>
 
-            <h3 className="relative z-10 text-xl font-display font-bold text-white mb-1 tracking-tight">
+            <h3 className="relative z-10 text-xl font-display font-bold text-kalvium-text dark:text-kalvium-dark-text mb-1 tracking-tight">
               Drop your event poster here
             </h3>
-            <p className="relative z-10 text-sm text-slate-400 mb-4">
-              or <span className="text-signal-400 font-semibold underline underline-offset-2">browse from your computer</span>
+            <p className="relative z-10 text-sm text-kalvium-muted dark:text-kalvium-dark-muted mb-4">
+              or <span className="text-kalvium-coral font-semibold underline underline-offset-2">browse from your computer</span>
             </p>
-            <p className="relative z-10 text-xs text-slate-500 font-mono">
+            <p className="relative z-10 text-xs text-kalvium-muted uppercase tracking-wider font-sans font-semibold">
               SUPPORTS JPG, JPEG, PNG, WEBP (UP TO 10MB)
             </p>
           </div>
@@ -249,10 +246,10 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
           <div>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-display font-extrabold uppercase tracking-wider text-white">
+                <h3 className="text-sm font-display font-bold uppercase tracking-wider text-kalvium-text dark:text-kalvium-dark-text">
                   Or Test with Sample Campus Posters (1-Click AI Demo)
                 </h3>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
                   Select any prepared campus poster to see real AI extraction, confidence scores, and clash scenarios.
                 </p>
               </div>
@@ -263,23 +260,23 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                 <div
                   key={sample.id}
                   onClick={() => handleSelectSample(sample)}
-                  className={`group relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 hover:border-indigo-500/50 cursor-pointer transition-all duration-300 ease-out-expo hover:-translate-y-1.5 hover:shadow-card-hover active:scale-95 animate-slide-up stagger-${(idx % 4) + 1}`}
+                  className={`group relative rounded-2xl overflow-hidden bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral/50 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-kalvium-md active:scale-95 animate-slide-up stagger-${(idx % 4) + 1}`}
                 >
-                  <div className="aspect-[4/3] w-full overflow-hidden bg-slate-950">
+                  <div className="aspect-[4/3] w-full overflow-hidden bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt">
                     <img
                       src={sample.previewUrl}
                       alt={sample.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out-expo will-change-transform"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 will-change-transform"
                     />
                   </div>
                   <div className="p-3.5">
-                    <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-indigo-400 block mb-1">
+                    <span className="text-[10px] font-sans uppercase tracking-wider font-bold text-kalvium-coral block mb-1">
                       {sample.category}
                     </span>
-                    <h4 className="text-xs font-bold text-white group-hover:text-indigo-300 line-clamp-1 transition-colors">
+                    <h4 className="text-xs font-bold text-kalvium-text dark:text-kalvium-dark-text group-hover:text-kalvium-coral line-clamp-1 transition-colors">
                       {sample.name}
                     </h4>
-                    <span className="text-[11px] text-slate-500 group-hover:text-slate-400 block mt-1 transition-colors">
+                    <span className="text-[11px] text-kalvium-muted group-hover:text-kalvium-coral block mt-1 transition-colors">
                       Click to analyze with AI →
                     </span>
                   </div>
@@ -293,55 +290,52 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
       {/* STAGE 2: AI ANALYZING ANIMATION */}
       {step === "ANALYZING" && (
         <div className="py-12 text-center max-w-lg mx-auto animate-scale-in">
-          {/* Laser Scanner Poster Preview */}
+          {/* Scanner Poster Preview */}
           {posterPreview ? (
-            <div className="relative mx-auto w-48 aspect-[3/4] rounded-2xl overflow-hidden border border-indigo-500/50 shadow-glow-brand mb-6 bg-slate-950">
+            <div className="relative mx-auto w-48 aspect-[3/4] rounded-2xl overflow-hidden border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium-md mb-6 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt">
               <img
                 src={posterPreview}
                 alt="Scanning poster"
-                className="w-full h-full object-cover opacity-85"
+                className="w-full h-full object-cover opacity-90"
               />
               <div className="laser-scan-line" />
-              <div className="absolute inset-0 bg-indigo-600/10 pointer-events-none" />
-              <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase bg-slate-950/80 text-indigo-300 border border-indigo-500/30">
+              <div className="absolute top-2 right-2 px-2.5 py-0.5 rounded-full text-[10px] font-sans font-bold uppercase bg-white/90 dark:bg-kalvium-dark-surface/90 text-kalvium-coral border border-kalvium-coral/30">
                 AI SCANNING
               </div>
             </div>
           ) : (
-            <div className="relative w-24 h-24 mx-auto mb-6">
-              <div className="absolute inset-0 rounded-full border-4 border-indigo-500/30 animate-ping"></div>
-              <div className="absolute -inset-2 rounded-full bg-indigo-500/10 animate-glow-pulse"></div>
-              <div className="relative w-full h-full rounded-full bg-slate-900 border-2 border-indigo-500 flex items-center justify-center shadow-glow-brand">
-                <Sparkles className="w-10 h-10 text-indigo-400 animate-spin" />
+            <div className="relative w-20 h-20 mx-auto mb-6">
+              <div className="relative w-full h-full rounded-full bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint border-2 border-kalvium-coral flex items-center justify-center shadow-kalvium-md">
+                <Sparkles className="w-8 h-8 text-kalvium-coral animate-spin" />
               </div>
             </div>
           )}
 
-          <h2 className="text-2xl font-display font-black text-white mb-2 tracking-tight">
+          <h2 className="text-2xl font-display font-bold text-kalvium-text dark:text-kalvium-dark-text mb-2 tracking-tight">
             Analyzing Your Event Poster...
           </h2>
-          <p className="text-sm font-mono text-indigo-400 mb-6 h-6 flex items-center justify-center animate-fade-in">
+          <p className="text-sm font-medium text-kalvium-coral mb-6 h-6 flex items-center justify-center animate-fade-in">
             {analyzingSteps[analyzingStepIndex]}
           </p>
 
-          <div className="space-y-2.5 text-left bg-slate-900/90 border border-slate-800 rounded-2xl p-5 text-xs text-slate-300 shadow-xl">
+          <div className="space-y-2.5 text-left bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border rounded-2xl p-5 text-xs text-kalvium-text dark:text-kalvium-dark-text shadow-kalvium-sm">
             {analyzingSteps.map((s, idx) => (
               <div
                 key={s}
-                className={`flex items-center gap-2.5 transition-all duration-300 ease-out-expo ${
+                className={`flex items-center gap-2.5 transition-all duration-300 ${
                   idx <= analyzingStepIndex
-                    ? "opacity-100 text-slate-200 translate-x-0"
-                    : "opacity-30 text-slate-600 translate-x-1"
+                    ? "opacity-100 text-kalvium-text dark:text-kalvium-dark-text translate-x-0"
+                    : "opacity-40 text-kalvium-muted translate-x-1"
                 }`}
               >
                 {idx < analyzingStepIndex ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 animate-scale-in" />
+                  <CheckCircle2 className="w-4 h-4 text-kalvium-success shrink-0" />
                 ) : idx === analyzingStepIndex ? (
-                  <div className="w-4 h-4 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin shrink-0"></div>
+                  <div className="w-4 h-4 rounded-full border-2 border-kalvium-coral border-t-transparent animate-spin shrink-0"></div>
                 ) : (
-                  <div className="w-4 h-4 rounded-full bg-slate-800 shrink-0"></div>
+                  <div className="w-4 h-4 rounded-full bg-kalvium-border dark:bg-kalvium-dark-border shrink-0"></div>
                 )}
-                <span className={idx === analyzingStepIndex ? "font-semibold text-white" : ""}>
+                <span className={idx === analyzingStepIndex ? "font-semibold text-kalvium-coral" : ""}>
                   {s}
                 </span>
               </div>
@@ -354,14 +348,14 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
       {step === "REVIEW" && (
         <div className="animate-fade-in space-y-8">
           {/* Top Review Bar */}
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-900 border border-slate-800">
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium-sm">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
+              <div className="w-8 h-8 rounded-xl bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint text-kalvium-coral flex items-center justify-center font-bold">
                 <FileCheck className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white">Review AI-Generated Event Details</h3>
-                <p className="text-xs text-slate-400">
+                <h3 className="text-sm font-bold text-kalvium-text dark:text-kalvium-dark-text">Review AI-Generated Event Details</h3>
+                <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
                   Inspect extracted fields, make any necessary adjustments, and submit for Campus Manager approval.
                 </p>
               </div>
@@ -369,7 +363,7 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
 
             <button
               onClick={() => setStep("UPLOAD")}
-              className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-slate-800"
+              className="text-xs text-kalvium-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Upload Different Poster</span>
@@ -378,12 +372,12 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
 
           {/* Duplicate Event Warning Banner if detected */}
           {duplicateWarning && (
-            <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/50 flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-              <div className="text-xs">
-                <p className="font-bold text-amber-300">Possible Duplicate Event Detected</p>
-                <p className="text-slate-300 mt-0.5">{duplicateWarning.reason}</p>
-                <p className="text-slate-400 text-[11px] mt-1">
+            <div className="p-4 rounded-2xl bg-kalvium-warning-tint dark:bg-kalvium-dark-warning-tint border border-kalvium-warning-border dark:border-kalvium-dark-warning-border flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-kalvium-warning shrink-0 mt-0.5" />
+              <div className="text-xs text-kalvium-warning">
+                <p className="font-bold">Possible Duplicate Event Detected</p>
+                <p className="mt-0.5 opacity-90">{duplicateWarning.reason}</p>
+                <p className="text-[11px] mt-1 opacity-75">
                   You may still review and submit. The Campus Manager will also receive this duplicate advisory.
                 </p>
               </div>
@@ -391,7 +385,7 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
           )}
 
           {errorMsg && (
-            <div className="p-4 rounded-2xl bg-rose-950/30 border border-rose-500/40 text-xs text-rose-300">
+            <div className="p-4 rounded-2xl bg-kalvium-coral-tint border border-kalvium-coral/30 text-xs text-kalvium-coral">
               {errorMsg}
             </div>
           )}
@@ -400,35 +394,35 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
           <form onSubmit={handleSubmitForVerification} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left: Original Poster Preview + AI Confidence Overview */}
             <div className="lg:col-span-5 space-y-6 animate-scale-in">
-              <div className="rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 p-2 shadow-xl group">
-                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-2 px-2 pt-1 font-bold">
+              <div className="rounded-2xl overflow-hidden bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border p-2 shadow-kalvium-sm group">
+                <span className="text-[10px] font-sans text-kalvium-muted uppercase tracking-wider block mb-2 px-2 pt-1 font-bold">
                   Original Uploaded Poster Truth
                 </span>
                 {posterPreview && (
                   <img
                     src={posterPreview}
                     alt="Event Poster"
-                    className="w-full h-auto rounded-xl object-cover max-h-[480px] transition-transform duration-500 ease-out-expo group-hover:scale-[1.01]"
+                    className="w-full h-auto rounded-xl object-cover max-h-[480px] transition-transform duration-500 group-hover:scale-[1.01]"
                   />
                 )}
               </div>
 
               {/* Confidence Ratings Card */}
-              <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-lg">
+              <div className="p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border space-y-3 shadow-kalvium-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-bold">
+                  <span className="text-xs font-sans uppercase tracking-wider text-kalvium-muted font-bold">
                     Extraction Certainty Ratings
                   </span>
-                  <span className="text-[11px] font-mono text-indigo-400 font-semibold">AI OCR ENGINE</span>
+                  <span className="text-[11px] font-sans text-kalvium-coral font-bold uppercase tracking-wider">AI OCR ENGINE</span>
                 </div>
 
                 <div className="space-y-2 text-xs">
                   {Object.entries(confidences).map(([field, level]) => (
                     <div
                       key={field}
-                      className="flex items-center justify-between py-1 border-b border-slate-800/60 last:border-none"
+                      className="flex items-center justify-between py-1 border-b border-kalvium-border/40 dark:border-kalvium-dark-border/40 last:border-none"
                     >
-                      <span className="capitalize text-slate-300 font-medium">
+                      <span className="capitalize text-kalvium-text dark:text-kalvium-dark-text font-medium">
                         {field.replace(/([A-Z])/g, " $1")}
                       </span>
                       {renderConfidenceBadge(level)}
@@ -436,8 +430,8 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                   ))}
                 </div>
 
-                <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-400 leading-relaxed flex items-start gap-2">
-                  <Info className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
+                <div className="pt-2 border-t border-kalvium-border dark:border-kalvium-dark-border text-[11px] text-kalvium-muted leading-relaxed flex items-start gap-2">
+                  <Info className="w-3.5 h-3.5 text-kalvium-coral shrink-0 mt-0.5" />
                   <span>
                     Confidence reflects optical clarity only. Campus Manager approval is required for authentic public listing.
                   </span>
@@ -446,14 +440,14 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
             </div>
 
             {/* Right: Editable Structured Form */}
-            <div className="lg:col-span-7 space-y-5 bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl animate-slide-up stagger-1">
-              <h3 className="text-base font-display font-bold text-white border-b border-slate-800 pb-3">
+            <div className="lg:col-span-7 space-y-5 bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border rounded-3xl p-6 shadow-kalvium-sm animate-slide-up stagger-1">
+              <h3 className="text-base font-display font-bold text-kalvium-text dark:text-kalvium-dark-text border-b border-kalvium-border dark:border-kalvium-dark-border pb-3">
                 Event Information
               </h3>
 
               {/* Event Title */}
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider mb-1">
                   Event Title *
                 </label>
                 <input
@@ -461,14 +455,14 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-4 py-2.5 text-sm text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral"
                 />
               </div>
 
               {/* Date & Times Row */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider mb-1">
                     Date (YYYY-MM-DD) *
                   </label>
                   <input
@@ -476,12 +470,12 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                     required
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-3 py-2 text-sm text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider mb-1">
                     Start Time *
                   </label>
                   <input
@@ -490,12 +484,12 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                     placeholder="e.g. 10:00 AM"
                     value={formData.startTime}
                     onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-3 py-2 text-sm text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider mb-1">
                     End Time *
                   </label>
                   <input
@@ -504,7 +498,7 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                     placeholder="e.g. 01:00 PM"
                     value={formData.endTime}
                     onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-3 py-2 text-sm text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral"
                   />
                 </div>
               </div>
@@ -512,7 +506,7 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
               {/* Venue & Category Row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider mb-1">
                     Venue / Campus Location *
                   </label>
                   <input
@@ -521,18 +515,18 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                     placeholder="e.g. Innovation Lab 304"
                     value={formData.venue}
                     onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-4 py-2.5 text-sm text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider mb-1">
                     Category *
                   </label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-3.5 py-2.5 text-sm text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral"
                   >
                     {CATEGORIES.map((cat) => (
                       <option key={cat} value={cat}>
@@ -545,7 +539,7 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
 
               {/* Organizer Name */}
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider mb-1">
                   Organizer / Society Name
                 </label>
                 <input
@@ -553,13 +547,13 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                   value={formData.organizerName}
                   onChange={(e) => setFormData({ ...formData, organizerName: e.target.value })}
                   placeholder="e.g. Robotics & AI Society"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-4 py-2.5 text-sm text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral"
                 />
               </div>
 
               {/* Summary */}
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider mb-1">
                   1-2 Sentence Summary (Card Teaser)
                 </label>
                 <input
@@ -567,13 +561,13 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                   value={formData.summary}
                   onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
                   placeholder="Concise summary for student discovery cards"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-4 py-2 text-sm text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral"
                 />
               </div>
 
               {/* Full Description */}
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider mb-1">
                   Full Description (Strictly based on poster) *
                 </label>
                 <textarea
@@ -581,13 +575,13 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                   required
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 leading-relaxed"
+                  className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-4 py-2.5 text-sm text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral leading-relaxed"
                 />
               </div>
 
               {/* Tags */}
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider mb-1">
                   Tags (Comma separated)
                 </label>
                 <input
@@ -595,14 +589,14 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                   value={formData.tags}
                   onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                   placeholder="AI, Robotics, Hardware, Workshop"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-4 py-2 text-sm text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral"
                 />
               </div>
 
               {/* Registration URL & Contact */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider mb-1">
                     Registration Link (if any)
                   </label>
                   <input
@@ -610,12 +604,12 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                     value={formData.registrationUrl}
                     onChange={(e) => setFormData({ ...formData, registrationUrl: e.target.value })}
                     placeholder="https://... or Not specified"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-4 py-2 text-sm text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider mb-1">
                     Contact Email / Phone
                   </label>
                   <input
@@ -623,21 +617,21 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                     value={formData.contactInfo}
                     onChange={(e) => setFormData({ ...formData, contactInfo: e.target.value })}
                     placeholder="contact@campus.edu or Not specified"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-4 py-2 text-sm text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral"
                   />
                 </div>
               </div>
 
               {/* Submit Button */}
-              <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
-                <span className="text-xs text-slate-400">
-                  Event will be submitted in <span className="font-bold text-amber-400">Pending Verification</span> state.
+              <div className="pt-4 border-t border-kalvium-border dark:border-kalvium-dark-border flex items-center justify-between">
+                <span className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
+                  Event will be submitted in <span className="font-bold text-kalvium-warning">Pending Verification</span> state.
                 </span>
 
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-3 rounded-xl text-sm font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-glow-brand transition-all duration-200 ease-out-expo active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                  className="px-6 py-3 rounded-full text-sm font-bold bg-kalvium-coral hover:bg-kalvium-coral-hover text-white shadow-sm transition-all duration-200 active:scale-95 flex items-center gap-2 disabled:opacity-50"
                 >
                   {submitting ? (
                     <>
@@ -663,20 +657,20 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
 function renderConfidenceBadge(level?: ConfidenceLevel) {
   if (level === "HIGH") {
     return (
-      <span className="text-[11px] font-mono font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded">
+      <span className="text-[11px] font-semibold text-kalvium-success bg-kalvium-success-tint border border-kalvium-success-border px-2.5 py-0.5 rounded-full">
         ✓ High confidence
       </span>
     );
   }
   if (level === "MEDIUM") {
     return (
-      <span className="text-[11px] font-mono font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded">
+      <span className="text-[11px] font-semibold text-kalvium-warning bg-kalvium-warning-tint border border-kalvium-warning-border px-2.5 py-0.5 rounded-full">
         ⚠ Medium confidence
       </span>
     );
   }
   return (
-    <span className="text-[11px] font-mono font-bold text-rose-400 bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 rounded">
+    <span className="text-[11px] font-semibold text-kalvium-coral bg-kalvium-coral-tint border border-kalvium-coral/30 px-2.5 py-0.5 rounded-full">
       ⚠ Low confidence (Check poster)
     </span>
   );

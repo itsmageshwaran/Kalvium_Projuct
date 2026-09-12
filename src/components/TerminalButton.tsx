@@ -21,27 +21,27 @@ export default function TerminalButton({
   disabled = false,
   className = "",
   type = "button",
-  bracketed = true,
+  bracketed = false,
 }: TerminalButtonProps) {
   const sizeStyles = {
-    sm: "text-xs px-3 py-1.5 gap-1.5 tracking-wider",
-    md: "text-xs px-4 py-2.5 gap-2 tracking-wider",
-    lg: "text-sm px-6 py-3.5 gap-2.5 tracking-widest",
+    sm: "text-xs px-3.5 py-1.5 gap-1.5",
+    md: "text-xs px-5 py-2.5 gap-2",
+    lg: "text-sm px-6 py-3 gap-2.5 font-semibold",
   };
 
   const variantStyles = {
     primary:
-      "bg-cyan-500 dark:bg-cyan-electric text-slate-950 border-cyan-400 hover:bg-cyan-400 dark:hover:bg-cyan-400/90 shadow-sm",
+      "bg-kalvium-coral hover:bg-kalvium-coral-hover text-white border-transparent shadow-sm",
     secondary:
-      "bg-slate-100 dark:bg-terminal-850 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-terminal-700 hover:border-slate-400 dark:hover:border-terminal-500 hover:text-slate-950 dark:hover:text-white",
+      "bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-text dark:text-kalvium-dark-text border-kalvium-border dark:border-kalvium-dark-border hover:bg-kalvium-border/30",
     outline:
-      "bg-transparent text-slate-700 dark:text-slate-200 border-slate-300 dark:border-terminal-700 hover:border-cyan-500 dark:hover:border-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-electric",
+      "bg-transparent text-kalvium-text dark:text-kalvium-dark-text border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral hover:text-kalvium-coral",
     danger:
-      "bg-red-500/10 text-red-600 dark:text-coral-red border-red-300 dark:border-coral-red/40 hover:bg-red-600 hover:text-white dark:hover:bg-coral-red dark:hover:text-white",
+      "bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint text-kalvium-coral border-kalvium-coral/30 hover:bg-kalvium-coral hover:text-white",
     success:
-      "bg-emerald-500/10 text-emerald-700 dark:text-phosphor-bright border-emerald-300 dark:border-phosphor-green/40 hover:bg-emerald-600 hover:text-white dark:hover:bg-phosphor-green dark:hover:text-terminal-950",
+      "bg-kalvium-success-tint dark:bg-kalvium-dark-success-tint text-kalvium-success border-kalvium-success-border dark:border-kalvium-dark-success-border hover:bg-kalvium-success hover:text-white",
     ghost:
-      "bg-transparent text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-terminal-850",
+      "bg-transparent text-kalvium-muted dark:text-kalvium-dark-muted border-transparent hover:text-kalvium-text dark:hover:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt",
   };
 
   return (
@@ -49,7 +49,7 @@ export default function TerminalButton({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`font-mono uppercase font-semibold rounded-sm border transition-all duration-150 inline-flex items-center justify-center select-none active:translate-y-0.5 disabled:opacity-50 disabled:pointer-events-none disabled:active:translate-y-0 ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
+      className={`font-sans font-semibold rounded-full border transition-all duration-150 inline-flex items-center justify-center select-none active:scale-95 disabled:opacity-50 disabled:pointer-events-none ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
     >
       {icon && <span className="shrink-0">{icon}</span>}
       {bracketed ? (

@@ -43,63 +43,63 @@ export default function ClashWarningModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-void-950/80 backdrop-blur-md"
+            className="fixed inset-0 bg-kalvium-text/40 dark:bg-black/60 backdrop-blur-sm"
           />
 
           {/* Modal Container */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.94, y: 16 }}
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 16 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
-            className="glass relative w-full max-w-lg overflow-hidden rounded-3xl p-6 sm:p-8 text-white shadow-2xl shadow-black/60 border border-flare-400/30"
+            className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white dark:bg-kalvium-dark-surface p-6 sm:p-8 text-kalvium-text dark:text-kalvium-dark-text shadow-kalvium-lg border border-kalvium-border dark:border-kalvium-dark-border"
           >
             {/* Header */}
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-flare-500/15 text-flare-400 border border-flare-400/20">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-kalvium-warning-tint dark:bg-kalvium-dark-warning-tint text-kalvium-warning border border-kalvium-warning-border dark:border-kalvium-dark-warning-border">
                   <AlertTriangle size={20} />
                 </span>
                 <div>
-                  <span className="text-[10px] font-mono font-bold tracking-widest text-flare-400 uppercase block">
+                  <span className="text-[11px] font-semibold tracking-wider text-kalvium-warning uppercase block">
                     Schedule Conflict Detected
                   </span>
-                  <h3 className="font-display text-xl font-bold text-white tracking-tight">
+                  <h3 className="font-display text-xl font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight">
                     Schedule Clash Warning
                   </h3>
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="text-slate-400 hover:text-white p-1.5 rounded-full hover:bg-white/5 transition"
+                className="text-kalvium-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text p-1.5 rounded-full hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt transition"
                 aria-label="Close"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <p className="mt-4 text-sm text-slate-300 leading-relaxed">
+            <p className="mt-4 text-sm text-kalvium-muted dark:text-kalvium-dark-muted leading-relaxed">
               You are about to save an event that overlaps with an item already on your personal schedule:
             </p>
 
             {/* Overlapping Cards */}
             <div className="mt-5 space-y-3">
               {/* Conflicting Event */}
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-400 block mb-1">
+              <div className="rounded-xl border border-kalvium-border dark:border-kalvium-dark-border bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt p-4">
+                <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-kalvium-muted dark:text-kalvium-dark-muted block mb-1">
                   Already Saved Event
                 </span>
-                <p className="font-display text-sm sm:text-base font-semibold text-white mb-1.5">
+                <p className="font-display text-sm sm:text-base font-semibold text-kalvium-text dark:text-kalvium-dark-text mb-1.5">
                   {conflictingEvent.title}
                 </p>
-                <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
-                  <span className="flex items-center gap-1.5 text-flare-400 font-medium bg-flare-500/10 px-2 py-0.5 rounded-full border border-flare-400/20">
+                <div className="flex items-center gap-3 text-xs text-kalvium-muted dark:text-kalvium-dark-muted flex-wrap">
+                  <span className="flex items-center gap-1.5 text-kalvium-warning font-medium bg-kalvium-warning-tint dark:bg-kalvium-dark-warning-tint px-2.5 py-0.5 rounded-full border border-kalvium-warning-border dark:border-kalvium-dark-warning-border">
                     <Clock size={12} />
                     {conflictingEvent.startTime} – {conflictingEvent.endTime}
                   </span>
                   {conflictingEvent.venue && (
                     <span className="flex items-center gap-1">
-                      <MapPin size={12} className="text-slate-500" />
+                      <MapPin size={12} className="text-kalvium-muted" />
                       {conflictingEvent.venue}
                     </span>
                   )}
@@ -107,21 +107,21 @@ export default function ClashWarningModal({
               </div>
 
               {/* Event Being Saved */}
-              <div className="rounded-2xl border border-signal-500/30 bg-signal-500/10 p-4">
-                <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-signal-400 block mb-1">
+              <div className="rounded-xl border border-kalvium-coral/30 bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint p-4">
+                <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-kalvium-coral block mb-1">
                   Event You Are Saving
                 </span>
-                <p className="font-display text-sm sm:text-base font-semibold text-white mb-1.5">
+                <p className="font-display text-sm sm:text-base font-semibold text-kalvium-text dark:text-kalvium-dark-text mb-1.5">
                   {currentEvent.title}
                 </p>
-                <div className="flex items-center gap-3 text-xs text-slate-300 flex-wrap">
-                  <span className="flex items-center gap-1.5 text-signal-300 font-medium bg-signal-500/20 px-2 py-0.5 rounded-full border border-signal-400/30">
+                <div className="flex items-center gap-3 text-xs text-kalvium-text dark:text-kalvium-dark-text flex-wrap">
+                  <span className="flex items-center gap-1.5 text-white font-medium bg-kalvium-coral px-2.5 py-0.5 rounded-full">
                     <Clock size={12} />
                     {currentEvent.startTime} – {currentEvent.endTime}
                   </span>
                   {currentEvent.venue && (
-                    <span className="flex items-center gap-1 text-slate-400">
-                      <MapPin size={12} className="text-slate-500" />
+                    <span className="flex items-center gap-1 text-kalvium-muted dark:text-kalvium-dark-muted">
+                      <MapPin size={12} className="text-kalvium-muted" />
                       {currentEvent.venue}
                     </span>
                   )}
@@ -129,12 +129,12 @@ export default function ClashWarningModal({
               </div>
 
               {/* Overlap Window Badge */}
-              <div className="flex items-center justify-between rounded-xl border border-flare-400/25 bg-flare-500/10 px-4 py-2.5 text-xs">
-                <span className="flex items-center gap-2 font-medium text-flare-300">
-                  <span className="h-2 w-2 rounded-full bg-flare-400 animate-pulse" />
+              <div className="flex items-center justify-between rounded-xl border border-kalvium-warning-border dark:border-kalvium-dark-warning-border bg-kalvium-warning-tint dark:bg-kalvium-dark-warning-tint px-4 py-2.5 text-xs text-kalvium-warning">
+                <span className="flex items-center gap-2 font-medium">
+                  <span className="h-2 w-2 rounded-full bg-kalvium-warning animate-pulse" />
                   Direct Overlap Window:
                 </span>
-                <span className="font-mono font-bold text-flare-400">
+                <span className="font-sans font-bold">
                   {overlapStr}
                 </span>
               </div>
@@ -144,7 +144,7 @@ export default function ClashWarningModal({
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
                 onClick={onClose}
-                className="rounded-full px-5 py-2.5 text-xs sm:text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition active:scale-95"
+                className="rounded-full border border-kalvium-border dark:border-kalvium-dark-border px-5 py-2.5 text-xs sm:text-sm font-semibold text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt transition active:scale-95"
               >
                 Cancel
               </button>
@@ -153,7 +153,7 @@ export default function ClashWarningModal({
                   onConfirmSave();
                   onClose();
                 }}
-                className="rounded-full bg-flare-500 hover:bg-flare-400 px-5 py-2.5 text-xs sm:text-sm font-bold text-void-950 shadow-lg shadow-flare-500/25 transition active:scale-95"
+                className="rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm transition active:scale-95"
               >
                 Save Anyway
               </button>

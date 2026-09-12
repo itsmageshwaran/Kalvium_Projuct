@@ -122,16 +122,16 @@ export default function EventDetailDrawer({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 overflow-hidden flex justify-end bg-black/75 backdrop-blur-sm animate-fade-in">
+      <div className="fixed inset-0 z-50 overflow-hidden flex justify-end bg-black/40 backdrop-blur-xs animate-fade-in">
         {/* Backdrop click to close */}
         <div className="absolute inset-0" onClick={onClose} />
 
         {/* Slide-over Drawer Panel */}
-        <div className="relative w-full max-w-xl bg-slate-900/98 backdrop-blur-2xl border-l border-slate-800 shadow-2xl h-full flex flex-col z-10 animate-slide-left overflow-y-auto">
+        <div className="relative w-full max-w-xl bg-white dark:bg-kalvium-dark-surface border-l border-kalvium-border dark:border-kalvium-dark-border shadow-2xl h-full flex flex-col z-10 animate-slide-left overflow-y-auto">
           {/* Top Bar */}
-          <div className="sticky top-0 z-20 bg-slate-900/90 backdrop-blur-md px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+          <div className="sticky top-0 z-20 bg-white/95 dark:bg-kalvium-dark-surface/95 backdrop-blur-md px-6 py-4 border-b border-kalvium-border dark:border-kalvium-dark-border flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-slate-800 text-indigo-300 border border-indigo-500/30">
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-text dark:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border">
                 {event.category}
               </span>
               <CampusVerifiedBadge size="sm" />
@@ -139,7 +139,7 @@ export default function EventDetailDrawer({
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all duration-200 active:scale-90"
+              className="p-2 rounded-full text-kalvium-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt transition-colors active:scale-90"
               title="Close (Esc)"
             >
               <X className="w-5 h-5" />
@@ -149,17 +149,17 @@ export default function EventDetailDrawer({
           {/* Drawer Body */}
           <div className="p-6 space-y-6 flex-1">
             {/* Poster Media Box */}
-            <div className="relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-xl group">
+            <div className="relative rounded-2xl overflow-hidden bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border shadow-sm group">
               <img
                 src={event.posterUrl}
                 alt={event.title}
-                className="w-full h-auto object-cover max-h-[380px] transition-transform duration-500 ease-out-expo group-hover:scale-[1.015]"
+                className="w-full h-auto object-cover max-h-[380px] transition-transform duration-500 ease-editorial group-hover:scale-[1.015]"
               />
               {startingSoon && (
                 <div className="absolute top-3 left-3">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-600 text-white flame-glow-badge flex items-center gap-1.5 shadow-lg">
-                    <Flame className="w-3.5 h-3.5 text-amber-200 animate-pulse" />
-                    <span>🔥 Starting Soon</span>
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-kalvium-coral text-white flex items-center gap-1.5 shadow-md">
+                    <Flame className="w-3.5 h-3.5 text-white fill-white" />
+                    <span>Starting soon</span>
                   </span>
                 </div>
               )}
@@ -167,49 +167,49 @@ export default function EventDetailDrawer({
 
             {/* Event Title */}
             <div>
-              <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-tight leading-tight">
+              <h2 className="text-2xl sm:text-3xl font-display font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight leading-tight">
                 {event.title}
               </h2>
               {event.summary && (
-                <p className="text-sm text-slate-300 mt-2 leading-relaxed">
+                <p className="text-sm text-kalvium-muted dark:text-kalvium-dark-muted mt-2 leading-relaxed font-normal">
                   {event.summary}
                 </p>
               )}
             </div>
 
             {/* Core Metadata Grid */}
-            <div className="space-y-3 py-4 border-y border-slate-800 text-xs">
-              <div className="flex items-start gap-3 text-slate-200">
-                <Calendar className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+            <div className="space-y-3 py-4 border-y border-kalvium-border dark:border-kalvium-dark-border text-xs">
+              <div className="flex items-start gap-3 text-kalvium-text dark:text-kalvium-dark-text">
+                <Calendar className="w-4 h-4 text-kalvium-coral shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold text-white">{countdownText}</p>
-                  <p className="text-[11px] text-slate-400 font-mono">Date: {event.date}</p>
+                  <p className="font-semibold text-kalvium-text dark:text-kalvium-dark-text">{countdownText}</p>
+                  <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted">Date: {event.date}</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 text-slate-200">
-                <Clock className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 text-kalvium-text dark:text-kalvium-dark-text">
+                <Clock className="w-4 h-4 text-kalvium-muted shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold text-white">{event.startTime} – {event.endTime}</p>
-                  <p className="text-[11px] text-slate-400">Scheduled campus time</p>
+                  <p className="font-semibold text-kalvium-text dark:text-kalvium-dark-text">{event.startTime} – {event.endTime}</p>
+                  <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted">Scheduled campus time</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 text-slate-200">
-                <MapPin className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 text-kalvium-text dark:text-kalvium-dark-text">
+                <MapPin className="w-4 h-4 text-kalvium-muted shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold text-white">{event.venue}</p>
-                  <p className="text-[11px] text-slate-400">Campus Location</p>
+                  <p className="font-semibold text-kalvium-text dark:text-kalvium-dark-text">{event.venue}</p>
+                  <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted">Campus location</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 text-slate-200">
-                <User className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 text-kalvium-text dark:text-kalvium-dark-text">
+                <User className="w-4 h-4 text-kalvium-muted shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold text-white">
+                  <p className="font-semibold text-kalvium-text dark:text-kalvium-dark-text">
                     {event.organizerName || (event as any).organizer?.name || "Campus Host"}
                   </p>
-                  <p className="text-[11px] text-slate-400">Official Host</p>
+                  <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted">Official host</p>
                 </div>
               </div>
             </div>
@@ -219,15 +219,15 @@ export default function EventDetailDrawer({
               <button
                 onClick={handleSaveClick}
                 disabled={saving}
-                className={`w-full py-3.5 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 ease-out-expo active:scale-[0.98] shadow-lg ${
+                className={`w-full py-3.5 px-5 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] shadow-xs ${
                   isSaved
-                    ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-600/30"
-                    : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-glow-brand"
+                    ? "bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-coral border border-kalvium-coral/30 hover:bg-kalvium-coral-tint"
+                    : "bg-kalvium-coral hover:bg-kalvium-coral-hover text-white shadow-md shadow-kalvium-coral/25"
                 }`}
               >
                 {isSaved ? (
                   <>
-                    <BookmarkCheck className="w-4 h-4 fill-indigo-300" />
+                    <BookmarkCheck className="w-4 h-4 fill-kalvium-coral" />
                     <span>Saved to My Schedule (Click to Remove)</span>
                   </>
                 ) : (
@@ -246,37 +246,37 @@ export default function EventDetailDrawer({
                   href={event.registrationUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-200 font-medium transition-all duration-200 active:scale-[0.99] group text-xs"
+                  className="flex items-center justify-between p-3.5 rounded-2xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral/50 text-kalvium-text dark:text-kalvium-dark-text font-medium transition-all duration-200 active:scale-[0.99] group text-xs"
                 >
                   <span className="flex items-center gap-2">
-                    <ExternalLink className="w-4 h-4 text-indigo-400 group-hover:rotate-6 transition-transform" />
+                    <ExternalLink className="w-4 h-4 text-kalvium-coral" />
                     <span>Official Registration Portal</span>
                   </span>
-                  <span className="text-[10px] text-indigo-400 uppercase font-mono group-hover:translate-x-0.5 transition-transform">
-                    Open Link →
+                  <span className="text-xs text-kalvium-coral font-semibold">
+                    Open link →
                   </span>
                 </a>
               </div>
             )}
 
             {/* Human Verification Stamp Notice */}
-            <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-xs text-slate-300 space-y-1">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-emerald-400 font-bold flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="p-4 rounded-2xl bg-kalvium-success-tint dark:bg-kalvium-dark-success-tint border border-kalvium-success-border dark:border-emerald-900/40 text-xs text-kalvium-text dark:text-kalvium-dark-text space-y-1">
+              <span className="text-xs font-semibold text-kalvium-success flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-kalvium-success" />
                 Human Certified by Campus Leadership
               </span>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
-                Extracted with AI and authenticated against original poster artwork.
+              <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted leading-relaxed">
+                Extracted with AI and authenticated against original poster artwork by the campus manager.
               </p>
             </div>
 
             {/* Full Description */}
             {event.description && (
               <div className="space-y-2 pt-2">
-                <h3 className="text-xs font-mono uppercase tracking-wider text-slate-400 font-bold">
-                  About This Event
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-kalvium-muted dark:text-kalvium-dark-muted">
+                  About this event
                 </h3>
-                <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">
+                <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted leading-relaxed whitespace-pre-line">
                   {event.description}
                 </p>
               </div>
@@ -289,7 +289,7 @@ export default function EventDetailDrawer({
                   {event.tags.split(",").map((t: string) => (
                     <span
                       key={t}
-                      className="px-2.5 py-1 rounded-lg text-xs bg-slate-950 text-slate-400 border border-slate-800 font-mono"
+                      className="px-3 py-1 rounded-full text-xs bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-muted dark:text-kalvium-dark-muted border border-kalvium-border dark:border-kalvium-dark-border font-medium"
                     >
                       #{t.trim()}
                     </span>
@@ -299,10 +299,10 @@ export default function EventDetailDrawer({
             )}
 
             {/* Deep link fallback */}
-            <div className="pt-4 border-t border-slate-800/80 text-center">
+            <div className="pt-4 border-t border-kalvium-border dark:border-kalvium-dark-border text-center">
               <Link
                 href={`/events/${event.id}`}
-                className="text-[11px] font-mono text-slate-500 hover:text-indigo-400 transition-colors"
+                className="text-xs text-kalvium-muted hover:text-kalvium-coral transition-colors font-medium"
               >
                 Open dedicated permalink page ↗
               </Link>
