@@ -7,6 +7,7 @@ import DemoSwitcherBar from "@/components/DemoSwitcherBar";
 import Navbar from "@/components/Navbar";
 import SmoothScroll from "@/components/SmoothScroll";
 import ScrollProgress from "@/components/ScrollProgress";
+import CursorAura from "@/components/CursorAura";
 
 const caveatDisplay = Caveat({
   subsets: ["latin"],
@@ -44,6 +45,7 @@ export default function RootLayout({
         <AuthProvider>
           <ThemeProvider>
             <ScrollProgress />
+            <CursorAura />
             <SmoothScroll>
               <div className="sticky top-0 z-40 w-full">
                 <DemoSwitcherBar />
@@ -73,6 +75,21 @@ export default function RootLayout({
                       ✓ Campus Verified
                     </span>
                   </div>
+                </div>
+
+                {/* Bottom Bar Credit */}
+                <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-kalvium-border/60 dark:border-kalvium-dark-border/60 flex flex-col items-center justify-center gap-2 text-center">
+                  <p className="inline-flex items-center gap-2 text-sm sm:text-base font-medium text-kalvium-text dark:text-kalvium-dark-text">
+                    <span>Built with</span>
+                    <span className="text-kalvium-coral text-base sm:text-lg animate-pulse">♥</span>
+                    <span>by</span>
+                    <span className="font-display font-bold text-xl sm:text-2xl text-kalvium-coral">
+                      Squad 83
+                    </span>
+                  </p>
+                  <p className="text-xs text-kalvium-muted/70 dark:text-kalvium-dark-muted/70">
+                    © 2026 CampusHub. All rights reserved.
+                  </p>
                 </div>
               </footer>
             </SmoothScroll>

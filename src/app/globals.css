@@ -34,6 +34,21 @@ html.dark body {
   color: #FAF6F0;
 }
 
+/* Subtle Campus Dot Grid Texture */
+.bg-campus-dot-grid {
+  background-image: radial-gradient(rgba(17, 19, 24, 0.08) 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+}
+
+html.dark .bg-campus-dot-grid {
+  background-image: radial-gradient(rgba(250, 246, 240, 0.09) 1.2px, transparent 1.2px);
+}
+
+.mask-radial-fade {
+  mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, black 25%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, black 25%, transparent 80%);
+}
+
 /* Kalvium Cards and Surfaces */
 .card-kalvium {
   @apply bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border rounded-2xl sm:rounded-3xl shadow-kalvium transition-all duration-300;

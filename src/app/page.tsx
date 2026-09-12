@@ -51,6 +51,14 @@ export default function LandingPage() {
       {/* Hero Section (Cinematic Scroll-Driven Parallax)                  */}
       {/* ---------------------------------------------------------------- */}
       <section ref={heroRef} className="relative overflow-hidden px-6 pt-6 sm:pt-10 pb-16 sm:px-10">
+        {/* Subtle Campus Dot Grid Texture with Radial Fade */}
+        <div className="absolute inset-0 bg-campus-dot-grid mask-radial-fade pointer-events-none -z-10" />
+
+        {/* Ambient Warm Aurora Glow Orbs */}
+        <div className="absolute top-[-8%] right-[-5%] w-[520px] h-[520px] bg-gradient-to-br from-kalvium-coral/20 via-amber-400/12 to-transparent blur-[120px] rounded-full pointer-events-none -z-10" />
+        <div className="absolute top-[10%] left-[-10%] w-[460px] h-[460px] bg-gradient-to-tr from-amber-200/35 dark:from-kalvium-coral/12 via-rose-200/20 to-transparent blur-[130px] rounded-full pointer-events-none -z-10" />
+        <div className="absolute bottom-[-10%] left-[25%] w-[600px] h-[280px] bg-gradient-to-t from-kalvium-coral/10 via-amber-300/8 to-transparent blur-[130px] rounded-full pointer-events-none -z-10" />
+
         <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 items-center">
           <motion.div style={{ scale: headlineScale, opacity: headlineOpacity, y: headlineY }}>
             <motion.p
@@ -122,7 +130,15 @@ export default function LandingPage() {
                   fill
                   priority
                   sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-contain object-center"
+                  className="object-contain object-center dark:hidden"
+                />
+                <Image
+                  src="/images/imageLight.png"
+                  alt="Illustration of three students looking at a verified campus event notification on a phone."
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-contain object-center hidden dark:block"
                 />
               </div>
             </motion.div>
@@ -130,8 +146,9 @@ export default function LandingPage() {
 
           {/* Dominant Character Illustration & Layered Elements (Desktop) */}
           <motion.div style={{ y: cardsY }} className="relative hidden lg:block h-[500px] xl:h-[560px] w-full">
-            {/* Ambient Radial Spotlight Glow for Dark Mode Contrast */}
-            <div className="absolute inset-0 bg-white/40 dark:bg-white/10 blur-[100px] rounded-full pointer-events-none -z-10" />
+            {/* Ambient Radial Spotlight & Warm Character Glow */}
+            <div className="absolute inset-0 bg-gradient-to-br from-kalvium-coral/15 via-amber-400/10 to-transparent blur-[90px] rounded-full pointer-events-none -z-10" />
+            <div className="absolute inset-0 bg-white/50 dark:bg-white/10 blur-[90px] rounded-full pointer-events-none -z-10" />
 
             {/* Character Illustration (Transparent PNG) */}
             <div className="relative w-full h-full ml-4 xl:ml-8">
@@ -141,7 +158,15 @@ export default function LandingPage() {
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-contain object-right-bottom drop-shadow-sm"
+                className="object-contain object-right-bottom drop-shadow-sm dark:hidden"
+              />
+              <Image
+                src="/images/imageLight.png"
+                alt="Illustration of three students looking at a verified campus event notification on a phone."
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-contain object-right-bottom drop-shadow-sm hidden dark:block"
               />
             </div>
 
