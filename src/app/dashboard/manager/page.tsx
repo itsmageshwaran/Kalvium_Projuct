@@ -860,7 +860,14 @@ export default function CampusManagerVerificationQueue() {
   );
 }
 
-function renderConfidenceBadge(level?: ConfidenceLevel) {
+function renderConfidenceBadge(level?: ConfidenceLevel | string) {
+  if (level === "MANUAL") {
+    return (
+      <span className="text-[10px] font-sans font-bold text-kalvium-coral bg-kalvium-coral-tint border border-kalvium-coral/30 px-2 py-0.5 rounded-full">
+        ✍️ Manual Entry
+      </span>
+    );
+  }
   if (level === "HIGH") {
     return (
       <span className="text-[10px] font-sans font-bold text-kalvium-success bg-kalvium-success-tint border border-kalvium-success-border px-2 py-0.5 rounded-full">

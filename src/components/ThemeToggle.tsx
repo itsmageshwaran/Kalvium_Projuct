@@ -30,14 +30,14 @@ export default function ThemeToggle({ className = "" }: { className?: string }) 
     >
       <div className="relative w-4 h-4">
         <Sun
-          className={`w-4 h-4 absolute inset-0 transition-transform duration-500 ease-cinematic ${
+          className={`w-4 h-4 absolute inset-0 transition-transform duration-500 ease-out ${
             isDark
               ? "rotate-90 scale-0 opacity-0"
               : "rotate-0 scale-100 opacity-100 text-kalvium-coral"
           }`}
         />
         <Moon
-          className={`w-4 h-4 absolute inset-0 transition-transform duration-500 ease-cinematic ${
+          className={`w-4 h-4 absolute inset-0 transition-transform duration-500 ease-out ${
             isDark
               ? "rotate-0 scale-100 opacity-100 text-kalvium-warning"
               : "-rotate-90 scale-0 opacity-0"

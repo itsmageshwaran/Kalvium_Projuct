@@ -30,23 +30,37 @@ export interface ClashResult {
 
 /**
  * Parses time strings in 12-hour or 24-hour formats into minutes from midnight (0 - 1439).
+ * Returns NaN if the time string is invalid or unspecified.
  * Examples:
  *  "10:00 AM" -> 600
  *  "12:00 PM" -> 720
  *  "01:30 PM" -> 810
  *  "14:00"    -> 840
  */
-export function parseTimeToMinutes(timeStr: string): number {
-  if (!timeStr) return 0;
+export function parseTimeToMinutes(timeStr: string | null | undefined): number {
+  if (!timeStr || typeof timeStr !== "string") return NaN;
   const clean = timeStr.trim().toUpperCase();
+  if (
+    clean === "" ||
+    clean === "NOT SPECIFIED" ||
+    clean === "NEEDS VERIFICATION" ||
+    clean === "TBD"
+  ) {
+    return NaN;
+  }
 
   const is12Hour = clean.includes("AM") || clean.includes("PM");
 
   if (is12Hour) {
     const isPM = clean.includes("PM");
-    const parts = clean.replace(/AM|PM/g, "").trim().split(":");
-    let hours = parseInt(parts[0], 10) || 0;
-    const minutes = parseInt(parts[1], 10) || 0;
+    const numPart = clean.replace(/AM|PM/g, "").trim();
+    const parts = numPart.split(":");
+    const hoursRaw = parseInt(parts[0], 10);
+    const minutesRaw = parts.length > 1 ? parseInt(parts[1], 10) : 0;
+
+    if (isNaN(hoursRaw)) return NaN;
+    let hours = hoursRaw;
+    const minutes = isNaN(minutesRaw) ? 0 : minutesRaw;
 
     if (isPM && hours < 12) hours += 12;
     if (!isPM && hours === 12) hours = 0;
@@ -54,17 +68,21 @@ export function parseTimeToMinutes(timeStr: string): number {
     return hours * 60 + minutes;
   } else {
     const parts = clean.split(":");
-    const hours = parseInt(parts[0], 10) || 0;
-    const minutes = parseInt(parts[1], 10) || 0;
-    return hours * 60 + minutes;
+    const hours = parseInt(parts[0], 10);
+    const minutes = parts.length > 1 ? parseInt(parts[1], 10) : 0;
+
+    if (isNaN(hours)) return NaN;
+    return hours * 60 + (isNaN(minutes) ? 0 : minutes);
   }
 }
 
 /**
  * Formats minutes from midnight back to readable 12-hour format ("10:00 AM").
+ * Handles minutes >= 1440 by wrapping around 24 hours.
  */
 export function formatMinutesToTime(minutes: number): string {
-  const normalized = Math.max(0, Math.min(1439, minutes));
+  if (isNaN(minutes)) return "TBD";
+  const normalized = ((Math.floor(minutes) % 1440) + 1440) % 1440;
   const hours = Math.floor(normalized / 60);
   const mins = normalized % 60;
   const period = hours >= 12 ? "PM" : "AM";
@@ -75,6 +93,7 @@ export function formatMinutesToTime(minutes: number): string {
 
 /**
  * Checks if two events clash.
+ * Supports overnight events spanning past midnight.
  */
 export function checkTwoEventsClash(a: TimeSlot, b: TimeSlot): ClashResult {
   // Must be on the exact same date
@@ -82,31 +101,47 @@ export function checkTwoEventsClash(a: TimeSlot, b: TimeSlot): ClashResult {
     return { hasClash: false };
   }
 
-  const startA = parseTimeToMinutes(a.startTime);
-  const endA = parseTimeToMinutes(a.endTime);
+  const rawStartA = parseTimeToMinutes(a.startTime);
+  let rawEndA = parseTimeToMinutes(a.endTime);
+  const rawStartB = parseTimeToMinutes(b.startTime);
+  let rawEndB = parseTimeToMinutes(b.endTime);
 
-  const startB = parseTimeToMinutes(b.startTime);
-  const endB = parseTimeToMinutes(b.endTime);
+  // If any time is unspecified or invalid, cannot confirm a clash
+  if (isNaN(rawStartA) || isNaN(rawEndA) || isNaN(rawStartB) || isNaN(rawEndB)) {
+    return { hasClash: false };
+  }
+
+  // Support overnight events where end time wraps past midnight (e.g. 10:00 PM to 02:00 AM)
+  if (rawEndA <= rawStartA) {
+    rawEndA += 1440;
+  }
+  if (rawEndB <= rawStartB) {
+    rawEndB += 1440;
+  }
 
   // Exact collision formula:
   // startA < endB AND startB < endA
-  const overlaps = startA < endB && startB < endA;
+  const overlaps = rawStartA < rawEndB && rawStartB < rawEndA;
 
   if (!overlaps) {
     return { hasClash: false };
   }
 
   // Calculate the exact overlap window
-  const overlapStart = Math.max(startA, startB);
-  const overlapEnd = Math.min(endA, endB);
-  const duration = overlapEnd - overlapStart;
+  const overlapStart = Math.max(rawStartA, rawStartB);
+  const overlapEnd = Math.min(rawEndA, rawEndB);
+  const duration = Math.max(0, overlapEnd - overlapStart);
+
+  if (duration === 0) {
+    return { hasClash: false };
+  }
 
   return {
     hasClash: true,
     conflictingEvent: b,
     overlap: {
-      startMinutes: overlapStart,
-      endMinutes: overlapEnd,
+      startMinutes: overlapStart % 1440,
+      endMinutes: overlapEnd % 1440,
       formatted: `${formatMinutesToTime(overlapStart)} – ${formatMinutesToTime(overlapEnd)}`,
       durationMinutes: duration,
     },

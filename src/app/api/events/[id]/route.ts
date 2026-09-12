@@ -41,10 +41,11 @@ export async function GET(
       return NextResponse.json({ error: "Event not found." }, { status: 404 });
     }
 
+    const auth = await getAuthUser(req);
+
     // Authorization rule:
     // If not APPROVED, only the event's organizer or a CAMPUS_MANAGER can view it.
     if (event.status !== "APPROVED") {
-      const auth = await getAuthUser(req);
       if (!auth) {
         return NextResponse.json(
           { error: "Event is pending verification and cannot be accessed." },
@@ -61,7 +62,17 @@ export async function GET(
       }
     }
 
-    return NextResponse.json({ success: true, event });
+    // Strip internal moderation data (analyses and approvalHistory) for public callers
+    const isPrivileged = !!(auth && (auth.userId === event.organizerId || auth.role === "CAMPUS_MANAGER"));
+    const sanitizedEvent = isPrivileged
+      ? event
+      : {
+          ...event,
+          analyses: [],
+          approvalHistory: [],
+        };
+
+    return NextResponse.json({ success: true, event: sanitizedEvent });
   } catch (error) {
     console.error("Get event by ID error:", error);
     return NextResponse.json(

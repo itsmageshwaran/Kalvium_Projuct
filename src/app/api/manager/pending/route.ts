@@ -9,16 +9,24 @@ export async function GET(req: NextRequest) {
     const authResult = await requireAuth(req, ["CAMPUS_MANAGER"]);
     if ("errorResponse" in authResult) return authResult.errorResponse;
 
-    // Get all events counts
-    const allEvents = await prisma.event.findMany({
-      select: { id: true, status: true },
+    // Compute event counts using database aggregation instead of full table scan
+    const statusGroups = await prisma.event.groupBy({
+      by: ["status"],
+      _count: { _all: true },
     });
 
+    const statusCounts: Record<string, number> = {};
+    let total = 0;
+    for (const group of statusGroups) {
+      statusCounts[group.status] = group._count._all;
+      total += group._count._all;
+    }
+
     const stats = {
-      pending: allEvents.filter((e) => e.status === "PENDING").length,
-      approved: allEvents.filter((e) => e.status === "APPROVED").length,
-      declined: allEvents.filter((e) => e.status === "DECLINED").length,
-      total: allEvents.length,
+      pending: statusCounts["PENDING"] || 0,
+      approved: statusCounts["APPROVED"] || 0,
+      declined: statusCounts["DECLINED"] || 0,
+      total,
     };
 
     // Get pending events for review

@@ -1,14 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { hashPassword, signToken } from "@/lib/auth";
+import { hashPassword, signToken, setAuthCookie } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
     const { name, email, password, role } = await req.json();
 
-    if (!name || !email || !password) {
+    if (!name || typeof name !== "string" || name.trim().length === 0) {
       return NextResponse.json(
-        { error: "Name, email, and password are required." },
+        { error: "Full name is required." },
+        { status: 400 }
+      );
+    }
+
+    if (!email || typeof email !== "string") {
+      return NextResponse.json(
+        { error: "Email address is required." },
+        { status: 400 }
+      );
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      return NextResponse.json(
+        { error: "Please provide a valid email address." },
+        { status: 400 }
+      );
+    }
+
+    if (!password || typeof password !== "string" || password.length < 6) {
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters long." },
         { status: 400 }
       );
     }
@@ -16,7 +39,6 @@ export async function POST(req: NextRequest) {
     // Role protection: CAMPUS_MANAGER cannot be self-registered
     const normalizedRole = role === "ORGANIZER" ? "ORGANIZER" : "STUDENT";
 
-    const cleanEmail = email.trim().toLowerCase();
     const existing = await prisma.user.findUnique({
       where: { email: cleanEmail },
     });
@@ -58,13 +80,7 @@ export async function POST(req: NextRequest) {
       token,
     });
 
-    response.cookies.set("campus_auth_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60,
-      path: "/",
-    });
+    setAuthCookie(response, token);
 
     return response;
   } catch (error) {

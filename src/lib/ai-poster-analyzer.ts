@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { prisma } from "./prisma";
+import { parseTimeToMinutes } from "./clash";
 
 export type ConfidenceLevel = "HIGH" | "MEDIUM" | "LOW";
 
@@ -201,7 +202,9 @@ export async function detectDuplicateEvent(
   venue: string
 ): Promise<DuplicateCheckResult> {
   try {
-    const cleanTitle = title.trim().toLowerCase();
+    const normTargetTitle = normalizeForComparison(title);
+    const targetStartMin = parseTimeToMinutes(startTime);
+
     const existingEvents = await prisma.event.findMany({
       where: {
         date: date,
@@ -218,22 +221,40 @@ export async function detectDuplicateEvent(
     });
 
     for (const event of existingEvents) {
-      const existingTitle = event.title.toLowerCase();
-      const sameVenue = venue && event.venue && venue.toLowerCase().includes(event.venue.toLowerCase());
+      const normExistingTitle = normalizeForComparison(event.title);
+      const sameVenue =
+        venue &&
+        event.venue &&
+        venue.trim() !== "Not specified" &&
+        (venue.toLowerCase().includes(event.venue.toLowerCase()) ||
+          event.venue.toLowerCase().includes(venue.toLowerCase()));
+
+      const exactTitleMatch = normTargetTitle === normExistingTitle;
+      const isSubstantialSubstring =
+        (normTargetTitle.length >= 15 && normExistingTitle.includes(normTargetTitle)) ||
+        (normExistingTitle.length >= 15 && normTargetTitle.includes(normExistingTitle));
+      const titleSimilarity = calculateTitleSimilarity(title, event.title);
+
       const similarTitle =
-        cleanTitle.includes(existingTitle) ||
-        existingTitle.includes(cleanTitle) ||
-        calculateTitleSimilarity(cleanTitle, existingTitle) > 0.6;
+        exactTitleMatch ||
+        isSubstantialSubstring ||
+        titleSimilarity >= 0.75;
 
       if (similarTitle && event.date === date) {
         return {
           hasPotentialDuplicate: true,
           matchedEvent: event,
-          reason: `Found an existing event '${event.title}' on the same date (${date}) with a matching title.`,
+          reason: `Found an existing event '${event.title}' on the same date (${date}) with a matching or highly similar title.`,
         };
       }
 
-      if (sameVenue && event.date === date && event.startTime === startTime) {
+      const existingStartMin = parseTimeToMinutes(event.startTime);
+      const timesMatch =
+        !isNaN(targetStartMin) &&
+        !isNaN(existingStartMin) &&
+        targetStartMin === existingStartMin;
+
+      if (sameVenue && event.date === date && timesMatch) {
         return {
           hasPotentialDuplicate: true,
           matchedEvent: event,
@@ -249,9 +270,17 @@ export async function detectDuplicateEvent(
   }
 }
 
+function normalizeForComparison(str: string): string {
+  return str.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+}
+
 function calculateTitleSimilarity(str1: string, str2: string): number {
-  const words1 = new Set(str1.split(/\s+/).filter((w) => w.length > 2));
-  const words2 = new Set(str2.split(/\s+/).filter((w) => w.length > 2));
+  const norm1 = normalizeForComparison(str1);
+  const norm2 = normalizeForComparison(str2);
+  if (norm1 === norm2) return 1.0;
+
+  const words1 = new Set(norm1.split(" ").filter((w) => w.length > 2));
+  const words2 = new Set(norm2.split(" ").filter((w) => w.length > 2));
   if (words1.size === 0 || words2.size === 0) return 0;
 
   let intersection = 0;

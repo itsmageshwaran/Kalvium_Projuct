@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { parseTimeToMinutes } from "@/lib/clash";
+import { formatLocalDate } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -13,17 +14,17 @@ export async function GET(req: NextRequest) {
     const dateFilter = searchParams.get("dateFilter")?.trim() || ""; // "TODAY" | "TOMORROW" | "THIS_WEEK" | "UPCOMING"
     const sortBy = searchParams.get("sortBy") || "soonest"; // "soonest" | "latest" | "recently_added"
 
-    // Reference date for demo consistency
+    // Reference date in local campus time
     const now = new Date();
-    const todayStr = now.toISOString().split("T")[0];
+    const todayStr = formatLocalDate(now);
 
     const tomorrow = new Date(now);
     tomorrow.setDate(now.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split("T")[0];
+    const tomorrowStr = formatLocalDate(tomorrow);
 
     const nextWeek = new Date(now);
     nextWeek.setDate(now.getDate() + 7);
-    const nextWeekStr = nextWeek.toISOString().split("T")[0];
+    const nextWeekStr = formatLocalDate(nextWeek);
 
     // Build Prisma query condition
     const where: any = {
@@ -51,6 +52,24 @@ export async function GET(req: NextRequest) {
       where.date = {
         gte: todayStr,
       };
+    }
+
+    const pageParam = parseInt(searchParams.get("page") || "", 10);
+    const limitParam = parseInt(searchParams.get("limit") || "", 10);
+    const hasPagination = !isNaN(limitParam) && limitParam > 0;
+    const page = !isNaN(pageParam) && pageParam > 0 ? pageParam : 1;
+    const limit = hasPagination ? Math.min(100, Math.max(1, limitParam)) : 100;
+
+    // Push text search down to SQL if query parameter exists
+    if (query) {
+      where.OR = [
+        { title: { contains: query } },
+        { organizerName: { contains: query } },
+        { venue: { contains: query } },
+        { category: { contains: query } },
+        { summary: { contains: query } },
+        { tags: { contains: query } },
+      ];
     }
 
     // Fetch matching approved events
@@ -81,7 +100,7 @@ export async function GET(req: NextRequest) {
           : { date: "asc" },
     });
 
-    // In-memory text search filter across title, organizerName, venue, category, summary
+    // Secondary in-memory search for organizer email/name matches if needed
     if (query) {
       events = events.filter((e) => {
         return (
@@ -101,14 +120,26 @@ export async function GET(req: NextRequest) {
         if (a.date !== b.date) {
           return a.date.localeCompare(b.date);
         }
-        return parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime);
+        const minA = parseTimeToMinutes(a.startTime);
+        const minB = parseTimeToMinutes(b.startTime);
+        const safeA = isNaN(minA) ? 9999 : minA;
+        const safeB = isNaN(minB) ? 9999 : minB;
+        return safeA - safeB;
       });
     }
 
+    const totalCount = events.length;
+    const paginatedEvents = hasPagination
+      ? events.slice((page - 1) * limit, page * limit)
+      : events;
+
     return NextResponse.json({
       success: true,
-      count: events.length,
-      events,
+      count: paginatedEvents.length,
+      totalCount,
+      page: hasPagination ? page : 1,
+      totalPages: hasPagination ? Math.ceil(totalCount / limit) : 1,
+      events: paginatedEvents,
     });
   } catch (error) {
     console.error("Public events query error:", error);

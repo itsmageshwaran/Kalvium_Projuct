@@ -24,19 +24,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Target event not found." }, { status: 404 });
     }
 
-    // Fetch all currently saved events for this user
-    const savedRecords = await prisma.savedEvent.findMany({
-      where: { userId: auth.userId },
+    // Check if target event is already saved
+    const existingSave = await prisma.savedEvent.findUnique({
+      where: {
+        userId_eventId: {
+          userId: auth.userId,
+          eventId,
+        },
+      },
+    });
+    const isAlreadySaved = !!existingSave;
+
+    // Fetch only saved events on the exact same date for this user
+    const sameDateSaved = await prisma.savedEvent.findMany({
+      where: {
+        userId: auth.userId,
+        event: {
+          date: targetEvent.date,
+        },
+      },
       include: {
         event: true,
       },
     });
 
-    // Check if target event is already saved
-    const isAlreadySaved = savedRecords.some((r) => r.eventId === eventId);
-
-    // Look for clashes among existing saved events
-    for (const record of savedRecords) {
+    // Look for clashes among existing saved events on this date
+    for (const record of sameDateSaved) {
       if (record.eventId === eventId) continue;
       const existing = record.event;
       const clash = checkTwoEventsClash(targetEvent, existing);
@@ -72,6 +85,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Check clash error:", error);
-    return NextResponse.json({ hasClash: false });
+    return NextResponse.json(
+      { error: "Failed to evaluate schedule conflicts. Please try again." },
+      { status: 500 }
+    );
   }
 }

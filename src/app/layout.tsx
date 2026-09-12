@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter } from "next/font/google";
+import { Caveat, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -8,16 +8,16 @@ import Navbar from "@/components/Navbar";
 import SmoothScroll from "@/components/SmoothScroll";
 import ScrollProgress from "@/components/ScrollProgress";
 
-const display = Space_Grotesk({
+const caveatDisplay = Caveat({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
   variable: "--font-display",
+  display: "swap",
 });
 
-const body = Inter({
+const jakartaBody = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
   variable: "--font-body",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -32,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`light ${display.variable} ${body.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`light ${caveatDisplay.variable} ${jakartaBody.variable}`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{

@@ -98,7 +98,11 @@ export async function GET(req: NextRequest) {
     // Sort chronologically by date and startTime
     enrichedEvents.sort((a, b) => {
       if (a.date !== b.date) return a.date.localeCompare(b.date);
-      return parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime);
+      const minA = parseTimeToMinutes(a.startTime);
+      const minB = parseTimeToMinutes(b.startTime);
+      const safeA = isNaN(minA) ? 9999 : minA;
+      const safeB = isNaN(minB) ? 9999 : minB;
+      return safeA - safeB;
     });
 
     // Grouping for "My Schedule"
@@ -106,6 +110,7 @@ export async function GET(req: NextRequest) {
     const todayEvents = enrichedEvents.filter((e) => e.dateCategory === "TODAY");
     const tomorrowEvents = enrichedEvents.filter((e) => e.dateCategory === "TOMORROW");
     const upcomingEvents = enrichedEvents.filter((e) => e.dateCategory === "THIS_WEEK" || e.dateCategory === "UPCOMING");
+    const pastEvents = enrichedEvents.filter((e) => e.dateCategory === "PAST");
 
     return NextResponse.json({
       success: true,
@@ -118,6 +123,7 @@ export async function GET(req: NextRequest) {
         today: todayEvents,
         tomorrow: tomorrowEvents,
         upcoming: upcomingEvents,
+        past: pastEvents,
       },
     });
   } catch (error) {

@@ -59,6 +59,8 @@ model Event {
   @@index([date])
   @@index([category])
   @@index([organizerId])
+  @@index([status, date])
+  @@index([status, category])
 }
 
 model SavedEvent {
@@ -84,6 +86,7 @@ model EventAnalysis {
   analyzedAt         DateTime @default(now())
 
   @@index([eventId])
+  @@index([analyzedAt])
 }
 
 model ApprovalHistory {
@@ -99,4 +102,5 @@ model ApprovalHistory {
 
   @@index([eventId])
   @@index([managerId])
+  @@index([timestamp])
 }

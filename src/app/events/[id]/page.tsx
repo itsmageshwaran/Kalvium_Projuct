@@ -305,17 +305,20 @@ export default function EventDetailPage() {
               </div>
             )}
 
-            {event.registrationUrl && (
-              <a
-                href={event.registrationUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 font-semibold text-kalvium-coral hover:underline"
-              >
-                <span>External Registration</span>
-                <ExternalLink size={14} />
-              </a>
-            )}
+            {event.registrationUrl &&
+              event.registrationUrl !== "Not specified" &&
+              event.registrationUrl !== "Needs verification" &&
+              (event.registrationUrl.startsWith("http://") || event.registrationUrl.startsWith("https://")) && (
+                <a
+                  href={event.registrationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 font-semibold text-kalvium-coral hover:underline"
+                >
+                  <span>External Registration</span>
+                  <ExternalLink size={14} />
+                </a>
+              )}
           </div>
         </div>
       </motion.div>

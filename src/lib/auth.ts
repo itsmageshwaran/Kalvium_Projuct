@@ -3,7 +3,57 @@ import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "./prisma";
 
-const JWT_SECRET = process.env.JWT_SECRET || "campus_event_hub_secure_key_2026_secret";
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("FATAL: JWT_SECRET environment variable must be configured in production.");
+    }
+    return "campus_event_hub_secure_key_2026_secret";
+  }
+  return secret;
+}
+
+const JWT_SECRET = getJwtSecret();
+
+/**
+ * Validates whether a URL is a safe HTTP/HTTPS URL or allowed internal path.
+ * Disallows javascript:, data:text/html, vbscript:, etc.
+ */
+export function isValidSafeUrl(urlStr: string | null | undefined): boolean {
+  if (!urlStr || typeof urlStr !== "string") return false;
+  const trimmed = urlStr.trim();
+  if (trimmed === "" || trimmed === "Not specified" || trimmed === "Needs verification") return true;
+
+  const lower = trimmed.toLowerCase();
+  if (
+    lower.startsWith("javascript:") ||
+    lower.startsWith("data:text") ||
+    lower.startsWith("vbscript:")
+  ) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    // Allow root-relative paths e.g. /posters/...
+    return trimmed.startsWith("/");
+  }
+}
+
+/**
+ * Returns a sanitized URL or a safe fallback if the input is dangerous or invalid.
+ */
+export function sanitizeUrl(urlStr: string | null | undefined, fallback: string = "Not specified"): string {
+  if (!urlStr || typeof urlStr !== "string") return fallback;
+  const trimmed = urlStr.trim();
+  if (!isValidSafeUrl(trimmed)) {
+    return fallback;
+  }
+  return trimmed;
+}
 
 export interface TokenPayload {
   userId: string;
@@ -32,6 +82,29 @@ export async function comparePassword(plain: string, hash: string): Promise<bool
   return bcrypt.compare(plain, hash);
 }
 
+export const AUTH_COOKIE_NAME = "campus_auth_token";
+
+export function setAuthCookie(res: NextResponse, token: string): void {
+  res.cookies.set(AUTH_COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60,
+    path: "/",
+  });
+}
+
+export function clearAuthCookie(res: NextResponse): void {
+  res.cookies.set(AUTH_COOKIE_NAME, "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 0,
+    expires: new Date(0),
+    path: "/",
+  });
+}
+
 /**
  * Extracts the authenticated user payload from the incoming NextRequest.
  * Checks Bearer Authorization header or the campus_auth_token HTTP cookie.
@@ -43,7 +116,7 @@ export async function getAuthUser(req: NextRequest): Promise<TokenPayload | null
   if (authHeader && authHeader.startsWith("Bearer ")) {
     token = authHeader.split(" ")[1];
   } else {
-    const cookie = req.cookies.get("campus_auth_token");
+    const cookie = req.cookies.get(AUTH_COOKIE_NAME);
     if (cookie) token = cookie.value;
   }
 

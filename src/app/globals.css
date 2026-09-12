@@ -2,10 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --font-display: "Space Grotesk", system-ui, sans-serif;
-  --font-body: "Inter", system-ui, sans-serif;
-}
+
 
 html {
   scroll-behavior: smooth;
@@ -14,9 +11,16 @@ html {
 body {
   @apply font-body antialiased;
   min-height: 100vh;
+  letter-spacing: -0.01em;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   overflow-x: hidden;
   transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Editorial Typography Refinements */
+h1.font-display, h2.font-display, h3.font-display, h4.font-display, .font-display {
+  letter-spacing: -0.025em;
+  text-rendering: optimizeLegibility;
 }
 
 html.light body,

@@ -23,6 +23,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (imageData && typeof imageData === "string" && imageData.length > 8 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "Image size exceeds 6MB limit. Please upload a smaller image file." },
+        { status: 413 }
+      );
+    }
+
+    if (posterUrl && typeof posterUrl === "string" && posterUrl.length > 8 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "Poster URL payload exceeds size limit." },
+        { status: 413 }
+      );
+    }
+
     // Run AI poster analysis
     const extractedData = await analyzeEventPoster(
       imageData || posterUrl || "",

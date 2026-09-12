@@ -1,37 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { signToken, DEMO_ACCOUNTS } from "@/lib/auth";
+import { signToken, hashPassword, setAuthCookie, DEMO_ACCOUNTS } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === "false" || process.env.DEMO_MODE === "false") {
+      return NextResponse.json(
+        { error: "Demo login is disabled in this environment." },
+        { status: 403 }
+      );
+    }
+
     const { role } = await req.json();
 
     if (!role || !["STUDENT", "ORGANIZER", "CAMPUS_MANAGER"].includes(role)) {
       return NextResponse.json(
-        { error: "Invalid demo role requested." },
+        { error: "Invalid role specified for demo login." },
         { status: 400 }
       );
     }
 
     const demoConfig = DEMO_ACCOUNTS[role as keyof typeof DEMO_ACCOUNTS];
 
-    // Find the real seeded user in the database
-    let user = await prisma.user.findUnique({
+    // Seed or get the demo account with a real bcrypt-hashed password
+    const secureDemoPasswordHash = await hashPassword("demo12345");
+    const user = await prisma.user.upsert({
       where: { email: demoConfig.email },
+      update: {
+        role: demoConfig.role,
+        name: demoConfig.name,
+        avatar: demoConfig.avatar,
+      },
+      create: {
+        email: demoConfig.email,
+        name: demoConfig.name,
+        role: demoConfig.role,
+        password: secureDemoPasswordHash,
+        avatar: demoConfig.avatar,
+      },
     });
-
-    if (!user) {
-      // Create user if not present
-      user = await prisma.user.create({
-        data: {
-          email: demoConfig.email,
-          name: demoConfig.name,
-          password: "demo_password_hash",
-          role: demoConfig.role,
-          avatar: demoConfig.avatar,
-        },
-      });
-    }
 
     const token = signToken({
       userId: user.id,
@@ -52,14 +59,7 @@ export async function POST(req: NextRequest) {
       token,
     });
 
-    // Set secure HTTP-only cookie
-    response.cookies.set("campus_auth_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60,
-      path: "/",
-    });
+    setAuthCookie(response, token);
 
     return response;
   } catch (error) {

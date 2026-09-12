@@ -33,6 +33,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Event not found." }, { status: 404 });
     }
 
+    // State Machine Guard: Only events with PENDING status can be verified/declined
+    if (event.status !== "PENDING") {
+      return NextResponse.json(
+        {
+          error: `Event cannot be processed because its status is already '${event.status}'. Only PENDING events can be reviewed.`,
+        },
+        { status: 400 }
+      );
+    }
+
     const now = new Date();
 
     if (action === "APPROVE") {
@@ -57,21 +67,21 @@ export async function POST(req: NextRequest) {
         if (corrections.summary) updateData.summary = corrections.summary.trim();
       }
 
-      const updated = await prisma.event.update({
-        where: { id: eventId },
-        data: updateData,
-      });
-
-      // Write to ApprovalHistory
-      await prisma.approvalHistory.create({
-        data: {
-          eventId,
-          managerId: user.userId,
-          action: "APPROVED",
-          notes: customNotes || "Verified against original event poster.",
-          timestamp: now,
-        },
-      });
+      const [updated] = await prisma.$transaction([
+        prisma.event.update({
+          where: { id: eventId },
+          data: updateData,
+        }),
+        prisma.approvalHistory.create({
+          data: {
+            eventId,
+            managerId: user.userId,
+            action: "APPROVED",
+            notes: customNotes || "Verified against original event poster.",
+            timestamp: now,
+          },
+        }),
+      ]);
 
       return NextResponse.json({
         success: true,
@@ -82,28 +92,28 @@ export async function POST(req: NextRequest) {
       // DECLINE action
       const declineReasonText = reason || "Information doesn't match poster";
 
-      const updated = await prisma.event.update({
-        where: { id: eventId },
-        data: {
-          status: "DECLINED",
-          declineReason: declineReasonText,
-          declineCustomNotes: customNotes || "Event information could not be verified.",
-          verifiedById: user.userId,
-          verifiedAt: now,
-        },
-      });
-
-      // Write to ApprovalHistory
-      await prisma.approvalHistory.create({
-        data: {
-          eventId,
-          managerId: user.userId,
-          action: "DECLINED",
-          reason: declineReasonText,
-          notes: customNotes || "Declined by Campus Manager",
-          timestamp: now,
-        },
-      });
+      const [updated] = await prisma.$transaction([
+        prisma.event.update({
+          where: { id: eventId },
+          data: {
+            status: "DECLINED",
+            declineReason: declineReasonText,
+            declineCustomNotes: customNotes || "Event information could not be verified.",
+            verifiedById: user.userId,
+            verifiedAt: now,
+          },
+        }),
+        prisma.approvalHistory.create({
+          data: {
+            eventId,
+            managerId: user.userId,
+            action: "DECLINED",
+            reason: declineReasonText,
+            notes: customNotes || "Declined by Campus Manager",
+            timestamp: now,
+          },
+        }),
+      ]);
 
       return NextResponse.json({
         success: true,

@@ -1,13 +1,24 @@
 import { parseTimeToMinutes } from "./clash";
 
 /**
+ * Formats a Date instance as YYYY-MM-DD in local time, avoiding UTC date shifts.
+ */
+export function formatLocalDate(d: Date = new Date()): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Builds a valid JS Date object from an event's date (YYYY-MM-DD) and startTime ("10:00 AM" or "10:00").
  */
 export function getEventDateTime(dateStr: string, timeStr: string): Date {
   const [year, month, day] = dateStr.split("-").map(Number);
   const minutes = parseTimeToMinutes(timeStr);
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
+  const validMinutes = isNaN(minutes) ? 0 : minutes;
+  const hours = Math.floor(validMinutes / 60);
+  const mins = validMinutes % 60;
   return new Date(year, month - 1, day, hours, mins, 0);
 }
 

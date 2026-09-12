@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, sanitizeUrl } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,16 +36,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Default fallback poster if none provided
-    const resolvedPoster =
-      posterUrl && posterUrl.trim().length > 0
-        ? posterUrl
-        : "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80";
+    // Check payload size on posterUrl to prevent database bloat
+    if (posterUrl && typeof posterUrl === "string" && posterUrl.length > 8 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "Poster image is too large (maximum 6MB). Please upload a smaller image." },
+        { status: 413 }
+      );
+    }
 
+    // Default fallback poster if none provided, and sanitize against dangerous protocols
+    const defaultPoster = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80";
+    const resolvedPoster = sanitizeUrl(posterUrl, defaultPoster);
+
+    const safeDescription = (description || "").trim();
     const resolvedSummary =
       summary && summary.trim().length > 0
         ? summary.trim()
-        : description.substring(0, 150) + "...";
+        : safeDescription.substring(0, 150) + "...";
 
     const formattedTags = Array.isArray(tags)
       ? tags.join(", ")
@@ -53,11 +60,23 @@ export async function POST(req: NextRequest) {
       ? tags
       : "Campus Event";
 
-    // Create event with PENDING status (organizers cannot publish directly!)
+    const safeRegistrationUrl = sanitizeUrl(registrationUrl, "Not specified");
+
+    // Clean audit snapshot so multi-megabyte base64 strings aren't duplicated into SQLite text columns
+    const auditSnapshot = { ...body };
+    if (
+      auditSnapshot.posterUrl &&
+      typeof auditSnapshot.posterUrl === "string" &&
+      auditSnapshot.posterUrl.startsWith("data:")
+    ) {
+      auditSnapshot.posterUrl = `[base64-image-data-length-${auditSnapshot.posterUrl.length}]`;
+    }
+
+    // Atomically create event and analysis record
     const event = await prisma.event.create({
       data: {
         title: title.trim(),
-        description: description.trim(),
+        description: safeDescription,
         summary: resolvedSummary,
         date: date.trim(),
         startTime: startTime.trim(),
@@ -67,20 +86,17 @@ export async function POST(req: NextRequest) {
         posterUrl: resolvedPoster,
         category: category.trim(),
         tags: formattedTags,
-        registrationUrl: registrationUrl ? registrationUrl.trim() : "Not specified",
+        registrationUrl: safeRegistrationUrl,
         contactInfo: contactInfo ? contactInfo.trim() : user.email,
         status: "PENDING", // Enforce pending status
         organizerId: user.userId,
-      },
-    });
-
-    // Save event analysis snapshot for manager audit
-    await prisma.eventAnalysis.create({
-      data: {
-        eventId: event.id,
-        rawExtractedData: JSON.stringify(body),
-        confidenceData: JSON.stringify(confidences || {}),
-        duplicatesDetected: duplicatesDetected ? JSON.stringify(duplicatesDetected) : null,
+        analyses: {
+          create: {
+            rawExtractedData: JSON.stringify(auditSnapshot),
+            confidenceData: JSON.stringify(confidences || {}),
+            duplicatesDetected: duplicatesDetected ? JSON.stringify(duplicatesDetected) : null,
+          },
+        },
       },
     });
 

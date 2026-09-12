@@ -9,6 +9,7 @@ import {
   XCircle,
   Sparkles,
   RefreshCw,
+  PenTool,
 } from "lucide-react";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 import CreateEventStudio from "@/components/CreateEventStudio";
@@ -18,7 +19,7 @@ export default function OrganizerDashboardPage() {
   const { user } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"SUBMISSIONS" | "CREATE">("SUBMISSIONS");
+  const [activeTab, setActiveTab] = useState<"SUBMISSIONS" | "CREATE_AI" | "CREATE_MANUAL">("SUBMISSIONS");
 
   const fetchOrganizerData = async () => {
     if (!user) return;
@@ -74,58 +75,88 @@ export default function OrganizerDashboardPage() {
             {user.name}
           </h1>
           <p className="text-xs sm:text-sm text-kalvium-muted dark:text-kalvium-dark-muted mt-1">
-            Submit event posters for AI extraction, monitor submissions, and track Campus Manager verification.
+            Submit event flyers for AI extraction or create events manually, monitor review queues, and track campus verification.
           </p>
         </div>
 
-        <button
-          onClick={() => setActiveTab(activeTab === "CREATE" ? "SUBMISSIONS" : "CREATE")}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm transition shrink-0 active:scale-95"
-        >
-          {activeTab === "CREATE" ? (
-            <span>View Submissions</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          {activeTab !== "SUBMISSIONS" ? (
+            <button
+              onClick={() => setActiveTab("SUBMISSIONS")}
+              className="px-4 py-2.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border bg-white dark:bg-kalvium-dark-surface text-kalvium-text dark:text-kalvium-dark-text hover:border-kalvium-coral text-xs font-bold shadow-sm transition shrink-0 active:scale-95"
+            >
+              ← Back to Submissions
+            </button>
           ) : (
             <>
-              <Sparkles className="w-4 h-4 text-amber-100" />
-              <span>+ Create with AI</span>
+              <button
+                onClick={() => setActiveTab("CREATE_AI")}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm transition shrink-0 active:scale-95"
+              >
+                <Sparkles className="w-4 h-4 text-amber-100" />
+                <span>+ Create with AI</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("CREATE_MANUAL")}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border bg-white dark:bg-kalvium-dark-surface text-kalvium-text dark:text-kalvium-dark-text hover:border-kalvium-coral hover:text-kalvium-coral text-xs font-bold shadow-sm transition shrink-0 active:scale-95"
+              >
+                <PenTool className="w-3.5 h-3.5 text-kalvium-coral" />
+                <span>+ Add Manually</span>
+              </button>
             </>
           )}
-        </button>
+        </div>
       </div>
 
-      {/* 2 Primary Task-Focused Workspace Tabs */}
-      <div className="flex items-center gap-2 border-b border-kalvium-border dark:border-kalvium-dark-border pb-4 mb-8">
+      {/* 3 Primary Task-Focused Workspace Tabs */}
+      <div className="flex items-center gap-2 border-b border-kalvium-border dark:border-kalvium-dark-border pb-4 mb-8 overflow-x-auto">
         <button
           onClick={() => setActiveTab("SUBMISSIONS")}
-          className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-2 shrink-0 ${
             activeTab === "SUBMISSIONS"
               ? "bg-kalvium-coral text-white shadow-sm"
               : "bg-white dark:bg-kalvium-dark-surface text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
           }`}
         >
           <span>Your Submissions</span>
-          <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-sans font-bold">
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-bold ${
+            activeTab === "SUBMISSIONS" ? "bg-white/20 text-white" : "bg-kalvium-surface-alt text-kalvium-muted"
+          }`}>
             {events.length}
           </span>
         </button>
 
         <button
-          onClick={() => setActiveTab("CREATE")}
-          className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-2 ${
-            activeTab === "CREATE"
+          onClick={() => setActiveTab("CREATE_AI")}
+          className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-2 shrink-0 ${
+            activeTab === "CREATE_AI"
               ? "bg-kalvium-coral text-white shadow-sm"
               : "bg-white dark:bg-kalvium-dark-surface text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
           }`}
         >
           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span>Create with AI</span>
+          <span>Create with AI Poster</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("CREATE_MANUAL")}
+          className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-2 shrink-0 ${
+            activeTab === "CREATE_MANUAL"
+              ? "bg-kalvium-coral text-white shadow-sm"
+              : "bg-white dark:bg-kalvium-dark-surface text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
+          }`}
+        >
+          <PenTool className="w-3.5 h-3.5 text-kalvium-coral" />
+          <span>Manual Event Entry</span>
         </button>
       </div>
 
-      {/* Tab 1: Create with AI In-Place */}
-      {activeTab === "CREATE" ? (
+      {/* View 1: Create with AI or Manual */}
+      {activeTab === "CREATE_AI" || activeTab === "CREATE_MANUAL" ? (
         <div className="animate-fade-in">
           <CreateEventStudio
+            initialMode={activeTab === "CREATE_MANUAL" ? "MANUAL" : "AI"}
             onComplete={() => {
               setActiveTab("SUBMISSIONS");
               fetchOrganizerData();
@@ -183,13 +214,22 @@ export default function OrganizerDashboardPage() {
               <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mb-6">
                 Upload your promotional poster and let the AI analyzer extract structured event details.
               </p>
-              <button
-                onClick={() => setActiveTab("CREATE")}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm active:scale-95 transition"
-              >
-                <PlusCircle className="w-4 h-4" />
-                <span>Post Your First Event with AI</span>
-              </button>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <button
+                  onClick={() => setActiveTab("CREATE_AI")}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm active:scale-95 transition"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Post with AI Poster</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab("CREATE_MANUAL")}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-card dark:bg-kalvium-dark-card border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral text-kalvium-text dark:text-kalvium-dark-text text-xs font-bold shadow-sm active:scale-95 transition"
+                >
+                  <PenTool className="w-4 h-4" />
+                  <span>Manual Entry</span>
+                </button>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">

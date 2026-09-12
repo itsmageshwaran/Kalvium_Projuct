@@ -122,7 +122,7 @@ export default function EventDetailDrawer({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 overflow-hidden flex justify-end bg-black/40 backdrop-blur-xs animate-fade-in">
+      <div className="fixed inset-0 z-50 overflow-hidden flex justify-end bg-black/40 backdrop-blur-sm animate-fade-in">
         {/* Backdrop click to close */}
         <div className="absolute inset-0" onClick={onClose} />
 
@@ -240,12 +240,15 @@ export default function EventDetailDrawer({
             </div>
 
             {/* Secondary Registration Link if available */}
-            {event.registrationUrl && event.registrationUrl !== "Not specified" && (
+            {event.registrationUrl &&
+              event.registrationUrl !== "Not specified" &&
+              (event.registrationUrl.startsWith("http://") ||
+                event.registrationUrl.startsWith("https://")) && (
               <div>
                 <a
                   href={event.registrationUrl}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="flex items-center justify-between p-3.5 rounded-2xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral/50 text-kalvium-text dark:text-kalvium-dark-text font-medium transition-all duration-200 active:scale-[0.99] group text-xs"
                 >
                   <span className="flex items-center gap-2">

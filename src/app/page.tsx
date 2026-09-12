@@ -2,6 +2,7 @@
 
 import React, { useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, ScanLine, ShieldCheck, UploadCloud, Zap, Sparkles } from "lucide-react";
 import MagneticButton from "@/components/MagneticButton";
@@ -50,7 +51,7 @@ export default function LandingPage() {
       {/* Hero Section (Cinematic Scroll-Driven Parallax)                  */}
       {/* ---------------------------------------------------------------- */}
       <section ref={heroRef} className="relative overflow-hidden px-6 pt-6 sm:pt-10 pb-16 sm:px-10">
-        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8 items-center">
+        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 items-center">
           <motion.div style={{ scale: headlineScale, opacity: headlineOpacity, y: headlineY }}>
             <motion.p
               initial={{ opacity: 0, y: 12 }}
@@ -104,56 +105,47 @@ export default function LandingPage() {
                 Post an event
               </MagneticButton>
             </motion.div>
-          </motion.div>
 
-          {/* Floating Hero Preview Showcase */}
-          <motion.div style={{ y: cardsY }} className="relative hidden lg:block h-[440px]">
-            {/* Ambient Radial Spotlight Glow */}
-            <div className="absolute -inset-10 bg-gradient-to-tr from-kalvium-coral/10 via-kalvium-success/5 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
-
-            {/* Card 1: Robotics Workshop */}
-            <PreviewCard
-              className="absolute right-0 top-0 w-84 animate-drift"
-              category="Workshop"
-              title="AI & Autonomous Robotics Workshop"
-              when="Today · 10:00 AM"
-              where="Innovation Lab (Room 304)"
-              image="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=300&auto=format&fit=crop&q=80"
-              delay={0.5}
-            />
-
-            {/* Card 2: Campus Music Fest */}
-            <PreviewCard
-              className="absolute right-12 top-48 w-84 [animation-delay:1.5s] animate-drift"
-              category="Cultural"
-              title="Harmony 2026: Campus Music Fest"
-              when="Tomorrow · 5:00 PM"
-              where="Main Amphitheatre"
-              image="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop&q=80"
-              delay={0.7}
-            />
-
-            {/* Floating Live Clash Shield Pill */}
+            {/* Mobile Hero Illustration (Simplified, non-layered for clean mobile layout) */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.9, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute bottom-2 left-0 flex items-center gap-3 rounded-2xl px-4 py-3 shadow-kalvium-md border border-kalvium-border dark:border-kalvium-dark-border bg-white dark:bg-kalvium-dark-surface backdrop-blur-md"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.85 }}
+              className="mt-10 block lg:hidden relative"
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-kalvium-success-tint text-kalvium-success border border-kalvium-success-border">
-                <Zap size={18} className="fill-kalvium-success" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-kalvium-success opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-kalvium-success"></span>
-                  </span>
-                  <p className="font-display text-xs font-bold text-kalvium-text dark:text-kalvium-dark-text">Clash Shield Active</p>
-                </div>
-                <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted">0 schedule conflicts detected</p>
+              {/* Subtle radial glow for dark mode contrast */}
+              <div className="absolute inset-0 bg-white/20 dark:bg-white/10 blur-[80px] rounded-full pointer-events-none -z-10" />
+              <div className="relative aspect-square sm:aspect-[4/3] w-full max-w-sm mx-auto">
+                <Image
+                  src="/images/image.png"
+                  alt="Illustration of three students looking at a verified campus event notification on a phone."
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-contain object-center"
+                />
               </div>
             </motion.div>
+          </motion.div>
+
+          {/* Dominant Character Illustration & Layered Elements (Desktop) */}
+          <motion.div style={{ y: cardsY }} className="relative hidden lg:block h-[500px] xl:h-[560px] w-full">
+            {/* Ambient Radial Spotlight Glow for Dark Mode Contrast */}
+            <div className="absolute inset-0 bg-white/40 dark:bg-white/10 blur-[100px] rounded-full pointer-events-none -z-10" />
+
+            {/* Character Illustration (Transparent PNG) */}
+            <div className="relative w-full h-full ml-4 xl:ml-8">
+              <Image
+                src="/images/image.png"
+                alt="Illustration of three students looking at a verified campus event notification on a phone."
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-contain object-right-bottom drop-shadow-sm"
+              />
+            </div>
+
+
           </motion.div>
         </div>
       </section>
@@ -163,17 +155,68 @@ export default function LandingPage() {
       {/* ---------------------------------------------------------------- */}
       <section className="relative px-6 py-20 sm:px-10">
         <div className="mx-auto max-w-6xl">
-          <motion.h2
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="font-display text-display-lg font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight"
-          >
-            From poster to verified event.
-          </motion.h2>
+          <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr] items-center mb-12">
+            <div>
+              <motion.span
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-kalvium-coral mb-3"
+              >
+                <Sparkles size={14} />
+                <span>Verification Pipeline</span>
+              </motion.span>
+              <motion.h2
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.4 }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="font-display text-display-lg font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight"
+              >
+                From poster to verified event.
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.15 }}
+                className="mt-3 text-base text-kalvium-muted dark:text-kalvium-dark-muted max-w-lg leading-relaxed"
+              >
+                Every listing is scanned for schedule clashes, confirmed with campus organizers, and certified before students RSVP.
+              </motion.p>
+            </div>
 
-          <StaggerGrid className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Supporting Editorial Image Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="relative h-44 sm:h-52 rounded-3xl overflow-hidden border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium group bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt"
+            >
+              <Image
+                src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&auto=format&fit=crop&q=80"
+                alt="Students planning and reviewing campus event posters and schedules"
+                fill
+                sizes="(max-width: 1024px) 100vw, 35vw"
+                className="object-cover object-center transition-transform duration-700 ease-editorial group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-kalvium-coral/5 mix-blend-multiply pointer-events-none" />
+              <div className="absolute bottom-3.5 left-4 right-4 flex items-center justify-between text-white">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-kalvium-coral text-white text-[11px] font-bold">
+                    ✓
+                  </span>
+                  <span className="text-xs font-semibold">Human-in-the-loop review</span>
+                </div>
+                <span className="text-[11px] text-white/80 font-mono">100% audited</span>
+              </div>
+            </motion.div>
+          </div>
+
+          <StaggerGrid className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {pipeline.map((step, i) => (
               <motion.div
                 key={step.title}
@@ -206,6 +249,145 @@ export default function LandingPage() {
           <Stat value={38} suffix="" label="Clubs posting weekly" />
           <Stat value={94} suffix="%" label="AI extraction accuracy" />
           <Stat value={0} suffix="" label="Double-bookings, since launch" />
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* Campus Life & Atmosphere (Editorial Photography Collage)        */}
+      {/* ---------------------------------------------------------------- */}
+      <section className="relative px-6 py-16 sm:px-10">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <motion.span
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-kalvium-coral mb-3"
+              >
+                <Sparkles size={14} />
+                <span>Campus Pulse</span>
+              </motion.span>
+              <motion.h2
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="font-display text-display-lg font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight"
+              >
+                Built for every rhythm of student life.
+              </motion.h2>
+            </div>
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="max-w-md text-sm sm:text-base text-kalvium-muted dark:text-kalvium-dark-muted leading-relaxed"
+            >
+              From packed keynote amphitheaters to late-night hackathons and open-air club sessions — discover the real gatherings that shape your university years.
+            </motion.p>
+          </div>
+
+          {/* 3-Image Editorial Collage */}
+          <div className="grid gap-6 md:grid-cols-12">
+            {/* Primary Dominant Card (7 cols) */}
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="relative md:col-span-7 h-[320px] sm:h-[400px] rounded-3xl overflow-hidden border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium group bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt"
+            >
+              <Image
+                src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&auto=format&fit=crop&q=85"
+                alt="Students gathered in modern university lecture auditorium for keynote symposium"
+                fill
+                sizes="(max-width: 768px) 100vw, 60vw"
+                className="object-cover object-center transition-transform duration-700 ease-editorial group-hover:scale-105 will-change-transform"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-kalvium-coral/5 mix-blend-multiply pointer-events-none" />
+
+              <div className="absolute top-4 left-4 z-10">
+                <span className="rounded-full bg-white/90 dark:bg-kalvium-dark-surface/90 backdrop-blur-md px-3 py-1 text-[11px] font-semibold text-kalvium-text dark:text-kalvium-dark-text border border-white/20 shadow-xs">
+                  Keynotes & Tech Symposiums
+                </span>
+              </div>
+
+              <div className="absolute bottom-6 left-6 right-6 z-10 text-white">
+                <p className="text-xs uppercase tracking-wider text-white/75 font-semibold">Innovation Quad · Hall A</p>
+                <h3 className="font-display text-xl sm:text-2xl font-bold mt-1 leading-snug">
+                  Tech Horizons Annual Showcase
+                </h3>
+                <p className="mt-1.5 text-xs sm:text-sm text-white/80 line-clamp-2 max-w-lg">
+                  Every attendee seat synchronized with real-time clash protection. Zero overlapping bookings since semester launch.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Right Stack (5 cols): Two complementary cards */}
+            <div className="md:col-span-5 grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-1">
+              {/* Card 2: Cultural Amphitheater */}
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                className="relative h-[180px] sm:h-[188px] rounded-3xl overflow-hidden border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium group bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt"
+              >
+                <Image
+                  src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80"
+                  alt="Vibrant campus music festival and cultural stage lighting"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 40vw"
+                  className="object-cover object-center transition-transform duration-700 ease-editorial group-hover:scale-105 will-change-transform"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-kalvium-coral/5 mix-blend-multiply pointer-events-none" />
+
+                <div className="absolute bottom-4 left-5 right-5 z-10 text-white">
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-kalvium-coral-tint">
+                    Cultural & Arts
+                  </span>
+                  <h4 className="font-display text-base font-bold leading-tight mt-0.5">
+                    Campus Amphitheater Live
+                  </h4>
+                  <p className="text-[11px] text-white/75 mt-0.5">Sound checks, drama, and festival stages</p>
+                </div>
+              </motion.div>
+
+              {/* Card 3: Student Communities & Outdoors */}
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="relative h-[180px] sm:h-[188px] rounded-3xl overflow-hidden border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium group bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt"
+              >
+                <Image
+                  src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&auto=format&fit=crop&q=80"
+                  alt="Diverse university students enjoying community club fair on campus grounds"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 40vw"
+                  className="object-cover object-center transition-transform duration-700 ease-editorial group-hover:scale-105 will-change-transform"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-kalvium-coral/5 mix-blend-multiply pointer-events-none" />
+
+                <div className="absolute bottom-4 left-5 right-5 z-10 text-white">
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-kalvium-coral-tint">
+                    Student Communities
+                  </span>
+                  <h4 className="font-display text-base font-bold leading-tight mt-0.5">
+                    Outdoor Club Fairs & Societies
+                  </h4>
+                  <p className="text-[11px] text-white/75 mt-0.5">38 active campus chapters connected weekly</p>
+                </div>
+              </motion.div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -267,7 +449,7 @@ function PreviewCard({
       <div className="flex items-center gap-3">
         {image && (
           <div className="relative w-14 h-14 rounded-2xl overflow-hidden shrink-0 border border-kalvium-border dark:border-kalvium-dark-border shadow-xs">
-            <img src={image} alt={title} className="w-full h-full object-cover" />
+            <Image src={image} alt={title} fill sizes="56px" className="object-cover" />
           </div>
         )}
         <div className="flex-1 min-w-0">
