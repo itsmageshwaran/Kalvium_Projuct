@@ -90,10 +90,10 @@ export default function MySchedulePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
         <div>
-          <span className="text-xs font-sans uppercase tracking-widest text-kalvium-coral font-bold bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint px-3 py-1 rounded-full border border-kalvium-coral/20">
+          <span className="text-xs font-sans uppercase tracking-widest text-[#E5391F] font-black bg-white px-4 py-1.5 rounded-full border-2 border-black shadow-[2px_2px_0px_0px_black]">
             Personal Agenda
           </span>
-          <h1 className="font-display text-display-lg font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight mt-2">
+          <h1 className="font-display text-5xl sm:text-6xl font-black text-black dark:text-white tracking-tighter uppercase mt-4 leading-none">
             My schedule.
           </h1>
           <p className="text-sm text-kalvium-muted dark:text-kalvium-dark-muted mt-1">
@@ -103,10 +103,10 @@ export default function MySchedulePage() {
 
         <Link
           href="/events"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral text-xs font-semibold text-kalvium-text dark:text-kalvium-dark-text transition shrink-0 self-start sm:self-auto shadow-xs"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white border-2 border-black hover:bg-black hover:text-white text-xs font-black uppercase tracking-widest text-black transition shrink-0 self-start sm:self-auto shadow-[4px_4px_0px_0px_black] active:translate-y-1 active:translate-x-1 active:shadow-none"
         >
-          <Compass size={16} className="text-kalvium-coral" />
-          <span>+ Add Events</span>
+          <Compass size={16} className="text-[#E5391F]" />
+          <span>Add Events</span>
         </Link>
       </div>
 
@@ -244,19 +244,18 @@ function ScheduleItemCard({
   return (
     <TiltCard maxTilt={3} className="h-full">
       <div
-        className={`p-5 rounded-3xl border transition-all duration-300 relative flex flex-col justify-between h-full group ${
-          event.hasClash
-            ? "border-kalvium-warning/40 bg-kalvium-warning-tint/20 dark:bg-kalvium-dark-warning-tint/20 shadow-kalvium-sm"
+        className={`p-6 rounded-3xl border-4 transition-all duration-300 relative flex flex-col justify-between h-full group ${event.hasClash
+            ? "border-[#FFB300] bg-white shadow-[8px_8px_0px_0px_#FFB300]"
             : isHighlight
-            ? "border-kalvium-coral/30 bg-white dark:bg-kalvium-dark-surface shadow-kalvium-sm"
-            : "border-kalvium-border dark:border-kalvium-dark-border bg-white dark:bg-kalvium-dark-surface hover:border-kalvium-coral/40 shadow-kalvium-sm"
-        }`}
+              ? "border-black bg-white shadow-[8px_8px_0px_0px_black]"
+              : "border-black bg-white hover:border-[#E5391F] hover:shadow-[8px_8px_0px_0px_#E5391F] shadow-[4px_4px_0px_0px_black]"
+          }`}
       >
         <div>
           {/* Top Badges & Clash Alert */}
           <div className="flex items-center justify-between gap-2 mb-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="rounded-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-2.5 py-0.5 text-[10px] font-medium text-kalvium-text dark:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border">
+              <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-black border-2 border-black">
                 {event.category}
               </span>
               <CampusVerifiedBadge size="sm" />
@@ -286,7 +285,7 @@ function ScheduleItemCard({
 
           {/* Title */}
           <Link href={`/events/${event.id}`}>
-            <h3 className="font-display text-base font-bold text-kalvium-text dark:text-kalvium-dark-text group-hover:text-kalvium-coral transition-colors line-clamp-1 mb-2">
+            <h3 className="font-display text-xl font-black text-black group-hover:text-[#E5391F] transition-colors line-clamp-1 mb-2 uppercase tracking-tighter leading-none">
               {event.title}
             </h3>
           </Link>
@@ -310,16 +309,16 @@ function ScheduleItemCard({
         </div>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-kalvium-border dark:border-kalvium-dark-border flex items-center justify-between text-xs">
-          <span className="text-[11px] text-kalvium-muted font-medium truncate max-w-[200px]">
+        <div className="pt-4 border-t-4 border-black flex items-center justify-between text-xs">
+          <span className="text-[10px] text-black font-black uppercase tracking-widest truncate max-w-[200px]">
             By {event.organizerName || event.organizer?.name || "Campus Club"}
           </span>
           <Link
             href={`/events/${event.id}`}
-            className="inline-flex items-center gap-1 font-semibold text-kalvium-coral hover:text-kalvium-coral-hover"
+            className="inline-flex items-center gap-1 font-black uppercase tracking-widest text-black hover:text-[#E5391F]"
           >
             <span>View</span>
-            <ArrowUpRight size={14} />
+            <ArrowUpRight size={16} strokeWidth={3} />
           </Link>
         </div>
       </div>

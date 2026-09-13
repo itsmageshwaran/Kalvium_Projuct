@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import ThemeToggle from "@/components/ThemeToggle";
+import KalviumLogo from "@/components/KalviumLogo";
 import {
   Sparkles,
   Compass,
@@ -24,109 +24,103 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="bg-kalvium-surface/95 dark:bg-kalvium-dark-surface/95 backdrop-blur-md border-b border-kalvium-border dark:border-kalvium-dark-border transition-colors duration-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="bg-white dark:bg-[#111111] border-b-4 border-black transition-colors duration-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           {/* Logo & Brand Identity */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2 group select-none">
-              <div className="w-8 h-8 rounded-xl bg-kalvium-coral text-white flex items-center justify-center font-display font-bold text-base shadow-xs group-hover:bg-kalvium-coral-hover transition-colors">
-                C
+              <div className="group-hover:scale-105 transition-transform duration-200 text-[#E5391F]">
+                <KalviumLogo size={28} className="text-[#E5391F]" />
               </div>
-              <div className="flex items-baseline gap-0.5">
-                <span className="font-display font-bold tracking-tight text-xl text-kalvium-text dark:text-kalvium-dark-text leading-none">
-                  CampusHub
-                </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-kalvium-coral inline-block" />
-              </div>
+              <span className="font-display font-black tracking-tighter text-2xl uppercase leading-none text-black dark:text-white">
+                CampusHub
+              </span>
             </Link>
           </div>
 
-          {/* Desktop Navigation Links - Editorial Pill Tabs */}
-          <nav className="hidden md:flex items-center gap-1 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt p-1 rounded-full border border-kalvium-border dark:border-kalvium-dark-border">
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center gap-3">
+            {user?.role === "STUDENT" && (
+              <Link
+                href="/dashboard/student"
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-black text-xs uppercase tracking-widest transition-all duration-200 border-2 ${isActive("/dashboard/student")
+                  ? "bg-[#E5391F] text-white border-[#E5391F] shadow-[4px_4px_0px_0px_black]"
+                  : "bg-white text-black border-transparent hover:border-black hover:shadow-[4px_4px_0px_0px_black]"
+                  }`}
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Student Portal</span>
+              </Link>
+            )}
+
             <Link
               href="/events"
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all duration-150 active:scale-95 select-none ${
-                isActive("/events")
-                  ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral font-semibold shadow-xs"
-                  : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text font-medium"
-              }`}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-black text-xs uppercase tracking-widest transition-all duration-200 border-2 ${isActive("/events")
+                ? "bg-[#E5391F] text-white border-[#E5391F] shadow-[4px_4px_0px_0px_black]"
+                : "bg-white text-black border-transparent hover:border-black hover:shadow-[4px_4px_0px_0px_black]"
+                }`}
             >
-              <Compass className="w-3.5 h-3.5" />
+              <Compass className="w-4 h-4" />
               <span>Events</span>
             </Link>
 
-            {/* Student Links: Events -> Schedule */}
             {(!user || user.role === "STUDENT") && (
               <Link
                 href="/schedule"
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all duration-150 active:scale-95 select-none ${
-                  isActive("/schedule")
-                    ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral font-semibold shadow-xs"
-                    : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text font-medium"
-                }`}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-black text-xs uppercase tracking-widest transition-all duration-200 border-2 ${isActive("/schedule")
+                  ? "bg-[#E5391F] text-white border-[#E5391F] shadow-[4px_4px_0px_0px_black]"
+                  : "bg-white text-black border-transparent hover:border-black hover:shadow-[4px_4px_0px_0px_black]"
+                  }`}
               >
-                <Clock className="w-3.5 h-3.5" />
+                <Clock className="w-4 h-4" />
                 <span>My Schedule</span>
               </Link>
             )}
 
-            {/* Organizer Links: Events -> Organizer Studio */}
             {user?.role === "ORGANIZER" && (
               <Link
                 href="/dashboard/organizer"
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all duration-150 active:scale-95 select-none ${
-                  isActive("/dashboard/organizer")
-                    ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral font-semibold shadow-xs"
-                    : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text font-medium"
-                }`}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-black text-xs uppercase tracking-widest transition-all duration-200 border-2 ${isActive("/dashboard/organizer")
+                  ? "bg-[#E5391F] text-white border-[#E5391F] shadow-[4px_4px_0px_0px_black]"
+                  : "bg-white text-black border-transparent hover:border-black hover:shadow-[4px_4px_0px_0px_black]"
+                  }`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-kalvium-coral" />
+                <Sparkles className="w-4 h-4" />
                 <span>Organizer Studio</span>
               </Link>
             )}
 
-            {/* Campus Manager Links: Events -> Verification Center */}
             {user?.role === "CAMPUS_MANAGER" && (
               <Link
                 href="/dashboard/manager"
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all duration-150 active:scale-95 select-none ${
-                  isActive("/dashboard/manager")
-                    ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral font-semibold shadow-xs"
-                    : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text font-medium"
-                }`}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-black text-xs uppercase tracking-widest transition-all duration-200 border-2 ${isActive("/dashboard/manager")
+                  ? "bg-[#E5391F] text-white border-[#E5391F] shadow-[4px_4px_0px_0px_black]"
+                  : "bg-white text-black border-transparent hover:border-black hover:shadow-[4px_4px_0px_0px_black]"
+                  }`}
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-kalvium-success" />
+                <ShieldCheck className="w-4 h-4" />
                 <span>Verification Studio</span>
               </Link>
             )}
           </nav>
 
           {/* User Profile / Auth Actions & Theme Toggle */}
-          <div className="hidden md:flex items-center gap-3">
-            <ThemeToggle />
+          <div className="hidden md:flex items-center gap-4">
 
             {user ? (
-              <div className="flex items-center gap-2.5 p-1 pl-3 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-full border border-kalvium-border dark:border-kalvium-dark-border shadow-xs">
+              <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <p className="text-xs font-semibold text-kalvium-text dark:text-kalvium-dark-text leading-tight">{user.name}</p>
-                  <span
-                    className={`inline-block text-[10px] font-medium ${
-                      user.role === "CAMPUS_MANAGER"
-                        ? "text-kalvium-success"
-                        : user.role === "ORGANIZER"
-                        ? "text-kalvium-warning"
-                        : "text-kalvium-muted"
-                    }`}
-                  >
+                  <p className="text-sm font-black text-black dark:text-white uppercase tracking-tighter">{user.name}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#E5391F]">
                     {user.role === "CAMPUS_MANAGER"
                       ? "Campus Manager"
                       : user.role === "ORGANIZER"
-                      ? "Organizer"
-                      : "Student"}
-                  </span>
+                        ? "Organizer"
+                        : "Student"}
+                  </p>
                 </div>
 
-                <div className="w-7 h-7 rounded-full bg-kalvium-border dark:bg-kalvium-dark-border flex items-center justify-center font-bold text-xs text-kalvium-text dark:text-kalvium-dark-text overflow-hidden select-none">
+                <div className="w-10 h-10 rounded-full bg-black border-2 border-black flex items-center justify-center font-bold text-sm text-white overflow-hidden select-none shadow-[2px_2px_0px_0px_black]">
                   {user.avatar ? (
                     <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                   ) : (
@@ -136,24 +130,18 @@ export default function Navbar() {
 
                 <button
                   onClick={() => logout()}
-                  className="p-1.5 text-kalvium-muted hover:text-kalvium-coral rounded-full hover:bg-white dark:hover:bg-kalvium-dark-surface transition-colors active:scale-95 text-xs"
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-black border-2 border-black hover:bg-[#E5391F] hover:text-white hover:border-[#E5391F] shadow-[4px_4px_0px_0px_black] transition-all duration-200"
                   title="Sign out"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
+                  <LogOut className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/login"
-                  className="text-xs font-medium px-4 py-2 rounded-full text-kalvium-text dark:text-kalvium-dark-text hover:text-kalvium-coral transition-colors"
-                >
+              <div className="flex items-center gap-4">
+                <Link href="/login" className="px-6 py-2.5 bg-white text-black font-black text-xs uppercase tracking-widest border-2 border-black rounded-full hover:bg-black hover:text-white transition-all duration-200">
                   Sign in
                 </Link>
-                <Link
-                  href="/register"
-                  className="text-xs font-semibold px-4 py-2 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white transition-colors shadow-xs active:scale-95"
-                >
+                <Link href="/register" className="px-6 py-2.5 bg-[#E5391F] text-white font-black text-xs uppercase tracking-widest border-2 border-black rounded-full shadow-[4px_4px_0px_0px_black] hover:bg-black hover:border-black transition-all duration-200">
                   Register
                 </Link>
               </div>
@@ -161,11 +149,10 @@ export default function Navbar() {
           </div>
 
           {/* Mobile menu hamburger */}
-          <div className="flex md:hidden items-center gap-2">
-            <ThemeToggle />
+          <div className="flex md:hidden items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-kalvium-muted hover:text-kalvium-text rounded-full border border-kalvium-border dark:border-kalvium-dark-border bg-kalvium-surface dark:bg-kalvium-dark-surface transition-colors"
+              className="w-10 h-10 flex items-center justify-center text-black dark:text-white border-2 border-black rounded-full shadow-[4px_4px_0px_0px_black]"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -174,11 +161,20 @@ export default function Navbar() {
 
         {/* Mobile Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-kalvium-border dark:border-kalvium-dark-border bg-kalvium-surface dark:bg-kalvium-dark-surface px-4 pt-3 pb-5 space-y-2">
+          <div className="md:hidden border-t border-[#D6D6D2] dark:border-[#444444] bg-white dark:bg-[#111111] px-4 pt-4 pb-6 space-y-2">
+            {user?.role === "STUDENT" && (
+              <Link
+                href="/dashboard/student"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-3 rounded-md font-bold text-sm text-[#111111] dark:text-white hover:bg-[#F7F7F5] dark:hover:bg-[#222222]"
+              >
+                Student Portal
+              </Link>
+            )}
             <Link
               href="/events"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-xl text-kalvium-text dark:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt text-xs font-medium"
+              className="block px-4 py-3 rounded-md font-bold text-sm text-[#111111] dark:text-white hover:bg-[#F7F7F5] dark:hover:bg-[#222222]"
             >
               Events
             </Link>
@@ -186,7 +182,7 @@ export default function Navbar() {
               <Link
                 href="/schedule"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl text-kalvium-text dark:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt text-xs font-medium"
+                className="block px-4 py-3 rounded-md font-bold text-sm text-[#111111] dark:text-white hover:bg-[#F7F7F5] dark:hover:bg-[#222222]"
               >
                 My Schedule
               </Link>
@@ -196,7 +192,7 @@ export default function Navbar() {
               <Link
                 href="/dashboard/organizer"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl text-kalvium-coral bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint text-xs font-semibold"
+                className="block px-4 py-3 rounded-md font-bold text-sm text-[#111111] dark:text-white hover:bg-[#F7F7F5] dark:hover:bg-[#222222]"
               >
                 Organizer Studio
               </Link>
@@ -206,22 +202,22 @@ export default function Navbar() {
               <Link
                 href="/dashboard/manager"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl bg-kalvium-success-tint dark:bg-kalvium-dark-success-tint text-kalvium-success text-xs font-semibold"
+                className="block px-4 py-3 rounded-md font-bold text-sm text-[#111111] dark:text-white hover:bg-[#F7F7F5] dark:hover:bg-[#222222]"
               >
                 Verification Studio
               </Link>
             )}
 
             {user ? (
-              <div className="pt-3 border-t border-kalvium-border dark:border-kalvium-dark-border flex items-center justify-between">
+              <div className="pt-4 mt-2 border-t border-[#D6D6D2] dark:border-[#444444] flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-kalvium-text dark:text-kalvium-dark-text">{user.name}</p>
-                  <p className="text-[10px] text-kalvium-muted dark:text-kalvium-dark-muted">
+                  <p className="text-sm font-bold text-[#111111] dark:text-white">{user.name}</p>
+                  <p className="text-xs font-semibold text-[#777777]">
                     {user.role === "CAMPUS_MANAGER"
                       ? "Campus Manager"
                       : user.role === "ORGANIZER"
-                      ? "Organizer"
-                      : "Student"}
+                        ? "Organizer"
+                        : "Student"}
                   </p>
                 </div>
                 <button
@@ -229,24 +225,24 @@ export default function Navbar() {
                     logout();
                     setMobileMenuOpen(false);
                   }}
-                  className="text-xs text-kalvium-coral font-medium px-3 py-1 rounded-full border border-kalvium-coral/30 hover:bg-kalvium-coral-tint transition-colors"
+                  className="btn-kalvium-outline py-2 px-4 text-xs"
                 >
                   Sign Out
                 </button>
               </div>
             ) : (
-              <div className="pt-3 border-t border-kalvium-border dark:border-kalvium-dark-border grid grid-cols-2 gap-2">
+              <div className="pt-4 mt-2 border-t border-[#D6D6D2] dark:border-[#444444] grid grid-cols-2 gap-3">
                 <Link
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-center py-2 rounded-full border border-kalvium-border dark:border-kalvium-dark-border text-kalvium-text dark:text-kalvium-dark-text text-xs font-medium"
+                  className="btn-kalvium-outline text-center py-2"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/register"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-center py-2 rounded-full bg-kalvium-coral text-white text-xs font-semibold shadow-xs"
+                  className="btn-kalvium-primary text-center py-2"
                 >
                   Register
                 </Link>
@@ -255,77 +251,6 @@ export default function Navbar() {
           </div>
         )}
       </header>
-
-      {/* Sticky Mobile Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-kalvium-surface/95 dark:bg-kalvium-dark-surface/95 backdrop-blur-md border-t border-kalvium-border dark:border-kalvium-dark-border flex items-center justify-around py-2 px-3 shadow-lg">
-        <Link
-          href="/events"
-          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-colors ${
-            isActive("/events") ? "text-kalvium-coral font-bold" : "text-kalvium-muted dark:text-kalvium-dark-muted"
-          }`}
-        >
-          <Compass className="w-4 h-4" />
-          <span className="text-[10px] font-medium">Events</span>
-        </Link>
-
-        {(!user || user.role === "STUDENT") && (
-          <Link
-            href="/schedule"
-            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-colors ${
-              isActive("/schedule") ? "text-kalvium-coral font-bold" : "text-kalvium-muted dark:text-kalvium-dark-muted"
-            }`}
-          >
-            <Clock className="w-4 h-4" />
-            <span className="text-[10px] font-medium">Schedule</span>
-          </Link>
-        )}
-
-        {user?.role === "ORGANIZER" && (
-          <Link
-            href="/dashboard/organizer"
-            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-colors ${
-              isActive("/dashboard/organizer") ? "text-kalvium-coral font-bold" : "text-kalvium-muted dark:text-kalvium-dark-muted"
-            }`}
-          >
-            <Sparkles className="w-4 h-4 text-kalvium-coral" />
-            <span className="text-[10px] font-medium">Studio</span>
-          </Link>
-        )}
-
-        {user?.role === "CAMPUS_MANAGER" && (
-          <Link
-            href="/dashboard/manager"
-            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-colors ${
-              isActive("/dashboard/manager") ? "text-kalvium-success font-bold" : "text-kalvium-muted dark:text-kalvium-dark-muted"
-            }`}
-          >
-            <ShieldCheck className="w-4 h-4 text-kalvium-success" />
-            <span className="text-[10px] font-medium">Verify</span>
-          </Link>
-        )}
-
-        {user ? (
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-kalvium-muted dark:text-kalvium-dark-muted"
-          >
-            <div className="w-4 h-4 rounded-full bg-kalvium-border dark:bg-kalvium-dark-border flex items-center justify-center text-[9px] font-bold text-kalvium-text dark:text-kalvium-dark-text">
-              {user.name.charAt(0)}
-            </div>
-            <span className="text-[10px] font-medium">Menu</span>
-          </button>
-        ) : (
-          <Link
-            href="/login"
-            className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-kalvium-muted dark:text-kalvium-dark-muted"
-          >
-            <div className="w-4 h-4 rounded-full bg-kalvium-coral text-white flex items-center justify-center text-[9px] font-bold">
-              →
-            </div>
-            <span className="text-[10px] font-medium">Login</span>
-          </Link>
-        )}
-      </nav>
     </>
   );
 }

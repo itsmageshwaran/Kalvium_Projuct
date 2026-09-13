@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Calendar, Clock, MapPin, Bookmark, BookmarkCheck, ArrowUpRight, Flame } from "lucide-react";
 import CampusVerifiedBadge from "./CampusVerifiedBadge";
 import ClashWarningModal from "./ClashWarningModal";
-import TiltCard from "./TiltCard";
 import { useAuth } from "@/context/AuthContext";
 import { isStartingSoon, getHumanCountdown } from "@/lib/time";
 
@@ -117,131 +116,136 @@ export default function EventCard({
 
   return (
     <>
-      <TiltCard maxTilt={3} className="h-full">
-        <div className="group relative flex flex-col h-full rounded-2xl sm:rounded-3xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium hover:shadow-kalvium-md transition-all duration-300 overflow-hidden">
-          {/* Poster Box */}
-          <div className="relative aspect-[16/10] w-full overflow-hidden bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt">
-            <img
-              src={event.posterUrl}
-              alt={event.title}
-              className="w-full h-full object-cover object-center transition-transform duration-500 ease-editorial group-hover:scale-105 will-change-transform"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-70" />
+      <div className="card-bauhaus group relative flex flex-col h-full overflow-hidden border-4 border-black hover:shadow-[8px_8px_0px_0px_#E5391F] hover:-translate-y-1 transition-all duration-300">
+        {/* Geometric Corner Decoration */}
+        <div className="absolute top-2 right-2 z-20 flex gap-1">
+          <div className="w-4 h-4 rounded-full bg-[#E5391F] border-2 border-black group-hover:scale-125 transition-transform" />
+          <div className="w-4 h-4 rounded-none bg-black border-2 border-black" />
+          <div className="w-4 h-4 bg-white border-2 border-black" style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }} />
+        </div>
 
-            {/* Category & Status Pills */}
-            <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap z-10">
-              <span className="rounded-full bg-white/95 dark:bg-kalvium-dark-surface/95 px-3 py-0.5 text-[11px] font-medium text-kalvium-text dark:text-kalvium-dark-text backdrop-blur-sm border border-kalvium-border dark:border-kalvium-dark-border shadow-xs">
-                {event.category}
+        {/* Poster Box */}
+        <div className="relative aspect-[16/10] w-full overflow-hidden bg-black border-b-4 border-black">
+          <img
+            src={event.posterUrl}
+            alt={event.title}
+            className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+          />
+
+          {/* Category & Status Pills */}
+          <div className="absolute top-3 left-3 flex flex-col items-start gap-2 z-10">
+            <span className="badge-bauhaus px-2 py-1 bg-white text-black text-xs font-bold uppercase tracking-widest border-2 border-black">
+              {event.category}
+            </span>
+
+            {startingSoon && (
+              <span className="badge-bauhaus px-2 py-1 bg-[#E5391F] text-white text-xs font-bold uppercase tracking-widest border-2 border-black flex items-center">
+                <Flame size={14} className="mr-1" strokeWidth={3} />
+                SOON
               </span>
-
-              {startingSoon && (
-                <span className="rounded-full bg-kalvium-coral px-2.5 py-0.5 text-[11px] font-semibold text-white flex items-center gap-1 shadow-xs">
-                  <Flame size={12} className="text-white fill-white" />
-                  <span>Starting soon</span>
-                </span>
-              )}
-            </div>
-
-            {/* Quick Bookmark Save Button */}
-            <button
-              onClick={handleSaveClick}
-              disabled={saving}
-              className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-all duration-200 active:scale-90 hover:scale-105 z-10 ${
-                isSaved
-                  ? "bg-kalvium-coral text-white shadow-md shadow-kalvium-coral/30"
-                  : "bg-white/90 dark:bg-kalvium-dark-surface/90 text-kalvium-text dark:text-kalvium-dark-text hover:text-kalvium-coral border border-kalvium-border dark:border-kalvium-dark-border shadow-xs"
-              }`}
-              title={isSaved ? "Remove from Schedule" : "Save to Schedule"}
-            >
-              {isSaved ? (
-                <BookmarkCheck size={16} className="fill-white" />
-              ) : (
-                <Bookmark size={16} />
-              )}
-            </button>
-
-            {/* Verified Badge on Poster */}
-            {event.status === "APPROVED" && (
-              <div className="absolute bottom-3 left-3 z-10">
-                <CampusVerifiedBadge size="sm" />
-              </div>
             )}
           </div>
 
-          {/* Body */}
-          <div className="p-5 flex-1 flex flex-col justify-between">
-            <div>
+          {/* Verified Badge on Poster */}
+          {event.status === "APPROVED" && (
+            <div className="absolute bottom-3 left-3 z-10">
+              <CampusVerifiedBadge size="sm" />
+            </div>
+          )}
+        </div>
+
+        {/* Body */}
+        <div className="p-6 flex-1 flex flex-col justify-between bg-white group-hover:bg-[#F7F7F5] transition-colors duration-300">
+          <div>
+            {/* Quick Bookmark Save Button */}
+            <div className="flex justify-between items-start gap-4 mb-4">
               {onSelectEvent ? (
                 <button
                   type="button"
                   onClick={() => onSelectEvent(event)}
-                  className="text-left w-full focus:outline-none"
+                  className="text-left flex-1 focus:outline-none"
                 >
-                  <h3 className="font-display text-lg font-bold text-kalvium-text dark:text-kalvium-dark-text leading-snug group-hover:text-kalvium-coral transition-colors duration-200 line-clamp-1 mb-2.5 tracking-tight">
+                  <h3 className="font-display text-2xl font-black text-black leading-none uppercase tracking-tighter hover:text-[#E5391F] transition-colors">
                     {event.title}
                   </h3>
                 </button>
               ) : (
-                <Link href={`/events/${event.id}`}>
-                  <h3 className="font-display text-lg font-bold text-kalvium-text dark:text-kalvium-dark-text leading-snug group-hover:text-kalvium-coral transition-colors duration-200 line-clamp-1 mb-2.5 tracking-tight">
+                <Link href={`/events/${event.id}`} className="flex-1">
+                  <h3 className="font-display text-2xl font-black text-black leading-none uppercase tracking-tighter hover:text-[#E5391F] transition-colors">
                     {event.title}
                   </h3>
                 </Link>
               )}
 
-              {/* Metadata */}
-              <div className="space-y-1.5 mb-3 text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
-                <div className="flex items-center gap-2 font-medium text-kalvium-text dark:text-kalvium-dark-text">
-                  <Calendar size={13} className="text-kalvium-coral shrink-0" />
-                  <span>{countdownText}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock size={13} className="text-kalvium-muted shrink-0" />
-                  <span>{event.startTime} – {event.endTime}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin size={13} className="text-kalvium-muted shrink-0" />
-                  <span className="truncate">{event.venue}</span>
-                </div>
-              </div>
-
-              <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted line-clamp-2 leading-relaxed mb-4 font-normal">
-                {event.summary}
-              </p>
+              <button
+                onClick={handleSaveClick}
+                disabled={saving}
+                className={`flex-shrink-0 p-2 border-2 border-black rounded-none transition-all active:translate-x-1 active:translate-y-1 ${isSaved
+                    ? "bg-[#E5391F] text-white shadow-[2px_2px_0px_0px_black]"
+                    : "bg-white text-black hover:bg-[#E5391F] hover:text-white shadow-[2px_2px_0px_0px_black]"
+                  }`}
+                title={isSaved ? "Remove from Schedule" : "Save to Schedule"}
+              >
+                {isSaved ? (
+                  <BookmarkCheck size={20} strokeWidth={3} />
+                ) : (
+                  <Bookmark size={20} strokeWidth={3} />
+                )}
+              </button>
             </div>
 
-            {/* Footer */}
-            <div className="pt-3 border-t border-kalvium-border dark:border-kalvium-dark-border flex items-center justify-between text-xs">
-              <div className="truncate max-w-[170px]">
-                <span className="text-[10px] text-kalvium-muted dark:text-kalvium-dark-muted block uppercase tracking-wider font-semibold">Organized by</span>
-                <span className="text-kalvium-text dark:text-kalvium-dark-text text-xs font-medium truncate block">
-                  {event.organizerName || event.organizer?.name || "Campus Club"}
-                </span>
+            {/* Metadata */}
+            <div className="space-y-2 mb-4 text-sm font-bold uppercase tracking-wider text-black border-l-4 border-[#E5391F] pl-3 py-1">
+              <div className="flex items-center gap-2">
+                <Calendar size={16} className="text-[#E5391F] stroke-[3]" />
+                <span>{countdownText}</span>
               </div>
-
-              {onSelectEvent ? (
-                <button
-                  type="button"
-                  onClick={() => onSelectEvent(event)}
-                  className="inline-flex items-center gap-1 font-semibold text-kalvium-coral hover:text-kalvium-coral-hover py-1 px-3 rounded-full hover:bg-kalvium-coral-tint dark:hover:bg-kalvium-dark-coral-tint transition active:scale-95"
-                >
-                  <span>Details</span>
-                  <ArrowUpRight size={14} />
-                </button>
-              ) : (
-                <Link
-                  href={`/events/${event.id}`}
-                  className="inline-flex items-center gap-1 font-semibold text-kalvium-coral hover:text-kalvium-coral-hover py-1 px-3 rounded-full hover:bg-kalvium-coral-tint dark:hover:bg-kalvium-dark-coral-tint transition active:scale-95"
-                >
-                  <span>Details</span>
-                  <ArrowUpRight size={14} />
-                </Link>
-              )}
+              <div className="flex items-center gap-2">
+                <Clock size={16} className="text-black stroke-[3]" />
+                <span>{event.startTime} – {event.endTime}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin size={16} className="text-black stroke-[3]" />
+                <span className="truncate">{event.venue}</span>
+              </div>
             </div>
+
+            <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed mb-6 font-medium">
+              {event.summary}
+            </p>
+          </div>
+
+          {/* Footer */}
+          <div className="pt-4 border-t-4 border-black flex items-center justify-between">
+            <div className="truncate max-w-[170px]">
+              <span className="text-[10px] text-[#E5391F] block uppercase tracking-widest font-black">Organized by</span>
+              <span className="text-black text-sm font-bold uppercase truncate block">
+                {event.organizerName || event.organizer?.name || "Campus Club"}
+              </span>
+            </div>
+
+            {onSelectEvent ? (
+              <button
+                type="button"
+                onClick={() => onSelectEvent(event)}
+                className="bg-black text-white px-3 py-2 text-xs font-bold uppercase flex items-center gap-1 hover:bg-[#E5391F] transition-colors"
+              >
+                <span>Details</span>
+                <ArrowUpRight size={16} strokeWidth={3} />
+              </button>
+            ) : (
+              <Link
+                href={`/events/${event.id}`}
+                className="bg-black text-white px-3 py-2 text-xs font-bold uppercase flex items-center gap-1 hover:bg-[#E5391F] transition-colors"
+              >
+                <span>Details</span>
+                <ArrowUpRight size={16} strokeWidth={3} />
+              </Link>
+            )}
           </div>
         </div>
-      </TiltCard>
+      </div>
 
       {/* Clash Warning Dialog */}
       {clashData && (

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Caveat, Plus_Jakarta_Sans } from "next/font/google";
+import React from "react";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -7,17 +8,12 @@ import DemoSwitcherBar from "@/components/DemoSwitcherBar";
 import Navbar from "@/components/Navbar";
 import SmoothScroll from "@/components/SmoothScroll";
 import ScrollProgress from "@/components/ScrollProgress";
-import CursorAura from "@/components/CursorAura";
+import KalviumLogo from "@/components/KalviumLogo";
 
-const caveatDisplay = Caveat({
+const outfit = Outfit({
   subsets: ["latin"],
-  variable: "--font-display",
-  display: "swap",
-});
-
-const jakartaBody = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-body",
+  variable: "--font-outfit",
+  weight: ["400", "500", "700", "900"],
   display: "swap",
 });
 
@@ -33,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`light ${caveatDisplay.variable} ${jakartaBody.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`light ${outfit.variable}`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -41,11 +37,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="font-body antialiased bg-kalvium-bg dark:bg-kalvium-dark-bg text-kalvium-text dark:text-kalvium-dark-text flex flex-col min-h-screen selection:bg-kalvium-coral/20 selection:text-kalvium-coral transition-colors duration-200">
+      <body className="font-sans antialiased bg-[#F7F7F5] dark:bg-[#111111] text-[#111111] dark:text-[#FFFFFF] flex flex-col min-h-screen selection:bg-[#E5391F] selection:text-white transition-colors duration-200">
         <AuthProvider>
           <ThemeProvider>
             <ScrollProgress />
-            <CursorAura />
             <SmoothScroll>
               <div className="sticky top-0 z-40 w-full">
                 <DemoSwitcherBar />
@@ -53,43 +48,32 @@ export default function RootLayout({
               </div>
               <main className="flex-1">{children}</main>
 
-              <footer className="relative border-t border-kalvium-border dark:border-kalvium-dark-border bg-kalvium-surface dark:bg-kalvium-dark-surface py-12 px-6 sm:px-10 text-xs text-kalvium-muted dark:text-kalvium-dark-muted transition-colors duration-200">
+              <footer className="relative border-t-4 border-black bg-white py-16 px-8 sm:px-10">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
                   <div>
-                    <div className="flex items-center justify-center md:justify-start gap-1.5 mb-1.5">
-                      <span className="font-display font-bold text-base text-kalvium-text dark:text-kalvium-dark-text tracking-tight">
+                    <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
+                      <div className="text-white bg-[#E5391F] p-2 border-2 border-black shadow-[2px_2px_0px_0px_black]">
+                        <KalviumLogo size={24} className="text-white" />
+                      </div>
+                      <span className="font-display font-black text-3xl uppercase tracking-tighter text-black">
                         CampusHub
                       </span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-kalvium-coral" />
                     </div>
-                    <p className="text-kalvium-muted dark:text-kalvium-dark-muted max-w-md text-xs leading-relaxed">
-                      "AI makes event creation faster. Human verification makes event discovery trustworthy."
+                    <p className="text-black font-black uppercase tracking-widest max-w-md text-[10px] leading-relaxed">
+                      Student-focused event discovery. AI-powered extraction. Human verification.
                     </p>
                   </div>
-                  <div className="flex items-center gap-3 sm:gap-4 text-xs text-kalvium-muted dark:text-kalvium-dark-muted font-medium">
-                    <span>Poster Truth</span>
-                    <span className="text-kalvium-border dark:text-kalvium-dark-border">→</span>
-                    <span>AI Extraction</span>
-                    <span className="text-kalvium-border dark:text-kalvium-dark-border">→</span>
-                    <span className="text-kalvium-success font-semibold inline-flex items-center gap-1">
-                      ✓ Campus Verified
-                    </span>
+                  <div className="flex flex-col items-center md:items-end gap-2 text-[10px] font-black tracking-widest uppercase">
+                    <p className="inline-flex items-center gap-2 text-[10px] font-black text-black bg-[#FFF8E1] px-4 py-2 border-2 border-black shadow-[4px_4px_0px_0px_black]">
+                      <span>Constructed by</span>
+                      <span className="text-[#E5391F] font-black text-[12px]">
+                        Squad 83
+                      </span>
+                    </p>
+                    <p className="text-[10px] text-black font-black mt-2">
+                      © 2026 CampusHub.
+                    </p>
                   </div>
-                </div>
-
-                {/* Bottom Bar Credit */}
-                <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-kalvium-border/60 dark:border-kalvium-dark-border/60 flex flex-col items-center justify-center gap-2 text-center">
-                  <p className="inline-flex items-center gap-2 text-sm sm:text-base font-medium text-kalvium-text dark:text-kalvium-dark-text">
-                    <span>Built with</span>
-                    <span className="text-kalvium-coral text-base sm:text-lg animate-pulse">♥</span>
-                    <span>by</span>
-                    <span className="font-display font-bold text-xl sm:text-2xl text-kalvium-coral">
-                      Squad 83
-                    </span>
-                  </p>
-                  <p className="text-xs text-kalvium-muted/70 dark:text-kalvium-dark-muted/70">
-                    © 2026 CampusHub. All rights reserved.
-                  </p>
                 </div>
               </footer>
             </SmoothScroll>

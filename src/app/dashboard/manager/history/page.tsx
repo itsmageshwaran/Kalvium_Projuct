@@ -93,29 +93,26 @@ export default function ManagerAuditHistoryPage() {
         <div className="flex items-center gap-1 bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border p-1 rounded-full text-xs shadow-soft-xs">
           <button
             onClick={() => setFilterAction("ALL")}
-            className={`px-3 py-1.5 rounded-full font-semibold transition ${
-              filterAction === "ALL" ? "bg-kalvium-coral text-white" : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-ink"
-            }`}
+            className={`px-3 py-1.5 rounded-full font-semibold transition ${filterAction === "ALL" ? "bg-kalvium-coral text-white" : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-ink"
+              }`}
           >
             All ({history.length})
           </button>
           <button
             onClick={() => setFilterAction("APPROVED")}
-            className={`px-3 py-1.5 rounded-full font-semibold transition ${
-              filterAction === "APPROVED"
+            className={`px-3 py-1.5 rounded-full font-semibold transition ${filterAction === "APPROVED"
                 ? "bg-kalvium-success-tint text-kalvium-success border border-kalvium-success-border"
                 : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-ink"
-            }`}
+              }`}
           >
             Approved
           </button>
           <button
             onClick={() => setFilterAction("DECLINED")}
-            className={`px-3 py-1.5 rounded-full font-semibold transition ${
-              filterAction === "DECLINED"
+            className={`px-3 py-1.5 rounded-full font-semibold transition ${filterAction === "DECLINED"
                 ? "bg-kalvium-coral-tint text-kalvium-coral border border-kalvium-coral/30"
                 : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-ink"
-            }`}
+              }`}
           >
             Declined
           </button>
@@ -133,11 +130,10 @@ export default function ManagerAuditHistoryPage() {
           {filteredHistory.map((entry) => (
             <div
               key={entry.id}
-              className={`p-5 rounded-2xl border transition shadow-soft-xs ${
-                entry.action === "APPROVED"
+              className={`p-5 rounded-2xl border transition shadow-soft-xs ${entry.action === "APPROVED"
                   ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-success-border/60 hover:border-kalvium-success"
                   : "bg-white dark:bg-kalvium-dark-surface border-kalvium-coral/30 hover:border-kalvium-coral/60"
-              }`}
+                }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                 <div className="flex items-start gap-4">

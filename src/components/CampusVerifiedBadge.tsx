@@ -20,29 +20,30 @@ export default function CampusVerifiedBadge({
   animate = false,
 }: CampusVerifiedBadgeProps) {
   const sizeClasses = {
-    sm: "px-2.5 py-0.5 text-[11px] gap-1 font-semibold",
-    md: "px-3 py-1 text-xs gap-1.5 font-semibold",
-    lg: "px-4 py-1.5 text-sm gap-2 font-semibold",
+    sm: "px-2 py-1 text-[10px] gap-1",
+    md: "px-3 py-1.5 text-xs gap-1.5",
+    lg: "px-4 py-2 text-sm gap-2",
   };
 
   const iconSizes = {
-    sm: 12,
-    md: 14,
-    lg: 16,
+    sm: 14,
+    md: 16,
+    lg: 18,
   };
 
   const content = (
     <span
-      className={`inline-flex items-center rounded-full border border-kalvium-success-border bg-kalvium-success-tint text-kalvium-success dark:bg-kalvium-dark-success-tint dark:border-emerald-900/40 dark:text-emerald-400 select-none transition-all duration-200 ${sizeClasses[size]} ${className}`}
+      className={`inline-flex items-center border border-[#111111]/20 bg-[#F7F7F5] text-[#111111] font-bold uppercase tracking-widest select-none rounded-full ${sizeClasses[size]} ${className}`}
       title={verifierName ? `Verified by ${verifierName}` : "Verified by Campus Staff"}
     >
       {showIcon && (
         <ShieldCheck
           size={iconSizes[size]}
-          className="text-kalvium-success dark:text-emerald-400 shrink-0"
+          className="text-[#E5391F] shrink-0"
+          strokeWidth={3}
         />
       )}
-      <span className="tracking-tight">Campus verified</span>
+      <span>Campus verified</span>
     </span>
   );
 
@@ -50,9 +51,9 @@ export default function CampusVerifiedBadge({
 
   return (
     <motion.span
-      initial={{ scale: 1.15, opacity: 0 }}
+      initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 360, damping: 22 }}
+      transition={{ duration: 0.2 }}
       className="inline-block"
     >
       {content}

@@ -1,12 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, Sparkles } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import EventCard, { EventCardData } from "@/components/EventCard";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 import EventDetailDrawer from "@/components/EventDetailDrawer";
-import StaggerGrid from "@/components/StaggerGrid";
 import { useAuth } from "@/context/AuthContext";
 
 const CATEGORIES = [
@@ -39,7 +37,6 @@ export default function EventsExplorePage() {
   const [savedEventIds, setSavedEventIds] = useState<Set<string>>(new Set());
   const [selectedEventForDrawer, setSelectedEventForDrawer] = useState<EventCardData | null>(null);
 
-  // Fetch student's saved event IDs to reflect bookmark state
   const fetchSavedState = async () => {
     if (!user) return;
     try {
@@ -104,49 +101,49 @@ export default function EventsExplorePage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-xs font-sans uppercase tracking-widest text-kalvium-coral font-bold bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint px-3 py-1 rounded-full border border-kalvium-coral/20">
+            <span className="text-[10px] font-sans uppercase tracking-widest text-[#E5391F] font-bold bg-white px-4 py-1.5 rounded-full border-2 border-black shadow-[2px_2px_0px_0px_black]">
               Campus Discovery
             </span>
             <CampusVerifiedBadge size="sm" animate />
           </div>
-          <h1 className="font-display text-display-lg font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight">
+          <h1 className="font-display text-4xl sm:text-6xl font-black text-black dark:text-white tracking-tighter uppercase leading-none">
             Everything verified, this semester.
           </h1>
-          <p className="text-base text-kalvium-muted dark:text-kalvium-dark-muted mt-2 max-w-xl">
+          <p className="text-base font-medium text-[#777777] mt-2 max-w-xl">
             Every listed event is authenticated by campus staff against original organizer posters.
           </p>
         </div>
 
         {/* Stats Pill */}
-        <div className="flex items-center gap-2.5 text-xs font-sans text-kalvium-text dark:text-kalvium-dark-text bg-white dark:bg-kalvium-dark-surface px-4 py-2.5 rounded-full self-start md:self-auto border border-kalvium-border dark:border-kalvium-dark-border shadow-xs">
-          <span className="text-kalvium-muted uppercase tracking-wider font-semibold">SHOWING:</span>
-          <span className="font-bold font-display text-sm text-kalvium-text dark:text-kalvium-dark-text">{events.length}</span>
-          <span className="text-kalvium-success font-semibold uppercase tracking-wider">APPROVED EVENTS</span>
+        <div className="flex items-center gap-2.5 text-xs font-sans text-[#111111] dark:text-white bg-white dark:bg-[#111111] px-4 py-2.5 rounded-full self-start md:self-auto border-4 border-black shadow-[6px_6px_0px_0px_black]">
+          <span className="text-[#777777] uppercase tracking-wider font-bold">SHOWING:</span>
+          <span className="font-black font-display text-base text-[#E5391F] leading-none">{events.length}</span>
+          <span className="text-[#111111] dark:text-[#D6D6D2] font-bold uppercase tracking-wider">APPROVED EVENTS</span>
         </div>
       </div>
 
       {/* Filter and Search Bar Section */}
-      <div className="bg-white dark:bg-kalvium-dark-surface rounded-3xl p-5 sm:p-6 mb-10 space-y-5 border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium-sm">
+      <div className="bg-white dark:bg-[#111111] rounded-2xl p-5 sm:p-6 mb-10 space-y-5 border-4 border-black shadow-[6px_6px_0px_0px_black]">
         {/* Search input and Sort dropdown */}
         <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="relative flex-1 w-full flex items-center gap-3 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-2xl px-4 py-3 focus-within:border-kalvium-coral transition">
-            <Search size={18} className="text-kalvium-muted shrink-0" />
+          <div className="relative flex-1 w-full flex items-center gap-3 bg-white border-2 border-black rounded-full px-6 py-4 shadow-[4px_4px_0px_0px_black] focus-within:border-[#E5391F] transition-colors">
+            <Search size={18} className="text-[#777777] shrink-0" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by event title, organizer, venue, or keywords..."
-              className="w-full bg-transparent text-sm text-kalvium-text dark:text-kalvium-dark-text placeholder:text-kalvium-muted focus:outline-none"
+              className="w-full bg-transparent text-sm font-medium text-[#111111] dark:text-white placeholder:text-[#777777] focus:outline-none"
             />
           </div>
 
           {/* Sort Selector */}
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <SlidersHorizontal size={16} className="text-kalvium-muted shrink-0 hidden sm:block" />
+            <SlidersHorizontal size={16} className="text-[#777777] shrink-0 hidden sm:block" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="w-full sm:w-auto bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-2xl px-4 py-3 text-xs font-semibold text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral transition"
+              className="w-full sm:w-auto bg-white border-2 border-black rounded-full px-6 py-4 shadow-[4px_4px_0px_0px_black] text-sm font-semibold text-[#111111] dark:text-white focus:outline-none focus:border-[#E5391F] transition-colors"
             >
               <option value="soonest">Sort: Soonest First</option>
               <option value="latest">Sort: Furthest Date</option>
@@ -157,7 +154,7 @@ export default function EventsExplorePage() {
 
         {/* Date Filter Pills */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-          <span className="text-kalvium-muted font-sans text-[11px] uppercase tracking-wider font-semibold shrink-0 mr-2">
+          <span className="text-[#777777] text-[10px] uppercase tracking-widest font-bold shrink-0 mr-2">
             Timeline:
           </span>
           {DATE_FILTERS.map((df) => {
@@ -166,11 +163,10 @@ export default function EventsExplorePage() {
               <button
                 key={df.id}
                 onClick={() => setSelectedDateFilter(df.id)}
-                className={`relative px-4 py-1.5 rounded-full font-medium transition-all duration-200 active:scale-95 whitespace-nowrap ${
-                  active
-                    ? "bg-kalvium-coral text-white font-semibold shadow-sm"
-                    : "bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
-                }`}
+                className={`relative px-4 py-1.5 rounded-full font-bold transition-all duration-200 active:scale-95 whitespace-nowrap border ${active
+                    ? "bg-[#E5391F] text-white border-black shadow-[4px_4px_0px_0px_black]"
+                    : "bg-white text-black border-black hover:shadow-[4px_4px_0px_0px_black]"
+                  }`}
               >
                 {df.label}
               </button>
@@ -180,7 +176,7 @@ export default function EventsExplorePage() {
 
         {/* Category Pills */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-          <span className="text-kalvium-muted font-sans text-[11px] uppercase tracking-wider font-semibold shrink-0 mr-2">
+          <span className="text-[#777777] text-[10px] uppercase tracking-widest font-bold shrink-0 mr-2">
             Category:
           </span>
           {CATEGORIES.map((cat) => {
@@ -189,11 +185,10 @@ export default function EventsExplorePage() {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`relative px-3.5 py-1.5 rounded-full font-medium transition-all duration-200 active:scale-95 whitespace-nowrap ${
-                  active
-                    ? "bg-kalvium-text dark:bg-kalvium-dark-text text-white dark:text-kalvium-dark-bg font-semibold shadow-sm"
-                    : "bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
-                }`}
+                className={`relative px-4 py-1.5 rounded-full font-bold transition-all duration-200 active:scale-95 whitespace-nowrap border ${active
+                    ? "bg-black text-white border-black shadow-[4px_4px_0px_0px_black]"
+                    : "bg-white text-black border-black hover:shadow-[4px_4px_0px_0px_black]"
+                  }`}
               >
                 {cat === "ALL" ? "All Categories" : cat}
               </button>
@@ -208,26 +203,26 @@ export default function EventsExplorePage() {
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
-              className="bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border rounded-2xl overflow-hidden flex flex-col h-[380px] animate-pulse"
+              className="bg-white dark:bg-[#111111] border border-[#D6D6D2] dark:border-[#444444] rounded-xl overflow-hidden flex flex-col h-[380px] animate-pulse"
             >
-              <div className="h-44 w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt" />
+              <div className="h-44 w-full bg-[#F7F7F5] dark:bg-[#222222]" />
               <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                 <div className="space-y-2.5">
-                  <div className="h-4 w-24 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-md" />
-                  <div className="h-6 w-5/6 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-md" />
-                  <div className="h-3.5 w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-md" />
+                  <div className="h-4 w-24 bg-[#F7F7F5] dark:bg-[#222222] rounded-md" />
+                  <div className="h-6 w-5/6 bg-[#F7F7F5] dark:bg-[#222222] rounded-md" />
+                  <div className="h-3.5 w-full bg-[#F7F7F5] dark:bg-[#222222] rounded-md" />
                 </div>
-                <div className="space-y-2 pt-3 border-t border-kalvium-border dark:border-kalvium-dark-border">
-                  <div className="h-4 w-1/2 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-md" />
+                <div className="space-y-2 pt-3 border-t border-[#D6D6D2] dark:border-[#444444]">
+                  <div className="h-4 w-1/2 bg-[#F7F7F5] dark:bg-[#222222] rounded-md" />
                 </div>
               </div>
             </div>
           ))}
         </div>
       ) : events.length === 0 ? (
-        <div className="bg-white dark:bg-kalvium-dark-surface py-16 text-center rounded-3xl p-8 max-w-xl mx-auto border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium-sm animate-fade-in">
-          <p className="font-display text-lg font-bold text-kalvium-text dark:text-kalvium-dark-text mb-2">No verified events found</p>
-          <p className="text-sm text-kalvium-muted dark:text-kalvium-dark-muted mb-6">
+        <div className="bg-white dark:bg-[#111111] py-16 text-center rounded-2xl p-8 max-w-xl mx-auto border-4 border-black shadow-[6px_6px_0px_0px_black]">
+          <p className="font-display text-2xl font-black text-[#111111] dark:text-white mb-2">No verified events found</p>
+          <p className="text-sm text-[#777777] font-medium mb-6">
             Try adjusting your search query, timeline filters, or category.
           </p>
           <button
@@ -236,7 +231,7 @@ export default function EventsExplorePage() {
               setSelectedCategory("ALL");
               setSelectedDateFilter("ALL");
             }}
-            className="rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-semibold px-5 py-2.5 transition active:scale-95 shadow-sm"
+            className="btn-kalvium-primary"
           >
             Clear all filters
           </button>

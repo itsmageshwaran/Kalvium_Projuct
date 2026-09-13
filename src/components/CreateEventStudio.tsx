@@ -366,16 +366,16 @@ export default function CreateEventStudio({
     const payloadConfidences =
       creationMode === "MANUAL"
         ? {
-            isManualEntry: true,
-            title: "MANUAL",
-            date: "MANUAL",
-            startTime: "MANUAL",
-            endTime: "MANUAL",
-            venue: "MANUAL",
-            organizerName: "MANUAL",
-            category: "MANUAL",
-            registrationUrl: "MANUAL",
-          }
+          isManualEntry: true,
+          title: "MANUAL",
+          date: "MANUAL",
+          startTime: "MANUAL",
+          endTime: "MANUAL",
+          venue: "MANUAL",
+          organizerName: "MANUAL",
+          category: "MANUAL",
+          registrationUrl: "MANUAL",
+        }
         : confidences;
 
     try {
@@ -422,11 +422,10 @@ export default function CreateEventStudio({
               setStep("UPLOAD");
               setErrorMsg(null);
             }}
-            className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 ${
-              creationMode === "AI"
+            className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 ${creationMode === "AI"
                 ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral shadow-soft-sm border border-kalvium-border dark:border-kalvium-dark-border"
                 : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text"
-            }`}
+              }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-kalvium-coral" />
             <span>⚡ AI Poster Extraction</span>
@@ -438,11 +437,10 @@ export default function CreateEventStudio({
               setCreationMode("MANUAL");
               setErrorMsg(null);
             }}
-            className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 ${
-              creationMode === "MANUAL"
+            className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 ${creationMode === "MANUAL"
                 ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral shadow-soft-sm border border-kalvium-border dark:border-kalvium-dark-border"
                 : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text"
-            }`}
+              }`}
           >
             <PenTool className="w-3.5 h-3.5 text-kalvium-coral" />
             <span>✍️ Manual Event Entry</span>
@@ -624,11 +622,10 @@ export default function CreateEventStudio({
                         key={preset.id}
                         type="button"
                         onClick={() => handleSelectPresetThumbnail(preset)}
-                        className={`group relative rounded-xl overflow-hidden aspect-[4/3] border transition-all text-left ${
-                          selectedPresetId === preset.id
+                        className={`group relative rounded-xl overflow-hidden aspect-[4/3] border transition-all text-left ${selectedPresetId === preset.id
                             ? "border-kalvium-coral ring-2 ring-kalvium-coral/30"
                             : "border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral/50"
-                        }`}
+                          }`}
                       >
                         <img
                           src={preset.url}
@@ -1070,11 +1067,10 @@ export default function CreateEventStudio({
                 {analyzingSteps.map((s, idx) => (
                   <div
                     key={s}
-                    className={`flex items-center gap-2.5 transition-all duration-300 ${
-                      idx <= analyzingStepIndex
+                    className={`flex items-center gap-2.5 transition-all duration-300 ${idx <= analyzingStepIndex
                         ? "opacity-100 text-kalvium-text dark:text-kalvium-dark-text translate-x-0"
                         : "opacity-40 text-kalvium-muted translate-x-1"
-                    }`}
+                      }`}
                   >
                     {idx < analyzingStepIndex ? (
                       <CheckCircle2 className="w-4 h-4 text-kalvium-success shrink-0" />

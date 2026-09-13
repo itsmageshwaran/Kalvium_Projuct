@@ -221,11 +221,10 @@ export default function EventDetailPage() {
             <button
               onClick={handleSaveToggle}
               disabled={saving}
-              className={`rounded-full px-6 py-3 text-sm font-semibold flex items-center gap-2 transition active:scale-95 shadow-sm ${
-                isSaved
+              className={`rounded-full px-6 py-3 text-sm font-semibold flex items-center gap-2 transition active:scale-95 shadow-sm ${isSaved
                   ? "bg-kalvium-coral text-white hover:bg-kalvium-coral-hover shadow-sm"
                   : "bg-white dark:bg-kalvium-dark-surface text-kalvium-text dark:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt"
-              }`}
+                }`}
             >
               {isSaved ? (
                 <>
