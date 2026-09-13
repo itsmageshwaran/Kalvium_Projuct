@@ -23,10 +23,10 @@ export default function TerminalBadge({
   };
 
   const variantStyles = {
-    verified: "border-kalvium-success-border bg-kalvium-success-tint text-kalvium-success",
-    amber: "border-kalvium-warning-border bg-kalvium-warning-tint text-kalvium-warning",
-    coral: "border-kalvium-coral/30 bg-kalvium-coral-tint text-kalvium-coral",
-    cyan: "border-kalvium-coral/30 bg-kalvium-coral-tint text-kalvium-coral",
+    verified: "border-kalvium-success-border dark:border-kalvium-dark-border bg-kalvium-success-tint dark:bg-kalvium-dark-surface-alt text-kalvium-success",
+    amber: "border-kalvium-warning-border dark:border-kalvium-dark-border bg-kalvium-warning-tint dark:bg-kalvium-dark-surface-alt text-kalvium-warning",
+    coral: "border-kalvium-coral/30 dark:border-kalvium-dark-border bg-kalvium-coral-tint dark:bg-kalvium-dark-surface-alt text-kalvium-coral",
+    cyan: "border-kalvium-coral/30 dark:border-kalvium-dark-border bg-kalvium-coral-tint dark:bg-kalvium-dark-surface-alt text-kalvium-coral",
     neutral: "border-kalvium-border dark:border-kalvium-dark-border text-kalvium-muted dark:text-kalvium-dark-muted bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt",
   };
 

@@ -6,8 +6,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import DemoSwitcherBar from "@/components/DemoSwitcherBar";
 import Navbar from "@/components/Navbar";
 import SmoothScroll from "@/components/SmoothScroll";
-import ScrollProgress from "@/components/ScrollProgress";
-import CursorAura from "@/components/CursorAura";
+import CampusHubLogo from "@/components/CampusHubLogo";
 
 const caveatDisplay = Caveat({
   subsets: ["latin"],
@@ -44,8 +43,6 @@ export default function RootLayout({
       <body className="font-body antialiased bg-kalvium-bg dark:bg-kalvium-dark-bg text-kalvium-text dark:text-kalvium-dark-text flex flex-col min-h-screen selection:bg-kalvium-coral/20 selection:text-kalvium-coral transition-colors duration-200">
         <AuthProvider>
           <ThemeProvider>
-            <ScrollProgress />
-            <CursorAura />
             <SmoothScroll>
               <div className="sticky top-0 z-40 w-full">
                 <DemoSwitcherBar />
@@ -56,24 +53,36 @@ export default function RootLayout({
               <footer className="relative border-t border-kalvium-border dark:border-kalvium-dark-border bg-kalvium-surface dark:bg-kalvium-dark-surface py-12 px-6 sm:px-10 text-xs text-kalvium-muted dark:text-kalvium-dark-muted transition-colors duration-200">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
                   <div>
-                    <div className="flex items-center justify-center md:justify-start gap-1.5 mb-1.5">
-                      <span className="font-display font-bold text-base text-kalvium-text dark:text-kalvium-dark-text tracking-tight">
-                        CampusHub
-                      </span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-kalvium-coral" />
+                    <div className="mb-3 flex justify-center md:justify-start">
+                      <CampusHubLogo size="md" showTagline />
                     </div>
                     <p className="text-kalvium-muted dark:text-kalvium-dark-muted max-w-md text-xs leading-relaxed">
                       "AI makes event creation faster. Human verification makes event discovery trustworthy."
                     </p>
                   </div>
-                  <div className="flex items-center gap-3 sm:gap-4 text-xs text-kalvium-muted dark:text-kalvium-dark-muted font-medium">
-                    <span>Poster Truth</span>
-                    <span className="text-kalvium-border dark:text-kalvium-dark-border">→</span>
-                    <span>AI Extraction</span>
-                    <span className="text-kalvium-border dark:text-kalvium-dark-border">→</span>
-                    <span className="text-kalvium-success font-semibold inline-flex items-center gap-1">
-                      ✓ Campus Verified
-                    </span>
+
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    <div className="flex items-center gap-3 sm:gap-4 text-xs text-kalvium-muted dark:text-kalvium-dark-muted font-medium">
+                      <span>Poster Truth</span>
+                      <span className="text-kalvium-border dark:text-kalvium-dark-border">→</span>
+                      <span>AI Extraction</span>
+                      <span className="text-kalvium-border dark:text-kalvium-dark-border">→</span>
+                      <span className="text-kalvium-success font-semibold inline-flex items-center gap-1">
+                        ✓ Campus Verified
+                      </span>
+                    </div>
+
+                    {/* Official Built for Kalvium Brand Lockup */}
+                    <div className="pl-0 sm:pl-6 sm:border-l border-kalvium-border dark:border-kalvium-dark-border text-center sm:text-left">
+                      <div className="text-xs font-bold tracking-tight text-kalvium-text dark:text-kalvium-dark-text">
+                        <span>Built for </span>
+                        <span className="text-kalvium-coral font-bold">Kalvium.</span>
+                      </div>
+                      <div className="w-8 h-0.5 bg-kalvium-coral my-1 mx-auto sm:mx-0 rounded-full" />
+                      <p className="text-[9px] uppercase tracking-[0.16em] text-kalvium-muted dark:text-kalvium-dark-muted font-bold">
+                        A Brighter Campus Together
+                      </p>
+                    </div>
                   </div>
                 </div>
 

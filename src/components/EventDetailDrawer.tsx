@@ -56,6 +56,16 @@ export default function EventDetailDrawer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, clashModalOpen, onClose]);
 
+  // Lock body scroll when drawer is open to prevent background scroll interference
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen]);
+
   if (!isOpen || !event) return null;
 
   const startingSoon = isStartingSoon(event.date, event.startTime);
@@ -122,14 +132,20 @@ export default function EventDetailDrawer({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 overflow-hidden flex justify-end bg-black/40 backdrop-blur-sm animate-fade-in">
+      <div
+        className="fixed inset-0 z-50 overflow-hidden flex justify-end bg-black/40 backdrop-blur-sm animate-fade-in"
+        data-lenis-prevent="true"
+      >
         {/* Backdrop click to close */}
         <div className="absolute inset-0" onClick={onClose} />
 
         {/* Slide-over Drawer Panel */}
-        <div className="relative w-full max-w-xl bg-white dark:bg-kalvium-dark-surface border-l border-kalvium-border dark:border-kalvium-dark-border shadow-2xl h-full flex flex-col z-10 animate-slide-left overflow-y-auto">
-          {/* Top Bar */}
-          <div className="sticky top-0 z-20 bg-white/95 dark:bg-kalvium-dark-surface/95 backdrop-blur-md px-6 py-4 border-b border-kalvium-border dark:border-kalvium-dark-border flex items-center justify-between">
+        <div
+          className="relative w-full max-w-xl bg-white dark:bg-kalvium-dark-surface border-l border-kalvium-border dark:border-kalvium-dark-border shadow-2xl h-full max-h-screen flex flex-col z-10 animate-slide-left overflow-hidden"
+          data-lenis-prevent="true"
+        >
+          {/* Top Bar - pinned and non-scrolling */}
+          <div className="shrink-0 bg-white/95 dark:bg-kalvium-dark-surface/95 backdrop-blur-md px-6 py-4 border-b border-kalvium-border dark:border-kalvium-dark-border flex items-center justify-between z-20">
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 rounded-full text-xs font-medium bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-text dark:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border">
                 {event.category}
@@ -146,8 +162,11 @@ export default function EventDetailDrawer({
             </button>
           </div>
 
-          {/* Drawer Body */}
-          <div className="p-6 space-y-6 flex-1">
+          {/* Drawer Body - smooth native scrolling */}
+          <div
+            className="p-6 space-y-6 flex-1 min-h-0 overflow-y-auto overscroll-contain pb-8 focus:outline-none"
+            data-lenis-prevent="true"
+          >
             {/* Poster Media Box */}
             <div className="relative rounded-2xl overflow-hidden bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border shadow-sm group">
               <img
@@ -214,30 +233,6 @@ export default function EventDetailDrawer({
               </div>
             </div>
 
-            {/* Primary Action Button: Save to Schedule */}
-            <div>
-              <button
-                onClick={handleSaveClick}
-                disabled={saving}
-                className={`w-full py-3.5 px-5 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] shadow-xs ${
-                  isSaved
-                    ? "bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-coral border border-kalvium-coral/30 hover:bg-kalvium-coral-tint"
-                    : "bg-kalvium-coral hover:bg-kalvium-coral-hover text-white shadow-md shadow-kalvium-coral/25"
-                }`}
-              >
-                {isSaved ? (
-                  <>
-                    <BookmarkCheck className="w-4 h-4 fill-kalvium-coral" />
-                    <span>Saved to My Schedule (Click to Remove)</span>
-                  </>
-                ) : (
-                  <>
-                    <Bookmark className="w-4 h-4" />
-                    <span>Save to My Schedule</span>
-                  </>
-                )}
-              </button>
-            </div>
 
             {/* Secondary Registration Link if available */}
             {event.registrationUrl &&
@@ -263,8 +258,8 @@ export default function EventDetailDrawer({
             )}
 
             {/* Human Verification Stamp Notice */}
-            <div className="p-4 rounded-2xl bg-kalvium-success-tint dark:bg-kalvium-dark-success-tint border border-kalvium-success-border dark:border-emerald-900/40 text-xs text-kalvium-text dark:text-kalvium-dark-text space-y-1">
-              <span className="text-xs font-semibold text-kalvium-success flex items-center gap-1.5">
+            <div className="p-4 rounded-2xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border text-xs text-kalvium-text dark:text-kalvium-dark-text space-y-1">
+              <span className="text-xs font-semibold text-kalvium-text dark:text-kalvium-dark-text flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-kalvium-success" />
                 Human Certified by Campus Leadership
               </span>
@@ -310,6 +305,31 @@ export default function EventDetailDrawer({
                 Open dedicated permalink page ↗
               </Link>
             </div>
+          </div>
+
+          {/* Sticky Frosted-Glass Bottom Bar */}
+          <div className="shrink-0 sticky bottom-0 bg-white/95 dark:bg-kalvium-dark-surface/95 backdrop-blur-md px-6 py-4 border-t border-kalvium-border dark:border-kalvium-dark-border z-30">
+            <button
+              onClick={handleSaveClick}
+              disabled={saving}
+              className={`w-full py-3.5 px-5 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] shadow-xs ${
+                isSaved
+                  ? "bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-coral border border-kalvium-coral/30 hover:bg-kalvium-coral-tint"
+                  : "bg-kalvium-coral hover:bg-kalvium-coral-hover text-white shadow-md shadow-kalvium-coral/25"
+              }`}
+            >
+              {isSaved ? (
+                <>
+                  <BookmarkCheck className="w-4 h-4 fill-kalvium-coral" />
+                  <span>Saved to My Schedule (Click to Remove)</span>
+                </>
+              ) : (
+                <>
+                  <Bookmark className="w-4 h-4" />
+                  <span>Save to My Schedule</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@ import React, { useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, ScanLine, ShieldCheck, UploadCloud, Zap, Sparkles } from "lucide-react";
+import { ArrowRight, ScanLine, ShieldCheck, UploadCloud, Zap, Sparkles, BookOpen, Calendar, Users } from "lucide-react";
 import MagneticButton from "@/components/MagneticButton";
 import CountUp from "@/components/CountUp";
 import StaggerGrid from "@/components/StaggerGrid";
@@ -54,10 +54,9 @@ export default function LandingPage() {
         {/* Subtle Campus Dot Grid Texture with Radial Fade */}
         <div className="absolute inset-0 bg-campus-dot-grid mask-radial-fade pointer-events-none -z-10" />
 
-        {/* Ambient Warm Aurora Glow Orbs */}
-        <div className="absolute top-[-8%] right-[-5%] w-[520px] h-[520px] bg-gradient-to-br from-kalvium-coral/20 via-amber-400/12 to-transparent blur-[120px] rounded-full pointer-events-none -z-10" />
-        <div className="absolute top-[10%] left-[-10%] w-[460px] h-[460px] bg-gradient-to-tr from-amber-200/35 dark:from-kalvium-coral/12 via-rose-200/20 to-transparent blur-[130px] rounded-full pointer-events-none -z-10" />
-        <div className="absolute bottom-[-10%] left-[25%] w-[600px] h-[280px] bg-gradient-to-t from-kalvium-coral/10 via-amber-300/8 to-transparent blur-[130px] rounded-full pointer-events-none -z-10" />
+        {/* Ambient Subtle Warmth */}
+        <div className="absolute top-[-8%] right-[-5%] w-[500px] h-[500px] bg-kalvium-coral/[0.04] dark:bg-kalvium-coral/[0.05] blur-[140px] rounded-full pointer-events-none -z-10" />
+        <div className="absolute bottom-[-10%] left-[10%] w-[500px] h-[300px] bg-kalvium-surface-alt/[0.5] dark:bg-kalvium-dark-surface-alt/[0.3] blur-[140px] rounded-full pointer-events-none -z-10" />
 
         <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 items-center">
           <motion.div style={{ scale: headlineScale, opacity: headlineOpacity, y: headlineY }}>
@@ -146,9 +145,8 @@ export default function LandingPage() {
 
           {/* Dominant Character Illustration & Layered Elements (Desktop) */}
           <motion.div style={{ y: cardsY }} className="relative hidden lg:block h-[500px] xl:h-[560px] w-full">
-            {/* Ambient Radial Spotlight & Warm Character Glow */}
-            <div className="absolute inset-0 bg-gradient-to-br from-kalvium-coral/15 via-amber-400/10 to-transparent blur-[90px] rounded-full pointer-events-none -z-10" />
-            <div className="absolute inset-0 bg-white/50 dark:bg-white/10 blur-[90px] rounded-full pointer-events-none -z-10" />
+            {/* Ambient Radial Spotlight */}
+            <div className="absolute inset-0 bg-kalvium-coral/[0.04] blur-[100px] rounded-full pointer-events-none -z-10" />
 
             {/* Character Illustration (Transparent PNG) */}
             <div className="relative w-full h-full ml-4 xl:ml-8">
@@ -172,6 +170,70 @@ export default function LandingPage() {
 
 
           </motion.div>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* Official Brand Pillars & University Lockup                       */}
+      {/* ---------------------------------------------------------------- */}
+      <section className="relative px-6 py-10 sm:px-10 border-y border-kalvium-border dark:border-kalvium-dark-border bg-white/70 dark:bg-kalvium-dark-surface/70 backdrop-blur-md">
+        <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+          {/* 3 Value Pillars from Official Brand Sheet */}
+          <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:divide-x divide-kalvium-border dark:divide-kalvium-dark-border">
+            <div className="flex items-center gap-3.5 sm:px-4 first:pl-0">
+              <div className="w-11 h-11 rounded-2xl bg-kalvium-coral/10 dark:bg-kalvium-coral/15 flex items-center justify-center text-kalvium-coral shrink-0 border border-kalvium-coral/20">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-sans font-bold uppercase tracking-wider text-kalvium-text dark:text-kalvium-dark-text">
+                  Discover Events
+                </h4>
+                <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">
+                  Verified campus calendar
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3.5 sm:px-4">
+              <div className="w-11 h-11 rounded-2xl bg-kalvium-coral/10 dark:bg-kalvium-coral/15 flex items-center justify-center text-kalvium-coral shrink-0 border border-kalvium-coral/20">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-sans font-bold uppercase tracking-wider text-kalvium-text dark:text-kalvium-dark-text">
+                  Organize Better
+                </h4>
+                <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">
+                  Clash-free scheduling
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3.5 sm:px-4">
+              <div className="w-11 h-11 rounded-2xl bg-kalvium-coral/10 dark:bg-kalvium-coral/15 flex items-center justify-center text-kalvium-coral shrink-0 border border-kalvium-coral/20">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-sans font-bold uppercase tracking-wider text-kalvium-text dark:text-kalvium-dark-text">
+                  Belong to More
+                </h4>
+                <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">
+                  Active student life
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Official 'Built for Kalvium' Lockup */}
+          <div className="md:col-span-4 flex flex-col items-center md:items-end justify-center pt-4 md:pt-0 border-t md:border-t-0 md:border-l border-kalvium-border dark:border-kalvium-dark-border md:pl-8 text-center md:text-right">
+            <div className="text-base sm:text-lg font-bold tracking-tight text-kalvium-text dark:text-kalvium-dark-text leading-tight">
+              <span>Built for </span>
+              <span className="text-kalvium-coral font-bold">Kalvium.</span>
+            </div>
+            <div className="w-10 h-0.5 bg-kalvium-coral my-1.5 rounded-full" />
+            <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] font-sans font-bold text-kalvium-muted dark:text-kalvium-dark-muted">
+              A Brighter Campus Together
+            </p>
+          </div>
         </div>
       </section>
 

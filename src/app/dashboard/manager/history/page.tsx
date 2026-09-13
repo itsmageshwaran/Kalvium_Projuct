@@ -78,7 +78,7 @@ export default function ManagerAuditHistoryPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
         <div>
-          <span className="text-xs font-sans uppercase tracking-widest text-kalvium-success font-bold bg-kalvium-success-tint px-3 py-1 rounded-full border border-kalvium-success-border">
+          <span className="text-xs font-sans uppercase tracking-widest text-kalvium-success font-bold bg-kalvium-bg dark:bg-kalvium-dark-surface px-3 py-1 rounded-full border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs">
             Immutable Audit Trail
           </span>
           <h1 className="text-3xl font-display font-black text-kalvium-ink dark:text-kalvium-dark-ink tracking-tight mt-1">
@@ -103,7 +103,7 @@ export default function ManagerAuditHistoryPage() {
             onClick={() => setFilterAction("APPROVED")}
             className={`px-3 py-1.5 rounded-full font-semibold transition ${
               filterAction === "APPROVED"
-                ? "bg-kalvium-success-tint text-kalvium-success border border-kalvium-success-border"
+                ? "bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-success border border-kalvium-border dark:border-kalvium-dark-border"
                 : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-ink"
             }`}
           >
@@ -135,8 +135,8 @@ export default function ManagerAuditHistoryPage() {
               key={entry.id}
               className={`p-5 rounded-2xl border transition shadow-soft-xs ${
                 entry.action === "APPROVED"
-                  ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-success-border/60 hover:border-kalvium-success"
-                  : "bg-white dark:bg-kalvium-dark-surface border-kalvium-coral/30 hover:border-kalvium-coral/60"
+                  ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-success/40"
+                  : "bg-white dark:bg-kalvium-dark-surface border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral/40"
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -149,13 +149,13 @@ export default function ManagerAuditHistoryPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                       {entry.action === "APPROVED" ? (
-                        <span className="text-[10px] font-sans uppercase tracking-wider font-bold bg-kalvium-success-tint text-kalvium-success border border-kalvium-success-border px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" />
+                        <span className="text-[10px] font-sans uppercase tracking-wider font-semibold bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-success border border-kalvium-border dark:border-kalvium-dark-border px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-kalvium-success" />
                           Approved & Certified
                         </span>
                       ) : (
-                        <span className="text-[10px] font-sans uppercase tracking-wider font-bold bg-kalvium-coral-tint text-kalvium-coral border border-kalvium-coral/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                          <XCircle className="w-3 h-3" />
+                        <span className="text-[10px] font-sans uppercase tracking-wider font-semibold bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-coral border border-kalvium-border dark:border-kalvium-dark-border px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                          <XCircle className="w-3 h-3 text-kalvium-coral" />
                           Declined
                         </span>
                       )}

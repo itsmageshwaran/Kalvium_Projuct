@@ -18,12 +18,12 @@ export default function GlobalError({
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4 py-16">
       <div className="text-center max-w-md mx-auto space-y-6">
-        <div className="w-16 h-16 rounded-3xl bg-red-50 dark:bg-red-950/40 text-red-500 flex items-center justify-center mx-auto border border-red-200 dark:border-red-900/50 shadow-sm">
+        <div className="w-16 h-16 rounded-3xl bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint text-kalvium-coral flex items-center justify-center mx-auto border border-kalvium-coral/20 shadow-sm">
           <AlertCircle className="w-8 h-8" />
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-red-500">
+          <p className="text-xs font-semibold uppercase tracking-wider text-kalvium-coral">
             System Notification
           </p>
           <h1 className="text-2xl font-display font-bold text-kalvium-text dark:text-kalvium-dark-text">

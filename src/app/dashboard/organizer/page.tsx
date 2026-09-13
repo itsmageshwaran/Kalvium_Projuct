@@ -68,10 +68,10 @@ export default function OrganizerDashboardPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
         <div>
-          <span className="text-xs font-sans uppercase tracking-widest text-kalvium-coral font-bold bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint px-2.5 py-0.5 rounded-full border border-kalvium-coral/20">
+          <span className="text-xs font-sans uppercase tracking-widest text-kalvium-text dark:text-kalvium-dark-text font-bold bg-kalvium-bg dark:bg-kalvium-dark-surface px-3 py-1 rounded-full border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs">
             Organizer Studio
           </span>
-          <h1 className="text-3xl sm:text-4xl font-display font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight mt-1">
+          <h1 className="text-3xl sm:text-4xl font-display font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight mt-1.5">
             {user.name}
           </h1>
           <p className="text-xs sm:text-sm text-kalvium-muted dark:text-kalvium-dark-muted mt-1">
@@ -93,7 +93,7 @@ export default function OrganizerDashboardPage() {
                 onClick={() => setActiveTab("CREATE_AI")}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm transition shrink-0 active:scale-95"
               >
-                <Sparkles className="w-4 h-4 text-amber-100" />
+                <Sparkles className="w-4 h-4 text-white" />
                 <span>+ Create with AI</span>
               </button>
 
@@ -135,7 +135,7 @@ export default function OrganizerDashboardPage() {
               : "bg-white dark:bg-kalvium-dark-surface text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <Sparkles className="w-3.5 h-3.5 text-kalvium-coral" />
           <span>Create with AI Poster</span>
         </button>
 
@@ -167,32 +167,44 @@ export default function OrganizerDashboardPage() {
         /* Tab 2: Your Submissions & Quick Metrics */
         <div className="space-y-6 animate-fade-in">
           {/* Status Metrics Strip */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="p-4 rounded-2xl border border-kalvium-warning-border bg-kalvium-warning-tint dark:bg-kalvium-dark-warning-tint">
-              <span className="text-[11px] font-sans text-kalvium-warning uppercase tracking-wider font-semibold block mb-1">
-                Pending Verification
-              </span>
-              <p className="text-2xl sm:text-3xl font-display font-bold text-kalvium-warning">{stats.pending}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs transition-all hover:-translate-y-0.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider font-semibold block mb-1">
+                  Pending Verification
+                </span>
+                <span className="w-2 h-2 rounded-full bg-kalvium-warning inline-block" />
+              </div>
+              <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-text dark:text-kalvium-dark-text mt-1">{stats.pending}</p>
+              <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">In manager review queue</p>
             </div>
 
-            <div className="p-4 rounded-2xl border border-kalvium-success-border bg-kalvium-success-tint dark:bg-kalvium-dark-success-tint">
-              <span className="text-[11px] font-sans text-kalvium-success uppercase tracking-wider font-semibold block mb-1">
-                Approved & Public
-              </span>
-              <p className="text-2xl sm:text-3xl font-display font-bold text-kalvium-success">{stats.approved}</p>
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs transition-all hover:-translate-y-0.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider font-semibold block mb-1">
+                  Approved & Public
+                </span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-kalvium-success" />
+              </div>
+              <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-text dark:text-kalvium-dark-text mt-1">{stats.approved}</p>
+              <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">Live on campus feed</p>
             </div>
 
-            <div className="p-4 rounded-2xl border border-kalvium-coral/30 bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint">
-              <span className="text-[11px] font-sans text-kalvium-coral uppercase tracking-wider font-semibold block mb-1">
-                Declined
-              </span>
-              <p className="text-2xl sm:text-3xl font-display font-bold text-kalvium-coral">{stats.declined}</p>
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs transition-all hover:-translate-y-0.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider font-semibold block mb-1">
+                  Declined
+                </span>
+                <XCircle className="w-3.5 h-3.5 text-kalvium-coral" />
+              </div>
+              <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-text dark:text-kalvium-dark-text mt-1">{stats.declined}</p>
+              <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">Requires information update</p>
             </div>
           </div>
 
           {/* Submissions List Header */}
           <div className="flex items-center justify-between pt-2">
-            <h2 className="text-sm font-display font-bold uppercase tracking-wider text-kalvium-text dark:text-kalvium-dark-text">
+            <h2 className="text-sm font-sans font-bold uppercase tracking-wider text-kalvium-text dark:text-kalvium-dark-text">
               Submission History
             </h2>
             <button
@@ -247,7 +259,7 @@ export default function OrganizerDashboardPage() {
                       />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="text-[10px] font-sans uppercase bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-coral px-2.5 py-0.5 rounded-full border border-kalvium-border font-semibold">
+                          <span className="text-[10px] font-sans uppercase bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-muted dark:text-kalvium-dark-muted px-2.5 py-0.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border font-semibold">
                             {ev.category}
                           </span>
                           {renderStatusBadge(ev.status)}
@@ -264,7 +276,7 @@ export default function OrganizerDashboardPage() {
                       {ev.status === "APPROVED" && (
                         <Link
                           href={`/events/${ev.id}`}
-                          className="px-4 py-1.5 rounded-full text-xs font-semibold text-kalvium-coral bg-kalvium-coral-tint hover:bg-kalvium-coral/20 border border-kalvium-coral/30 transition"
+                          className="px-4 py-1.5 rounded-full text-xs font-semibold text-kalvium-text dark:text-kalvium-dark-text hover:text-kalvium-coral bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt hover:bg-white dark:hover:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border transition shadow-soft-xs active:scale-95"
                         >
                           Public Page →
                         </Link>
@@ -274,8 +286,8 @@ export default function OrganizerDashboardPage() {
 
                   {/* Decline Feedback Banner */}
                   {ev.status === "DECLINED" && (
-                    <div className="p-4 rounded-xl bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint border border-kalvium-coral/30 text-xs text-kalvium-coral space-y-1">
-                      <div className="flex items-center gap-1.5 font-bold">
+                    <div className="p-4 rounded-xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border text-xs space-y-1.5">
+                      <div className="flex items-center gap-1.5 font-bold text-kalvium-coral">
                         <XCircle className="w-4 h-4" />
                         <span>Declined by Campus Manager</span>
                       </div>
@@ -284,7 +296,7 @@ export default function OrganizerDashboardPage() {
                         {ev.declineReason || "Event information could not be verified."}
                       </p>
                       {ev.declineCustomNotes && (
-                        <p className="text-kalvium-muted text-[11px] pt-1 border-t border-kalvium-coral/20">
+                        <p className="text-kalvium-muted dark:text-kalvium-dark-muted text-[11px] pt-1 border-t border-kalvium-border dark:border-kalvium-dark-border">
                           Manager feedback: {ev.declineCustomNotes}
                         </p>
                       )}
@@ -304,27 +316,28 @@ function renderStatusBadge(status: string) {
   switch (status) {
     case "APPROVED":
       return (
-        <span className="text-[10px] font-medium uppercase tracking-wider bg-kalvium-success-tint text-kalvium-success border border-kalvium-success-border px-2.5 py-0.5 rounded-full">
-          Approved
+        <span className="text-[10px] font-sans uppercase tracking-wider font-semibold bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-success border border-kalvium-border dark:border-kalvium-dark-border px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+          <CheckCircle2 className="w-3 h-3 text-kalvium-success shrink-0" />
+          <span>Approved</span>
         </span>
       );
     case "PENDING":
       return (
-        <span className="text-[10px] font-medium uppercase tracking-wider bg-kalvium-warning-tint text-kalvium-warning border border-kalvium-warning-border px-2.5 py-0.5 rounded-full flex items-center gap-1">
-          <Clock className="w-3 h-3" />
-          Pending Verification
+        <span className="text-[10px] font-sans uppercase tracking-wider font-semibold bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-warning border border-kalvium-border dark:border-kalvium-dark-border px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+          <Clock className="w-3 h-3 text-kalvium-warning shrink-0" />
+          <span>Pending Verification</span>
         </span>
       );
     case "DECLINED":
       return (
-        <span className="text-[10px] font-medium uppercase tracking-wider bg-kalvium-coral-tint text-kalvium-coral border border-kalvium-coral/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-          <XCircle className="w-3 h-3" />
-          Declined
+        <span className="text-[10px] font-sans uppercase tracking-wider font-semibold bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-coral border border-kalvium-border dark:border-kalvium-dark-border px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+          <XCircle className="w-3 h-3 text-kalvium-coral shrink-0" />
+          <span>Declined</span>
         </span>
       );
     default:
       return (
-        <span className="text-[10px] font-medium uppercase tracking-wider bg-kalvium-surface-alt text-kalvium-muted border border-kalvium-border px-2.5 py-0.5 rounded-full">
+        <span className="text-[10px] font-sans uppercase tracking-wider font-semibold bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-muted dark:text-kalvium-dark-muted border border-kalvium-border dark:border-kalvium-dark-border px-2.5 py-0.5 rounded-full">
           Draft
         </span>
       );

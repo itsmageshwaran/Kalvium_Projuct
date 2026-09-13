@@ -24,7 +24,7 @@ import {
   Mail,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { SAMPLE_POSTERS, ConfidenceLevel } from "@/lib/ai-poster-analyzer";
+import { SAMPLE_POSTERS, ConfidenceLevel } from "@/lib/poster-shared";
 
 const CATEGORIES = [
   "Workshop",
@@ -412,83 +412,11 @@ export default function CreateEventStudio({
 
   return (
     <div className="space-y-6">
-      {/* Creation Mode Switcher: AI Extraction vs Manual Event Entry */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-2 rounded-2xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs">
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => {
-              setCreationMode("AI");
-              setStep("UPLOAD");
-              setErrorMsg(null);
-            }}
-            className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 ${
-              creationMode === "AI"
-                ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral shadow-soft-sm border border-kalvium-border dark:border-kalvium-dark-border"
-                : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text"
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-kalvium-coral" />
-            <span>⚡ AI Poster Extraction</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setCreationMode("MANUAL");
-              setErrorMsg(null);
-            }}
-            className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 ${
-              creationMode === "MANUAL"
-                ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral shadow-soft-sm border border-kalvium-border dark:border-kalvium-dark-border"
-                : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text"
-            }`}
-          >
-            <PenTool className="w-3.5 h-3.5 text-kalvium-coral" />
-            <span>✍️ Manual Event Entry</span>
-          </button>
-        </div>
-
-        <span className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted hidden md:inline px-3">
-          {creationMode === "AI"
-            ? "Upload an event poster flyer to extract data with AI vision"
-            : "Directly fill in event schedule, registration links, and artwork"}
-        </span>
-      </div>
-
       {/* ========================================================= */}
       {/* MODE 1: MANUAL EVENT ENTRY */}
       {/* ========================================================= */}
       {creationMode === "MANUAL" && (
         <div className="space-y-8 animate-fade-in">
-          {/* Header Banner */}
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint text-kalvium-coral flex items-center justify-center font-bold">
-                <PenTool className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-kalvium-text dark:text-kalvium-dark-text">
-                  Manual Event Creator
-                </h3>
-                <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
-                  Add full event details, custom thumbnails, registration links, and submit for Campus Manager certification.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setCreationMode("AI");
-                setStep("UPLOAD");
-              }}
-              className="text-xs text-kalvium-coral hover:underline flex items-center gap-1 font-semibold"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Switch to AI Poster Mode</span>
-            </button>
-          </div>
 
           {/* Live Conflict & Duplicate Advisory */}
           {conflictResult?.hasConflict && (
@@ -509,7 +437,7 @@ export default function CreateEventStudio({
           )}
 
           {errorMsg && (
-            <div className="p-4 rounded-2xl bg-kalvium-coral-tint border border-kalvium-coral/30 text-xs text-kalvium-coral">
+            <div className="p-4 rounded-2xl bg-kalvium-coral-tint dark:bg-kalvium-dark-surface-alt border border-kalvium-coral/30 dark:border-kalvium-coral/40 text-xs text-kalvium-coral">
               {errorMsg}
             </div>
           )}
@@ -1136,7 +1064,7 @@ export default function CreateEventStudio({
               )}
 
               {errorMsg && (
-                <div className="p-4 rounded-2xl bg-kalvium-coral-tint border border-kalvium-coral/30 text-xs text-kalvium-coral">
+                <div className="p-4 rounded-2xl bg-kalvium-coral-tint dark:bg-kalvium-dark-surface-alt border border-kalvium-coral/30 dark:border-kalvium-coral/40 text-xs text-kalvium-coral">
                   {errorMsg}
                 </div>
               )}
@@ -1412,27 +1340,27 @@ export default function CreateEventStudio({
 function renderConfidenceBadge(level?: ConfidenceLevel | string) {
   if (level === "MANUAL") {
     return (
-      <span className="text-[11px] font-semibold text-kalvium-coral bg-kalvium-coral-tint border border-kalvium-coral/30 px-2.5 py-0.5 rounded-full">
+      <span className="text-[11px] font-semibold text-kalvium-coral bg-kalvium-coral-tint dark:bg-kalvium-dark-surface-alt border border-kalvium-coral/30 dark:border-kalvium-dark-border px-2.5 py-0.5 rounded-full">
         ✍️ Manual Entry
       </span>
     );
   }
   if (level === "HIGH") {
     return (
-      <span className="text-[11px] font-semibold text-kalvium-success bg-kalvium-success-tint border border-kalvium-success-border px-2.5 py-0.5 rounded-full">
+      <span className="text-[11px] font-semibold text-kalvium-success bg-kalvium-success-tint dark:bg-kalvium-dark-surface-alt border border-kalvium-success-border dark:border-kalvium-dark-border px-2.5 py-0.5 rounded-full">
         ✓ High confidence
       </span>
     );
   }
   if (level === "MEDIUM") {
     return (
-      <span className="text-[11px] font-semibold text-kalvium-warning bg-kalvium-warning-tint border border-kalvium-warning-border px-2.5 py-0.5 rounded-full">
+      <span className="text-[11px] font-semibold text-kalvium-warning bg-kalvium-warning-tint dark:bg-kalvium-dark-surface-alt border border-kalvium-warning-border dark:border-kalvium-dark-border px-2.5 py-0.5 rounded-full">
         ⚠ Medium confidence
       </span>
     );
   }
   return (
-    <span className="text-[11px] font-semibold text-kalvium-coral bg-kalvium-coral-tint border border-kalvium-coral/30 px-2.5 py-0.5 rounded-full">
+    <span className="text-[11px] font-semibold text-kalvium-coral bg-kalvium-coral-tint dark:bg-kalvium-dark-surface-alt border border-kalvium-coral/30 dark:border-kalvium-dark-border px-2.5 py-0.5 rounded-full">
       ⚠ Low confidence (Check poster)
     </span>
   );

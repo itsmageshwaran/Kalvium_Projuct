@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    serverComponentsExternalPackages: ["tesseract.js", "sharp", "@huggingface/transformers"],
+  },
   webpack: (config, { dev }) => {
     if (dev) {
       config.cache = {

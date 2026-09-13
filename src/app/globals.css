@@ -114,11 +114,11 @@ html.dark .bg-campus-dot-grid {
 }
 
 .badge-verified {
-  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-kalvium-success-tint dark:bg-kalvium-dark-success-tint text-kalvium-success border border-kalvium-success-border dark:border-emerald-900/40;
+  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-kalvium-success-tint dark:bg-kalvium-dark-success-tint text-kalvium-success border border-kalvium-success-border dark:border-kalvium-dark-border;
 }
 
 .badge-warning {
-  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-kalvium-warning-tint dark:bg-kalvium-dark-warning-tint text-kalvium-warning border border-kalvium-warning-border dark:border-amber-900/40;
+  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-kalvium-warning-tint dark:bg-kalvium-dark-warning-tint text-kalvium-warning border border-kalvium-warning-border dark:border-kalvium-dark-border;
 }
 
 .badge-neutral {

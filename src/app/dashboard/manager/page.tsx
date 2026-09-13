@@ -24,7 +24,7 @@ import confetti from "canvas-confetti";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 import DeclineReasonModal from "@/components/DeclineReasonModal";
 import { useAuth } from "@/context/AuthContext";
-import { ConfidenceLevel } from "@/lib/ai-poster-analyzer";
+import { ConfidenceLevel } from "@/lib/poster-shared";
 
 export default function CampusManagerVerificationQueue() {
   const { user } = useAuth();
@@ -123,7 +123,7 @@ export default function CampusManagerVerificationQueue() {
           particleCount: 80,
           spread: 70,
           origin: { y: 0.6 },
-          colors: ["#10B981", "#6366F1", "#3B82F6"],
+          colors: ["#D44A32", "#B8823C", "#387050"],
         });
 
         setSuccessToast(`✓ "${selectedEvent.title}" stamped with CAMPUS VERIFIED badge and published!`);
@@ -174,7 +174,7 @@ export default function CampusManagerVerificationQueue() {
     return (
       <div className="max-w-md mx-auto px-4 py-24 text-center">
         <div className="p-8 rounded-3xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-sm text-center">
-          <div className="w-12 h-12 rounded-full bg-kalvium-success-tint border border-kalvium-success-border text-kalvium-success flex items-center justify-center mx-auto mb-3">
+          <div className="w-12 h-12 rounded-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border text-kalvium-success flex items-center justify-center mx-auto mb-3">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <h2 className="text-xl font-display font-black text-kalvium-ink dark:text-kalvium-dark-ink mb-2">Campus Manager Portal</h2>
@@ -222,21 +222,9 @@ export default function CampusManagerVerificationQueue() {
       {/* Signature Pipeline Concept Header */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <span className="text-xs font-sans uppercase tracking-widest text-kalvium-success font-bold bg-kalvium-success-tint px-3 py-1 rounded-full border border-kalvium-success-border">
+          <span className="text-xs font-sans uppercase tracking-widest text-kalvium-success font-bold bg-kalvium-bg dark:bg-kalvium-dark-surface px-3 py-1 rounded-full border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs">
             Official Campus Certification Studio
           </span>
-          <span className="text-kalvium-muted hidden sm:inline">•</span>
-          <div className="hidden sm:flex items-center gap-2 text-[11px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted bg-white dark:bg-kalvium-dark-surface px-3.5 py-1.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs">
-            <span className="text-kalvium-ink dark:text-kalvium-dark-ink font-semibold">POSTER TRUTH</span>
-            <span className="text-kalvium-coral font-bold">→</span>
-            <span className="text-kalvium-coral font-semibold">AI UNDERSTANDING</span>
-            <span className="text-kalvium-coral font-bold">→</span>
-            <span className="text-kalvium-warning font-semibold">HUMAN VERIFICATION</span>
-            <span className="text-kalvium-success font-bold">→</span>
-            <span className="text-kalvium-success font-bold bg-kalvium-success-tint px-2.5 py-0.5 rounded-full border border-kalvium-success-border">
-              ✓ CAMPUS VERIFIED
-            </span>
-          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -269,7 +257,7 @@ export default function CampusManagerVerificationQueue() {
 
       {/* Success Notification */}
       {successToast && (
-        <div className="mb-6 p-4 rounded-2xl bg-kalvium-success-tint border border-kalvium-success-border text-kalvium-success text-xs font-semibold flex items-center justify-between shadow-soft-sm animate-slide-down">
+        <div className="mb-6 p-4 rounded-2xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border text-kalvium-text dark:text-kalvium-dark-text text-xs font-semibold flex items-center justify-between shadow-soft-sm animate-slide-down">
           <span>{successToast}</span>
           <button onClick={() => setSuccessToast(null)} className="text-kalvium-success hover:opacity-75 active:scale-90 transition-transform">
             ✕
@@ -283,20 +271,20 @@ export default function CampusManagerVerificationQueue() {
           onClick={() => setActiveTab("PENDING")}
           className={`p-4 sm:p-5 rounded-2xl border text-left transition-all duration-200 active:scale-[0.98] ${
             activeTab === "PENDING"
-              ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-warning shadow-soft-md ring-2 ring-kalvium-warning/30"
-              : "bg-white/70 dark:bg-kalvium-dark-surface/70 border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-warning/50 hover:bg-white dark:hover:bg-kalvium-dark-surface shadow-soft-xs"
+              ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-warning/60 shadow-soft-md"
+              : "bg-white/70 dark:bg-kalvium-dark-surface/70 border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-warning/40 hover:bg-white dark:hover:bg-kalvium-dark-surface shadow-soft-xs"
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sans uppercase tracking-wider font-bold text-kalvium-warning">
+            <span className="text-[11px] font-sans uppercase tracking-wider font-semibold text-kalvium-muted dark:text-kalvium-dark-muted">
               Needs Review
             </span>
-            <span className="w-2.5 h-2.5 rounded-full bg-kalvium-warning animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-kalvium-warning animate-pulse" />
           </div>
-          <p className="text-3xl sm:text-4xl font-display font-black text-kalvium-warning mt-2">
+          <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-ink dark:text-kalvium-dark-ink mt-1">
             {stats.pending.toString().padStart(2, "0")}
           </p>
-          <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-1">Pending verification queue</p>
+          <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">Pending verification queue</p>
         </button>
 
         <button
@@ -306,20 +294,20 @@ export default function CampusManagerVerificationQueue() {
           }}
           className={`p-4 sm:p-5 rounded-2xl border text-left transition-all duration-200 active:scale-[0.98] ${
             activeTab === "APPROVED"
-              ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-success shadow-soft-md ring-2 ring-kalvium-success/30"
-              : "bg-white/70 dark:bg-kalvium-dark-surface/70 border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-success/50 hover:bg-white dark:hover:bg-kalvium-dark-surface shadow-soft-xs"
+              ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-success/60 shadow-soft-md"
+              : "bg-white/70 dark:bg-kalvium-dark-surface/70 border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-success/40 hover:bg-white dark:hover:bg-kalvium-dark-surface shadow-soft-xs"
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sans uppercase tracking-wider font-bold text-kalvium-success">
+            <span className="text-[11px] font-sans uppercase tracking-wider font-semibold text-kalvium-muted dark:text-kalvium-dark-muted">
               Campus Verified
             </span>
-            <CheckCircle2 className="w-4 h-4 text-kalvium-success" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-kalvium-success" />
           </div>
-          <p className="text-3xl sm:text-4xl font-display font-black text-kalvium-success mt-2">
+          <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-ink dark:text-kalvium-dark-ink mt-1">
             {stats.approved.toString().padStart(2, "0")}
           </p>
-          <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-1">Certified events audit</p>
+          <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">Certified events audit</p>
         </button>
 
         <button
@@ -329,20 +317,20 @@ export default function CampusManagerVerificationQueue() {
           }}
           className={`p-4 sm:p-5 rounded-2xl border text-left transition-all duration-200 active:scale-[0.98] ${
             activeTab === "DECLINED"
-              ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-coral shadow-soft-md ring-2 ring-kalvium-coral/30"
-              : "bg-white/70 dark:bg-kalvium-dark-surface/70 border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral/50 hover:bg-white dark:hover:bg-kalvium-dark-surface shadow-soft-xs"
+              ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-coral/60 shadow-soft-md"
+              : "bg-white/70 dark:bg-kalvium-dark-surface/70 border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral/40 hover:bg-white dark:hover:bg-kalvium-dark-surface shadow-soft-xs"
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sans uppercase tracking-wider font-bold text-kalvium-coral">
+            <span className="text-[11px] font-sans uppercase tracking-wider font-semibold text-kalvium-muted dark:text-kalvium-dark-muted">
               Declined Submissions
             </span>
-            <XCircle className="w-4 h-4 text-kalvium-coral" />
+            <XCircle className="w-3.5 h-3.5 text-kalvium-coral" />
           </div>
-          <p className="text-3xl sm:text-4xl font-display font-black text-kalvium-coral mt-2">
+          <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-ink dark:text-kalvium-dark-ink mt-1">
             {stats.declined.toString().padStart(2, "0")}
           </p>
-          <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-1">Declined with feedback log</p>
+          <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">Declined with feedback log</p>
         </button>
       </div>
 
@@ -354,7 +342,7 @@ export default function CampusManagerVerificationQueue() {
         </div>
       ) : pendingEvents.length === 0 ? (
         <div className="py-20 text-center bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border rounded-3xl p-8 max-w-xl mx-auto shadow-soft-sm">
-          <div className="w-12 h-12 rounded-full bg-kalvium-success-tint border border-kalvium-success-border text-kalvium-success flex items-center justify-center mx-auto mb-3">
+          <div className="w-12 h-12 rounded-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border text-kalvium-success flex items-center justify-center mx-auto mb-3">
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <h3 className="text-lg font-display font-black text-kalvium-ink dark:text-kalvium-dark-ink mb-1">Verification Queue is Clear</h3>
@@ -388,7 +376,7 @@ export default function CampusManagerVerificationQueue() {
                     onClick={() => selectEventForReview(event)}
                     className={`p-4 rounded-2xl border cursor-pointer transition-all duration-200 ease-out-expo animate-slide-up stagger-${(idx % 4) + 1} ${
                       isSelected
-                        ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-coral shadow-soft-md ring-2 ring-kalvium-coral/30 scale-[1.01]"
+                        ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-border dark:border-kalvium-dark-border shadow-soft-md scale-[1.01]"
                         : "bg-white/80 dark:bg-kalvium-dark-surface/80 border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral/40 hover:bg-white dark:hover:bg-kalvium-dark-surface hover:-translate-y-0.5 shadow-soft-xs"
                     }`}
                   >
@@ -426,7 +414,7 @@ export default function CampusManagerVerificationQueue() {
                 {/* Studio Header & Certification Disclaimer */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-kalvium-border dark:border-kalvium-dark-border">
                   <div>
-                    <span className="text-[11px] font-sans uppercase tracking-wider text-kalvium-warning font-bold bg-kalvium-warning-tint px-2.5 py-0.5 rounded-full border border-kalvium-warning-border">
+                    <span className="text-[11px] font-sans uppercase tracking-wider text-kalvium-warning font-bold bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-2.5 py-0.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border">
                       Pending Manager Certification
                     </span>
                     <h2 className="text-xl font-display font-black text-kalvium-ink dark:text-kalvium-dark-ink mt-1">
@@ -692,7 +680,7 @@ export default function CampusManagerVerificationQueue() {
                     <button
                       onClick={handleApprove}
                       disabled={actionLoading}
-                      className="flex-1 sm:flex-initial px-6 py-2.5 rounded-full text-xs font-bold text-white bg-kalvium-success hover:bg-emerald-600 shadow-soft-sm transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
+                      className="flex-1 sm:flex-initial px-6 py-2.5 rounded-full text-xs font-bold text-white bg-kalvium-success hover:opacity-90 shadow-soft-sm transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
                     >
                       <CheckCircle2 className="w-4 h-4 text-white" />
                       <span>{isEditing ? "Save Edits & Approve" : "Approve Event (Stamp Verified)"}</span>
@@ -730,7 +718,7 @@ export default function CampusManagerVerificationQueue() {
                 .map((entry) => (
                   <div
                     key={entry.id}
-                    className="p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-success-border/60 hover:border-kalvium-success shadow-soft-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-200"
+                    className="p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-success/40 shadow-soft-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-200"
                   >
                     <div className="flex items-start gap-4 min-w-0">
                       <img
@@ -740,7 +728,7 @@ export default function CampusManagerVerificationQueue() {
                       />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="text-[10px] font-sans uppercase tracking-wider font-bold bg-kalvium-success-tint text-kalvium-success border border-kalvium-success-border px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                          <span className="text-[10px] font-sans uppercase tracking-wider font-bold bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-success border border-kalvium-border dark:border-kalvium-dark-border px-2.5 py-0.5 rounded-full flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3" />
                             Approved & Certified
                           </span>
@@ -797,19 +785,19 @@ export default function CampusManagerVerificationQueue() {
                 .map((entry) => (
                   <div
                     key={entry.id}
-                    className="p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-coral/30 hover:border-kalvium-coral/60 shadow-soft-xs flex flex-col gap-3 transition-all duration-200"
+                    className="p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral/40 shadow-soft-xs flex flex-col gap-3 transition-all duration-200"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                       <div className="flex items-start gap-4 min-w-0">
                         <img
                           src={entry.event?.posterUrl || "/images/placeholder.svg"}
                           alt={entry.event?.title || "Event"}
-                          className="w-16 h-16 rounded-xl object-cover bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt shrink-0 border border-kalvium-border dark:border-kalvium-dark-border opacity-60"
+                          className="w-16 h-16 rounded-xl object-cover bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt shrink-0 border border-kalvium-border dark:border-kalvium-dark-border opacity-70"
                         />
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <span className="text-[10px] font-sans uppercase tracking-wider font-bold bg-kalvium-coral-tint text-kalvium-coral border border-kalvium-coral/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                              <XCircle className="w-3 h-3" />
+                            <span className="text-[10px] font-sans uppercase tracking-wider font-semibold bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-coral border border-kalvium-border dark:border-kalvium-dark-border px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                              <XCircle className="w-3 h-3 text-kalvium-coral" />
                               Declined
                             </span>
                             <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-kalvium-muted dark:text-kalvium-dark-muted bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-2.5 py-0.5 rounded-full">
@@ -863,27 +851,27 @@ export default function CampusManagerVerificationQueue() {
 function renderConfidenceBadge(level?: ConfidenceLevel | string) {
   if (level === "MANUAL") {
     return (
-      <span className="text-[10px] font-sans font-bold text-kalvium-coral bg-kalvium-coral-tint border border-kalvium-coral/30 px-2 py-0.5 rounded-full">
+      <span className="text-[10px] font-sans font-semibold text-kalvium-coral bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border px-2 py-0.5 rounded-full">
         ✍️ Manual Entry
       </span>
     );
   }
   if (level === "HIGH") {
     return (
-      <span className="text-[10px] font-sans font-bold text-kalvium-success bg-kalvium-success-tint border border-kalvium-success-border px-2 py-0.5 rounded-full">
+      <span className="text-[10px] font-sans font-semibold text-kalvium-success bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border px-2 py-0.5 rounded-full">
         ✓ High
       </span>
     );
   }
   if (level === "MEDIUM") {
     return (
-      <span className="text-[10px] font-sans font-bold text-kalvium-warning bg-kalvium-warning-tint border border-kalvium-warning-border px-2 py-0.5 rounded-full">
+      <span className="text-[10px] font-sans font-semibold text-kalvium-warning bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border px-2 py-0.5 rounded-full">
         ⚠ Medium
       </span>
     );
   }
   return (
-    <span className="text-[10px] font-sans font-bold text-kalvium-coral bg-kalvium-coral-tint border border-kalvium-coral/30 px-2 py-0.5 rounded-full">
+    <span className="text-[10px] font-sans font-semibold text-kalvium-coral bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border px-2 py-0.5 rounded-full">
       ⚠ Low (Scrutinize)
     </span>
   );

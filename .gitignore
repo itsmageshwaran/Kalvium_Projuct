@@ -32,3 +32,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# OCR traineddata & test scratch scripts
+eng.traineddata
+test-*.mjs
+test-*.ts

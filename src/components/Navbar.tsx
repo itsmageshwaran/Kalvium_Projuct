@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import ThemeToggle from "@/components/ThemeToggle";
+import CampusHubLogo from "@/components/CampusHubLogo";
 import {
   Sparkles,
   Compass,
@@ -29,15 +30,7 @@ export default function Navbar() {
           {/* Logo & Brand Identity */}
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2 group select-none">
-              <div className="w-8 h-8 rounded-xl bg-kalvium-coral text-white flex items-center justify-center font-display font-bold text-base shadow-xs group-hover:bg-kalvium-coral-hover transition-colors">
-                C
-              </div>
-              <div className="flex items-baseline gap-0.5">
-                <span className="font-display font-bold tracking-tight text-xl text-kalvium-text dark:text-kalvium-dark-text leading-none">
-                  CampusHub
-                </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-kalvium-coral inline-block" />
-              </div>
+              <CampusHubLogo size="md" />
             </Link>
           </div>
 

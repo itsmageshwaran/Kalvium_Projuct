@@ -33,16 +33,16 @@ export default function CampusVerifiedBadge({
 
   const content = (
     <span
-      className={`inline-flex items-center rounded-full border border-kalvium-success-border bg-kalvium-success-tint text-kalvium-success dark:bg-kalvium-dark-success-tint dark:border-emerald-900/40 dark:text-emerald-400 select-none transition-all duration-200 ${sizeClasses[size]} ${className}`}
+      className={`inline-flex items-center rounded-full border border-kalvium-border dark:border-kalvium-dark-border bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-text dark:text-kalvium-dark-text select-none transition-all duration-200 ${sizeClasses[size]} ${className}`}
       title={verifierName ? `Verified by ${verifierName}` : "Verified by Campus Staff"}
     >
       {showIcon && (
         <ShieldCheck
           size={iconSizes[size]}
-          className="text-kalvium-success dark:text-emerald-400 shrink-0"
+          className="text-kalvium-success shrink-0"
         />
       )}
-      <span className="tracking-tight">Campus verified</span>
+      <span className="tracking-tight font-medium">Campus verified</span>
     </span>
   );
 
