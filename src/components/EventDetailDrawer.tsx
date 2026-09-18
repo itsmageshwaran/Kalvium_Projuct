@@ -19,6 +19,7 @@ import ClashWarningModal from "./ClashWarningModal";
 import { useAuth } from "@/context/AuthContext";
 import { isStartingSoon, getHumanCountdown } from "@/lib/time";
 import { EventCardData } from "./EventCard";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 interface EventDetailDrawerProps {
   event: EventCardData | null;
@@ -38,6 +39,7 @@ export default function EventDetailDrawer({
   const [saving, setSaving] = useState(false);
   const [clashModalOpen, setClashModalOpen] = useState(false);
   const [clashData, setClashData] = useState<any>(null);
+  const trapRef = useFocusTrap(isOpen && !clashModalOpen);
 
   useEffect(() => {
     if (event) {
@@ -127,7 +129,13 @@ export default function EventDetailDrawer({
         <div className="absolute inset-0" onClick={onClose} />
 
         {/* Slide-over Drawer Panel */}
-        <div className="relative w-full max-w-xl bg-white dark:bg-kalvium-dark-surface border-l border-kalvium-border dark:border-kalvium-dark-border shadow-2xl h-full flex flex-col z-10 animate-slide-left overflow-y-auto">
+        <div
+          ref={trapRef as React.RefObject<HTMLDivElement>}
+          role="dialog"
+          aria-modal="true"
+          aria-label={event?.title ? `Event details: ${event.title}` : "Event details"}
+          className="relative w-full max-w-xl bg-white dark:bg-kalvium-dark-surface border-l border-kalvium-border dark:border-kalvium-dark-border shadow-2xl h-full flex flex-col z-10 animate-slide-left overflow-y-auto"
+        >
           {/* Top Bar */}
           <div className="sticky top-0 z-20 bg-white/95 dark:bg-kalvium-dark-surface/95 backdrop-blur-md px-6 py-4 border-b border-kalvium-border dark:border-kalvium-dark-border flex items-center justify-between">
             <div className="flex items-center gap-2">

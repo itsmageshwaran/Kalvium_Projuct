@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { XCircle, X } from "lucide-react";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 interface DeclineReasonModalProps {
   isOpen: boolean;
@@ -30,6 +31,16 @@ export default function DeclineReasonModal({
   const [selectedReason, setSelectedReason] = useState(PRESET_REASONS[0]);
   const [customNotes, setCustomNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const trapRef = useFocusTrap(isOpen);
+
+  // Escape key closes modal
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen && !submitting) onClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [isOpen, submitting, onClose]);
 
   if (!isOpen) return null;
 
@@ -45,8 +56,17 @@ export default function DeclineReasonModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg bg-white border-4 border-black shadow-[8px_8px_0px_0px_black] rounded-none p-6 text-black">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+      role="presentation"
+    >
+      <div
+        ref={trapRef as React.RefObject<HTMLDivElement>}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="decline-modal-title"
+        className="relative w-full max-w-lg bg-white border-4 border-black shadow-[8px_8px_0px_0px_black] rounded-none p-6 text-black"
+      >
         <div className="flex items-start justify-between gap-4 border-b-4 border-black pb-4 mb-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-bauhaus-red border-2 border-black flex items-center justify-center shrink-0">
@@ -56,7 +76,7 @@ export default function DeclineReasonModal({
               <span className="text-xs font-black uppercase tracking-widest text-bauhaus-red block">
                 Manager Action
               </span>
-              <h3 className="text-2xl font-display font-black text-black uppercase tracking-tight">Decline Event</h3>
+              <h3 id="decline-modal-title" className="text-2xl font-display font-black text-black uppercase tracking-tight">Decline Event</h3>
             </div>
           </div>
           <button

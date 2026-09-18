@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, Clock, MapPin, X } from "lucide-react";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 interface ClashWarningModalProps {
   isOpen: boolean;
@@ -33,6 +34,17 @@ export default function ClashWarningModal({
   currentEvent,
   overlapStr,
 }: ClashWarningModalProps) {
+  const trapRef = useFocusTrap(isOpen);
+
+  // Escape key closes modal
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) onClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [isOpen, onClose]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -48,10 +60,14 @@ export default function ClashWarningModal({
 
           {/* Modal Container */}
           <motion.div
+            ref={trapRef as React.RefObject<HTMLDivElement>}
             initial={{ opacity: 0, scale: 0.96, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="clash-modal-title"
             className="relative w-full max-w-lg overflow-hidden bg-white border-4 border-black shadow-[8px_8px_0px_0px_black] rounded-none p-6 sm:p-8 text-black"
           >
             {/* Header */}
@@ -64,7 +80,7 @@ export default function ClashWarningModal({
                   <span className="text-xs font-black tracking-widest text-bauhaus-red uppercase block">
                     Conflict Detected
                   </span>
-                  <h3 className="font-display text-2xl font-black text-black tracking-tight uppercase">
+                  <h3 id="clash-modal-title" className="font-display text-2xl font-black text-black tracking-tight uppercase">
                     Schedule Clash
                   </h3>
                 </div>

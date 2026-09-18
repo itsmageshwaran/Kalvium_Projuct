@@ -63,8 +63,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-outfit)", "Outfit", "system-ui", "sans-serif"],
-        display: ["var(--font-outfit)", "Outfit", "system-ui", "sans-serif"],
+        sans: ["var(--font-caacupe)", "Caacupé One", "cursive"],
+        display: ["var(--font-caacupe)", "Caacupé One", "cursive"],
+        caacupe: ["var(--font-caacupe)", "Caacupé One", "cursive"],
         mono: ["var(--font-mono)", "JetBrains Mono", "SFMono-Regular", "Menlo", "monospace"],
       },
       fontSize: {

@@ -6,10 +6,15 @@ html {
   scroll-behavior: smooth;
 }
 
+:root {
+  --font-caacupe: "Caacupe One";
+}
+
 body {
   @apply font-sans antialiased;
+  font-family: var(--font-caacupe), "Caacupé One", cursive;
   min-height: 100vh;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
   overflow-x: hidden;
   background-color: #F7F7F5;
   color: #111111;
@@ -20,9 +25,10 @@ html.dark body {
   color: #F7F7F5;
 }
 
-/* Kalvium Typography */
+/* Kalvium Typography — Caacupé One display font */
 h1, h2, h3, h4, h5, h6, .font-display {
-  letter-spacing: -0.04em;
+  font-family: var(--font-caacupe), "Caacupé One", cursive;
+  letter-spacing: 0.02em;
   text-rendering: optimizeLegibility;
 }
 
@@ -32,6 +38,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   border-color: #D6D6D2;
   box-shadow: 0 1px 3px rgba(17, 17, 17, 0.08);
 }
+
 html.dark .card-kalvium {
   @apply bg-[#222222];
   border-color: #444444;
@@ -44,6 +51,7 @@ html.dark .card-kalvium {
   border-color: #E5391F;
   box-shadow: 0 1px 3px rgba(17, 17, 17, 0.08);
 }
+
 .btn-kalvium-primary:hover {
   background-color: #D13019;
   border-color: #D13019;
@@ -55,6 +63,7 @@ html.dark .card-kalvium {
   border-color: #111111;
   box-shadow: 0 1px 3px rgba(17, 17, 17, 0.08);
 }
+
 .btn-kalvium-secondary:hover {
   background-color: #444444;
 }
@@ -65,6 +74,7 @@ html.dark .card-kalvium {
   border-color: #D6D6D2;
   box-shadow: 0 1px 3px rgba(17, 17, 17, 0.08);
 }
+
 .btn-kalvium-outline:hover {
   border-color: #111111;
   background-color: #F7F7F5;
@@ -74,6 +84,7 @@ html.dark .card-kalvium {
   @apply border border-transparent rounded-lg font-bold px-6 py-2.5 transition-all duration-200 inline-flex items-center justify-center gap-2 select-none;
   color: #111111;
 }
+
 .btn-kalvium-ghost:hover {
   background-color: #EFEDEA;
 }
@@ -82,10 +93,22 @@ html.dark .card-kalvium {
 .badge-kalvium {
   @apply inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full border transition-colors;
 }
-.badge-red { @apply bg-kalvium-red-light text-kalvium-red border-kalvium-red-light; }
-.badge-black { @apply bg-kalvium-black text-white border-kalvium-black; }
-.badge-neutral { @apply bg-kalvium-neutral-100 text-kalvium-black-muted border-kalvium-neutral-200; }
-.badge-white { @apply bg-white text-kalvium-black border-kalvium-neutral-300; }
+
+.badge-red {
+  @apply bg-kalvium-coral-tint text-kalvium-coral border-kalvium-coral-tint;
+}
+
+.badge-black {
+  @apply bg-kalvium-ink text-white border-kalvium-ink;
+}
+
+.badge-neutral {
+  @apply bg-kalvium-surface-alt text-kalvium-muted border-kalvium-border;
+}
+
+.badge-white {
+  @apply bg-white text-kalvium-ink border-kalvium-border;
+}
 
 /* Interactive transitions */
 button,
@@ -99,25 +122,39 @@ textarea {
 }
 
 /* Stagger entrance delays */
-.stagger-1 { animation-delay: 40ms; }
-.stagger-2 { animation-delay: 80ms; }
-.stagger-3 { animation-delay: 120ms; }
-.stagger-4 { animation-delay: 160ms; }
+.stagger-1 {
+  animation-delay: 40ms;
+}
+
+.stagger-2 {
+  animation-delay: 80ms;
+}
+
+.stagger-3 {
+  animation-delay: 120ms;
+}
+
+.stagger-4 {
+  animation-delay: 160ms;
+}
 
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
+
 ::-webkit-scrollbar-track {
   background: #F7F7F5;
   border-left: 1px solid #D6D6D2;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #777777;
   border-radius: 5px;
   border: 2px solid #F7F7F5;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #E5391F;
 }

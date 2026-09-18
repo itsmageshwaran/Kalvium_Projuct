@@ -17,6 +17,7 @@ const outfit = Outfit({
   display: "swap",
 });
 
+
 export const metadata: Metadata = {
   title: "CampusHub — Verified campus events",
   description:
@@ -31,6 +32,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`light ${outfit.variable}`} suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Caacupe+One&display=swap"
+          rel="stylesheet"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem('campushub_theme')||'light';document.documentElement.classList.remove('dark','light');document.documentElement.classList.add(t);}catch(e){}})()`,
