@@ -27,39 +27,22 @@ function sanitizeExtractedValue(value: any, field: string): string {
   return strVal;
 }
 
-function getGeminiApiKey(): string | undefined {
-  if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim()) {
-    return process.env.GEMINI_API_KEY.trim();
-  }
-  try {
-    const fs = require("fs");
-    const path = require("path");
-    const envPath = path.resolve(process.cwd(), ".env");
-    if (fs.existsSync(envPath)) {
-      const content = fs.readFileSync(envPath, "utf-8");
-      const match = content.match(/GEMINI_API_KEY=["']?([^"'\r\n]+)/);
-      if (match && match[1]) {
-        return match[1].trim();
-      }
-    }
-  } catch {
-    // ignore
-  }
-  return undefined;
-}
-
 /**
- * Analyzes an event poster image using Google Gemini Vision API.
- * Falls back to intelligent local heuristics if Gemini is unavailable.
+ * Analyzes an event poster image using Google Gemini Vision API with the user's provided API key.
+ * The API key is supplied client-side by the user, stored on their device, and never persisted to Firebase.
  *
  * @param imageBufferOrBase64 - Raw base64 image data string (with or without data: prefix), or sample ID string
  * @param mimeType - MIME type of the image (e.g. "image/png", "image/jpeg")
  * @param sampleId - Optional sample poster ID to use pre-defined extraction
+ * @param userApiKey - Optional Gemini API key provided by the user on their device
+ * @param preferredModel - Optional preferred Gemini model (e.g. gemini-3.6-flash)
  */
 export async function analyzeEventPoster(
   imageBufferOrBase64: string,
   mimeType: string = "image/png",
-  sampleId?: string
+  sampleId?: string,
+  userApiKey?: string,
+  preferredModel?: string
 ): Promise<ExtractedEventData> {
   // If a specific sample ID is provided, return its pre-defined extracted data
   if (sampleId) {
@@ -83,20 +66,123 @@ export async function analyzeEventPoster(
     }
   }
 
-  // Attempt Gemini Vision API analysis for real image data
-  const apiKey = getGeminiApiKey();
+/**
+ * Dynamically queries Google Gemini API to discover active models for this user's API key.
+ * Prioritizes high-speed, cost-effective Flash models like `gemini-3.6-flash`, `gemini-3.1-flash`,
+ * `gemini-2.5-flash`, and user-preferred models.
+ */
+async function getPrioritizedCandidateModels(apiKey: string, preferredModel?: string): Promise<string[]> {
+  const fallbackList = [
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+    "gemini-3.1-flash",
+    "gemini-3.1-flash-preview",
+    "gemini-3.0-flash",
+    "gemini-3-flash-preview",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-latest",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-flash",
+    "gemini-3.1-pro-preview",
+    "gemini-3.1-pro",
+    "gemini-2.5-pro",
+  ];
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.models) && data.models.length > 0) {
+        const available = data.models
+          .filter((m: any) => {
+            const methods: string[] = m.supportedGenerationMethods || [];
+            return methods.includes("generateContent");
+          })
+          .map((m: any) => String(m.name || "").replace(/^models\//, ""))
+          .filter((name: string) => name && !name.includes("embedding") && !name.includes("aqa"));
+
+        if (available.length > 0) {
+          // Priority scoring: FLASH models like 3.6-flash, 3.1-flash, 3.0-flash FIRST!
+          available.sort((a: string, b: string) => {
+            const score = (name: string) => {
+              if (preferredModel && (name === preferredModel || name.includes(preferredModel))) return 2500;
+              if (name === "gemini-3.6-flash") return 2000;
+              if (name === "gemini-3.5-flash") return 1900;
+              if (name === "gemini-3.1-flash") return 1800;
+              if (name === "gemini-3.1-flash-preview") return 1750;
+              if (name === "gemini-3.0-flash" || name === "gemini-3-flash-preview") return 1700;
+              if (name.includes("flash") && (name.includes("3.") || name.includes("3-"))) return 1600;
+              if (name === "gemini-2.5-flash" || name === "gemini-2.5-flash-latest") return 1500;
+              if (name === "gemini-2.0-flash") return 1400;
+              if (name === "gemini-2.0-flash-lite") return 1350;
+              if (name.includes("flash")) return 1200;
+              if (name === "gemini-1.5-flash") return 1100;
+              // Pro models only as fallbacks if flash models are unavailable
+              if (name === "gemini-3.1-pro-preview") return 600;
+              if (name.includes("3.1-pro")) return 550;
+              if (name.includes("pro")) return 400;
+              return 100;
+            };
+            return score(b) - score(a);
+          });
+
+          // Always ensure top Flash candidates are available at head
+          if (preferredModel && !available.includes(preferredModel)) {
+            available.unshift(preferredModel);
+          } else if (!available.some((m: string) => m.includes("flash"))) {
+            available.unshift("gemini-3.6-flash", "gemini-3.1-flash", "gemini-2.5-flash");
+          }
+
+          console.log("✓ Live Flash Gemini models prioritized:", available.slice(0, 5));
+          return available;
+        }
+      }
+    } else {
+      const errText = await res.text();
+      console.warn("Could not list models from Gemini API:", res.status, errText);
+      if (res.status === 400 || res.status === 403) {
+        if (errText.includes("API_KEY_INVALID") || errText.includes("API key not valid")) {
+          throw new Error("Invalid Gemini API key. Please check your key at https://aistudio.google.com/app/apikey and re-enter it on your device.");
+        }
+      }
+      if (res.status === 429 || errText.includes("RESOURCE_EXHAUSTED")) {
+        throw new Error("Gemini API rate limit or quota exceeded for this API key. Please try again shortly or check your Google AI Studio quota.");
+      }
+    }
+  } catch (discoveryErr: any) {
+    if (discoveryErr.message?.includes("Invalid Gemini API key") || discoveryErr.message?.includes("quota exceeded")) {
+      throw discoveryErr;
+    }
+    console.warn("Model discovery note, falling back to prioritized list:", discoveryErr?.message || discoveryErr);
+  }
+
+  // Prepend preferred model to fallback list if specified
+  if (preferredModel && !fallbackList.includes(preferredModel)) {
+    return [preferredModel, ...fallbackList];
+  }
+  return fallbackList;
+}
+
+  // Use the user's client-supplied Gemini API key
+  const apiKey = (userApiKey || "").trim();
+
+  if (!sampleId && !apiKey) {
+    throw new Error(
+      "A Google Gemini API key is required to analyze custom posters. Please enter your API key in the studio (it stays on your device and is never saved to the database)."
+    );
+  }
+
   if (apiKey && imageBufferOrBase64 && imageBufferOrBase64.length > 100) {
     try {
+      const candidateModels = await getPrioritizedCandidateModels(apiKey, preferredModel);
       const genAI = new GoogleGenerativeAI(apiKey);
-      const CANDIDATE_MODELS = [
-        "gemini-3.5-flash",
-        "gemini-3.5-flash-lite",
-        "gemini-3.7-flash",
-        "gemini-3.6-flash",
-        "gemini-2.5-pro",
-        "gemini-flash-lite-latest",
-        "gemini-pro-latest"
-      ];
 
       const prompt = `You are the Campus Event Hub AI Poster Analyzer.
 Analyze the provided campus event poster image and extract event details.
@@ -150,31 +236,109 @@ Respond with ONLY the JSON object. Do not include markdown codeblocks or convers
         },
       };
 
-      let result: any = null;
+      let resultText: string | null = null;
       let lastModelError: any = null;
-      for (const modelName of CANDIDATE_MODELS) {
+
+      for (const modelName of candidateModels) {
         try {
+          console.log(`[Gemini Poster AI] Attempting extraction with model: ${modelName}`);
           const model = genAI.getGenerativeModel({ model: modelName });
           const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error(`Timeout after 12s on ${modelName}`)), 12000)
+            setTimeout(() => reject(new Error(`Timeout after 16s on ${modelName}`)), 16000)
           );
-          result = await Promise.race([model.generateContent([prompt, imagePart]), timeoutPromise]);
-          console.log(`✓ Poster extraction succeeded via ${modelName}`);
-          break;
+          const genResult: any = await Promise.race([
+            model.generateContent([prompt, imagePart]),
+            timeoutPromise,
+          ]);
+
+          const text = genResult?.response?.text?.()?.trim();
+          if (text) {
+            resultText = text;
+            console.log(`✓ [Gemini Poster AI] Poster extraction succeeded via ${modelName}`);
+            break;
+          }
         } catch (modelErr: any) {
           lastModelError = modelErr;
-          console.warn(`Vision model ${modelName} failed (${modelErr?.message || modelErr}), trying fallback...`);
+          const errMsg = String(modelErr?.message || modelErr);
+          console.warn(`Vision model ${modelName} returned note: ${errMsg}`);
+
+          if (errMsg.includes("API_KEY_INVALID") || errMsg.includes("API key not valid")) {
+            throw new Error("Invalid Gemini API key. Please check your key at https://aistudio.google.com/app/apikey and re-enter it on your device.");
+          }
+          if (errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("quota") || errMsg.includes("429")) {
+            throw new Error("Gemini API rate limit or quota exceeded for this API key. Please try again shortly or check your Google AI Studio quota.");
+          }
         }
       }
 
-      if (!result) {
-        throw new Error(`All Gemini vision candidate models failed. Last error: ${lastModelError?.message || "Unknown error"}`);
+      // Direct REST fallback with prioritized Flash model if all SDK calls missed
+      if (!resultText) {
+        const fallbackFlashModel =
+          preferredModel ||
+          candidateModels.find((m) => m.includes("flash")) ||
+          "gemini-3.6-flash";
+
+        try {
+          console.log(`[Gemini Poster AI] Attempting direct REST fallback with ${fallbackFlashModel}...`);
+          const restRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${fallbackFlashModel}:generateContent?key=${encodeURIComponent(apiKey)}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [
+                      { text: prompt },
+                      {
+                        inlineData: {
+                          mimeType: mimeType || "image/png",
+                          data: base64Data,
+                        },
+                      },
+                    ],
+                  },
+                ],
+              }),
+            }
+          );
+
+          if (restRes.ok) {
+            const restData = await restRes.json();
+            const text = restData.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+            if (text) {
+              resultText = text;
+              console.log(`✓ [Gemini Poster AI] Extraction succeeded via direct REST ${fallbackFlashModel}`);
+            }
+          } else {
+            const restErrText = await restRes.text();
+            console.warn("Direct REST attempt status:", restRes.status, restErrText);
+          }
+        } catch (restErr) {
+          console.warn("Direct REST fallback error:", restErr);
+        }
       }
 
-      const responseText = result.response.text().trim();
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      const cleanedJson = jsonMatch ? jsonMatch[0] : responseText.replace(/```json\s*|\s*```/g, "").trim();
-      const parsed = JSON.parse(cleanedJson);
+      if (!resultText) {
+        throw new Error(
+          lastModelError?.message ||
+          "Gemini vision extraction could not process the poster image with the provided API key. Please check your key and quota."
+        );
+      }
+
+      const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+      const cleanedJson = jsonMatch ? jsonMatch[0] : resultText.replace(/```json\s*|\s*```/g, "").trim();
+
+      let parsed: any;
+      try {
+        parsed = JSON.parse(cleanedJson);
+      } catch {
+        const sanitized = cleanedJson
+          .replace(/,\s*([}\]])/g, "$1")
+          .replace(/```json\s*|\s*```/g, "")
+          .trim();
+        parsed = JSON.parse(sanitized);
+      }
 
       const confidences: Record<string, ConfidenceLevel> = {
         title: parsed.confidences?.title || "HIGH",
@@ -220,9 +384,18 @@ Respond with ONLY the JSON object. Do not include markdown codeblocks or convers
           "AI confidence indicates extraction certainty only. Legitimate approval is determined exclusively by the Campus Manager.",
       };
     } catch (geminiError: any) {
-      console.error("❌ Gemini vision analysis failed:", geminiError?.message || geminiError);
-      // If user uploaded a custom image (not a sample), throw descriptive error so UI explains accurately
+      console.error("❌ Gemini vision analysis error:", geminiError?.message || geminiError);
       if (!sampleId) {
+        const rawMsg = String(geminiError?.message || "");
+        if (
+          rawMsg.includes("API_KEY_INVALID") ||
+          rawMsg.includes("API key not valid") ||
+          (rawMsg.includes("400") && rawMsg.includes("key"))
+        ) {
+          throw new Error("Invalid Gemini API key. Please check your key at https://aistudio.google.com/app/apikey and re-enter it on your device.");
+        } else if (rawMsg.includes("RESOURCE_EXHAUSTED") || rawMsg.includes("quota") || rawMsg.includes("429")) {
+          throw new Error("Gemini API rate limit or quota exceeded for this API key. Please try again shortly or check your Google AI Studio quota.");
+        }
         throw new Error(geminiError?.message || "Vision extraction could not read the poster image.");
       }
     }

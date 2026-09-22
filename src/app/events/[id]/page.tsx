@@ -16,6 +16,7 @@ import {
   BookmarkCheck,
   Flame,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 import ClashWarningModal from "@/components/ClashWarningModal";
@@ -29,6 +30,10 @@ export default function EventDetailPage() {
   const { user } = useAuth();
   const id = params?.id as string;
 
+  const isManager = user?.role?.toUpperCase() === "CAMPUS_MANAGER";
+  const isOrganizer = user?.role?.toUpperCase() === "ORGANIZER";
+  const isStaffOrManager = isManager || isOrganizer;
+
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,8 +45,10 @@ export default function EventDetailPage() {
   useEffect(() => {
     if (!id) return;
     fetchEvent();
-    checkIfSaved();
-  }, [id, user]);
+    if (!isStaffOrManager) {
+      checkIfSaved();
+    }
+  }, [id, user, isStaffOrManager]);
 
   const fetchEvent = async () => {
     setLoading(true);
@@ -228,27 +235,45 @@ export default function EventDetailPage() {
           </div>
 
           <div className="shrink-0">
-            <button
-              onClick={handleSaveToggle}
-              disabled={saving}
-              className={`rounded-full px-6 py-3 text-sm font-semibold flex items-center gap-2 transition active:scale-95 shadow-sm ${
-                isSaved
-                  ? "bg-kalvium-coral text-white hover:bg-kalvium-coral-hover shadow-sm"
-                  : "bg-white dark:bg-kalvium-dark-surface text-kalvium-text dark:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt"
-              }`}
-            >
-              {isSaved ? (
-                <>
-                  <BookmarkCheck size={16} className="fill-white" />
-                  <span>Saved to schedule</span>
-                </>
-              ) : (
-                <>
-                  <Bookmark size={16} />
-                  <span>Save to schedule</span>
-                </>
-              )}
-            </button>
+            {isManager ? (
+              <Link
+                href="/dashboard/manager"
+                className="rounded-full px-5 py-2.5 text-xs font-bold flex items-center gap-2 bg-kalvium-success-tint dark:bg-kalvium-dark-success-tint text-kalvium-success border border-kalvium-success/30 hover:bg-kalvium-success hover:text-white transition active:scale-95 shadow-soft-xs"
+              >
+                <ShieldCheck size={16} />
+                <span>Manager's Portal</span>
+              </Link>
+            ) : isOrganizer ? (
+              <Link
+                href="/dashboard/organizer"
+                className="rounded-full px-5 py-2.5 text-xs font-bold flex items-center gap-2 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-text dark:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral hover:text-kalvium-coral transition active:scale-95 shadow-soft-xs"
+              >
+                <Sparkles size={16} className="text-kalvium-coral" />
+                <span>Organizer's Portal</span>
+              </Link>
+            ) : (
+              <button
+                onClick={handleSaveToggle}
+                disabled={saving}
+                className={`rounded-full px-6 py-3 text-sm font-semibold flex items-center gap-2 transition active:scale-95 shadow-sm ${
+                  isSaved
+                    ? "bg-kalvium-coral text-white hover:bg-kalvium-coral-hover shadow-sm"
+                    : "bg-white dark:bg-kalvium-dark-surface text-kalvium-text dark:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt"
+                }`}
+              >
+                {isSaved ? (
+                  <>
+                    <BookmarkCheck size={16} className="fill-white" />
+                    <span>Saved to schedule</span>
+                  </>
+                ) : (
+                  <>
+                    <Bookmark size={16} />
+                    <span>Save to schedule</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
 

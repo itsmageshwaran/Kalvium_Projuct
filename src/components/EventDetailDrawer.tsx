@@ -13,6 +13,8 @@ import {
   BookmarkCheck,
   Flame,
   CheckCircle2,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import CampusVerifiedBadge from "./CampusVerifiedBadge";
 import ClashWarningModal from "./ClashWarningModal";
@@ -72,7 +74,13 @@ export default function EventDetailDrawer({
   const startingSoon = !isPast && isStartingSoon(event.date, event.startTime);
   const countdownText = getHumanCountdown(event.date, event.startTime);
 
+  const isManager = user?.role?.toUpperCase() === "CAMPUS_MANAGER";
+  const isOrganizer = user?.role?.toUpperCase() === "ORGANIZER";
+  const isStaffOrManager = isManager || isOrganizer;
+
   const handleSaveClick = async () => {
+    if (isStaffOrManager) return;
+
     if (!user) {
       alert("Please sign in to save events.");
       return;
@@ -320,29 +328,51 @@ export default function EventDetailDrawer({
           </div>
 
           {/* Sticky Frosted-Glass Bottom Bar */}
-          <div className="shrink-0 sticky bottom-0 bg-white/95 dark:bg-kalvium-dark-surface/95 backdrop-blur-md px-6 py-4 border-t border-kalvium-border dark:border-kalvium-dark-border z-30">
-            <button
-              onClick={handleSaveClick}
-              disabled={saving}
-              className={`w-full py-3.5 px-5 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] shadow-xs ${
-                isSaved
-                  ? "bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-coral border border-kalvium-coral/30 hover:bg-kalvium-coral-tint"
-                  : "bg-kalvium-coral hover:bg-kalvium-coral-hover text-white shadow-md shadow-kalvium-coral/25"
-              }`}
-            >
-              {isSaved ? (
-                <>
-                  <BookmarkCheck className="w-4 h-4 fill-kalvium-coral" />
-                  <span>Saved to My Schedule (Click to Remove)</span>
-                </>
-              ) : (
-                <>
-                  <Bookmark className="w-4 h-4" />
-                  <span>Save to My Schedule</span>
-                </>
-              )}
-            </button>
-          </div>
+          {isManager ? (
+            <div className="shrink-0 sticky bottom-0 bg-white/95 dark:bg-kalvium-dark-surface/95 backdrop-blur-md px-6 py-4 border-t border-kalvium-border dark:border-kalvium-dark-border z-30">
+              <Link
+                href="/dashboard/manager"
+                className="w-full py-3.5 px-5 rounded-full text-xs font-bold flex items-center justify-center gap-2 bg-kalvium-success-tint dark:bg-kalvium-dark-success-tint text-kalvium-success border border-kalvium-success/30 hover:bg-kalvium-success hover:text-white transition shadow-soft-xs active:scale-[0.98]"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Campus Manager Verification Center</span>
+              </Link>
+            </div>
+          ) : isOrganizer ? (
+            <div className="shrink-0 sticky bottom-0 bg-white/95 dark:bg-kalvium-dark-surface/95 backdrop-blur-md px-6 py-4 border-t border-kalvium-border dark:border-kalvium-dark-border z-30">
+              <Link
+                href="/dashboard/organizer"
+                className="w-full py-3.5 px-5 rounded-full text-xs font-bold flex items-center justify-center gap-2 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-text dark:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral hover:text-kalvium-coral transition shadow-soft-xs active:scale-[0.98]"
+              >
+                <Sparkles className="w-4 h-4 text-kalvium-coral" />
+                <span>Organizer's Dashboard</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="shrink-0 sticky bottom-0 bg-white/95 dark:bg-kalvium-dark-surface/95 backdrop-blur-md px-6 py-4 border-t border-kalvium-border dark:border-kalvium-dark-border z-30">
+              <button
+                onClick={handleSaveClick}
+                disabled={saving}
+                className={`w-full py-3.5 px-5 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] shadow-xs ${
+                  isSaved
+                    ? "bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-coral border border-kalvium-coral/30 hover:bg-kalvium-coral-tint"
+                    : "bg-kalvium-coral hover:bg-kalvium-coral-hover text-white shadow-md shadow-kalvium-coral/25"
+                }`}
+              >
+                {isSaved ? (
+                  <>
+                    <BookmarkCheck className="w-4 h-4 fill-kalvium-coral" />
+                    <span>Saved to My Schedule (Click to Remove)</span>
+                  </>
+                ) : (
+                  <>
+                    <Bookmark className="w-4 h-4" />
+                    <span>Save to My Schedule</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

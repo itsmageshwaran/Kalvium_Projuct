@@ -26,10 +26,15 @@ import {
   Layers,
   XCircle,
   FileText,
+  Key,
+  Eye,
+  EyeOff,
+  Shield,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { auth as firebaseClientAuth } from "@/lib/firebase/client";
-import { ConfidenceLevel } from "@/lib/ai-poster-constants";
+import { ConfidenceLevel, SAMPLE_POSTERS } from "@/lib/ai-poster-constants";
 
 const CATEGORIES = [
   "Workshop",
@@ -98,6 +103,100 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // User on-device Gemini API Key (stored strictly in browser localStorage, never saved to Firebase DB)
+  const [userApiKey, setUserApiKey] = useState<string>("");
+  const [apiKeyInput, setApiKeyInput] = useState<string>("");
+  const [showApiKeySecret, setShowApiKeySecret] = useState<boolean>(false);
+  const [isEditingKey, setIsEditingKey] = useState<boolean>(false);
+  const [keySaveMessage, setKeySaveMessage] = useState<string | null>(null);
+  const [keyModalOpen, setKeyModalOpen] = useState<boolean>(false);
+  const [modalKeyInput, setModalKeyInput] = useState<string>("");
+  const [showModalKeySecret, setShowModalKeySecret] = useState<boolean>(false);
+  const [selectedModel, setSelectedModel] = useState<string>("gemini-3.6-flash");
+  const [pendingUploadPayload, setPendingUploadPayload] = useState<{
+    imageData?: string;
+    mimeType?: string;
+  } | null>(null);
+
+  // Load API key and model preference from local device storage on mount
+  useEffect(() => {
+    try {
+      const savedKey = localStorage.getItem("campushub_gemini_api_key");
+      if (savedKey) {
+        setUserApiKey(savedKey);
+        setApiKeyInput(savedKey);
+        setModalKeyInput(savedKey);
+      }
+      const savedModel = localStorage.getItem("campushub_gemini_model");
+      if (savedModel) {
+        setSelectedModel(savedModel);
+      }
+    } catch {
+      // LocalStorage unavailable in certain sandbox environments
+    }
+  }, []);
+
+  const handleModelChange = (model: string) => {
+    setSelectedModel(model);
+    try {
+      localStorage.setItem("campushub_gemini_model", model);
+    } catch {
+      // LocalStorage unavailable
+    }
+  };
+
+  const handleSaveApiKey = (keyToSave?: string): boolean => {
+    const key = (keyToSave !== undefined ? keyToSave : apiKeyInput).trim();
+    if (!key) {
+      alert("Please enter a valid Gemini API key.");
+      return false;
+    }
+    try {
+      localStorage.setItem("campushub_gemini_api_key", key);
+      setUserApiKey(key);
+      setApiKeyInput(key);
+      setModalKeyInput(key);
+      setIsEditingKey(false);
+      setErrorMsg(null);
+      setKeySaveMessage("API key saved on your device!");
+      setTimeout(() => setKeySaveMessage(null), 3000);
+      return true;
+    } catch (err) {
+      console.error("Failed to save API key to localStorage:", err);
+      return false;
+    }
+  };
+
+  const handleRemoveApiKey = () => {
+    try {
+      localStorage.removeItem("campushub_gemini_api_key");
+    } catch (err) {
+      console.error("Failed to remove API key from localStorage:", err);
+    }
+    setUserApiKey("");
+    setApiKeyInput("");
+    setModalKeyInput("");
+    setIsEditingKey(false);
+    setKeySaveMessage("API key removed from this device.");
+    setTimeout(() => setKeySaveMessage(null), 3000);
+  };
+
+  const handleModalSaveAndAnalyze = () => {
+    const key = modalKeyInput.trim();
+    if (!key) {
+      alert("Please enter a valid Gemini API key to proceed with AI analysis.");
+      return;
+    }
+    const saved = handleSaveApiKey(key);
+    if (saved) {
+      setKeyModalOpen(false);
+      if (pendingUploadPayload) {
+        startAnalysis(pendingUploadPayload, key);
+        setPendingUploadPayload(null);
+      }
+    }
+  };
 
   const analyzingSteps = [
     "Reading event poster typography & imagery...",
@@ -213,29 +312,45 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
     try {
       const { base64, mimeType } = await compressImageForAnalysis(file);
       setPosterPreview(base64);
-      startAnalysis({ imageData: base64, mimeType });
+      if (!userApiKey) {
+        setPendingUploadPayload({ imageData: base64, mimeType });
+        setKeyModalOpen(true);
+      } else {
+        startAnalysis({ imageData: base64, mimeType });
+      }
     } catch (err) {
       console.error("Image processing error:", err);
       const reader = new FileReader();
       reader.onload = (e) => {
         const base64 = e.target?.result as string;
         setPosterPreview(base64);
-        startAnalysis({ imageData: base64, mimeType: file.type });
+        if (!userApiKey) {
+          setPendingUploadPayload({ imageData: base64, mimeType: file.type });
+          setKeyModalOpen(true);
+        } else {
+          startAnalysis({ imageData: base64, mimeType: file.type });
+        }
       };
       reader.readAsDataURL(file);
     }
   };
 
   // Core AI Analysis Flow
-  const startAnalysis = async (payload: {
-    imageData?: string;
-    mimeType?: string;
-    posterUrl?: string;
-  }) => {
+  const startAnalysis = async (
+    payload: {
+      imageData?: string;
+      mimeType?: string;
+      posterUrl?: string;
+      sampleId?: string;
+    },
+    explicitApiKey?: string
+  ) => {
     setStep("ANALYZING");
     setAnalyzingStepIndex(0);
     setErrorMsg(null);
     setConflictResult(null);
+
+    const activeKey = explicitApiKey || userApiKey;
 
     // Animate analyzing steps
     let stepIdx = 0;
@@ -249,6 +364,12 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
 
     try {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (activeKey) {
+        headers["x-gemini-api-key"] = activeKey;
+      }
+      if (selectedModel) {
+        headers["x-gemini-model"] = selectedModel;
+      }
       try {
         const idToken = await firebaseClientAuth.currentUser?.getIdToken();
         if (idToken) {
@@ -261,7 +382,11 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
       const res = await fetch("/api/ai/analyze-poster", {
         method: "POST",
         headers,
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...payload,
+          apiKey: activeKey,
+          model: selectedModel,
+        }),
       });
 
       clearInterval(interval);
@@ -295,8 +420,8 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
     } catch (err: any) {
       clearInterval(interval);
       console.warn("AI analysis note:", err.message);
-      setErrorMsg(err.message || "Could not analyze poster. Please enter details manually.");
-      setStep("REVIEW");
+      setErrorMsg(err.message || "Could not analyze poster. Please check your API key or fill details manually.");
+      setStep("UPLOAD");
     }
   };
 
@@ -352,6 +477,8 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
       } else {
         if (user?.role?.toUpperCase() === "STUDENT") {
           router.push("/dashboard/student");
+        } else if (user?.role?.toUpperCase() === "CAMPUS_MANAGER") {
+          router.push("/dashboard/manager");
         } else {
           router.push("/dashboard/organizer");
         }
@@ -383,7 +510,222 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
 
       {/* ─── STAGE 1: UPLOAD POSTER ─── */}
       {step === "UPLOAD" && (
-        <div className="space-y-10 animate-fade-in">
+        <div className="space-y-8 animate-fade-in">
+          {/* Analysis Note / Error Banner */}
+          {errorMsg && (
+            <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/40 text-xs text-rose-700 dark:text-rose-400 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-slide-down shadow-soft-xs">
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold">Poster Analysis Note</p>
+                  <p className="mt-0.5 text-xs opacity-90">{errorMsg}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {posterPreview && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (posterFile) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          startAnalysis({ imageData: reader.result as string, mimeType: posterFile.type });
+                        };
+                        reader.readAsDataURL(posterFile);
+                      } else {
+                        startAnalysis({ posterUrl: posterPreview });
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-kalvium-coral text-white font-bold text-[11px] hover:bg-kalvium-coral/90 transition-colors shadow-soft-xs"
+                  >
+                    Retry Analysis
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorMsg(null);
+                    setStep("REVIEW");
+                  }}
+                  className="px-3 py-1.5 rounded-xl border border-rose-300 dark:border-rose-700/60 hover:bg-rose-100 dark:hover:bg-rose-900/40 font-bold text-[11px] transition-colors"
+                >
+                  Fill Details Manually →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* On-Device Gemini API Key Card (Zero Database Persistence) */}
+          <div className="p-5 rounded-3xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-kalvium-border/60 dark:border-kalvium-dark-border/60">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-kalvium-coral/10 dark:bg-kalvium-coral/20 text-kalvium-coral flex items-center justify-center shrink-0">
+                  <Key className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-kalvium-text dark:text-kalvium-dark-text">
+                      Gemini Vision API Key
+                    </h4>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-kalvium-dark-surface-alt text-kalvium-muted border border-slate-200 dark:border-kalvium-dark-border">
+                      <Shield className="w-2.5 h-2.5 text-emerald-500" />
+                      Stored On-Device Only
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted">
+                    Saved in your browser&apos;s localStorage for OCR analysis. Never saved to Firebase database.
+                  </p>
+                </div>
+              </div>
+
+              {/* Status Badge */}
+              <div className="shrink-0 flex items-center gap-2">
+                {userApiKey ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Key Active
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    Key Required for Custom Posters
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Key Saved / Removed message notification */}
+            {keySaveMessage && (
+              <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/30 text-xs font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2 animate-fade-in">
+                <Check className="w-4 h-4 text-emerald-600" />
+                <span>{keySaveMessage}</span>
+              </div>
+            )}
+
+            {userApiKey && !isEditingKey ? (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border/80 dark:border-kalvium-dark-border/80">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-mono font-bold tracking-wider text-kalvium-text dark:text-kalvium-dark-text">
+                    {showApiKeySecret ? userApiKey : `••••••••••••••••••••••••${userApiKey.slice(-4)}`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowApiKeySecret(!showApiKeySecret)}
+                    className="text-kalvium-muted hover:text-kalvium-coral text-xs transition-colors p-1"
+                    title={showApiKeySecret ? "Hide API key" : "Show API key"}
+                  >
+                    {showApiKeySecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setApiKeyInput(userApiKey);
+                      setIsEditingKey(true);
+                    }}
+                    className="px-3 py-1.5 text-xs font-bold rounded-xl border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral text-kalvium-text dark:text-kalvium-dark-text transition-colors"
+                  >
+                    Change Key
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemoveApiKey}
+                    className="px-3 py-1.5 text-xs font-bold rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type={showApiKeySecret ? "text" : "password"}
+                      value={apiKeyInput}
+                      onChange={(e) => setApiKeyInput(e.target.value)}
+                      placeholder="Paste your Google Gemini API key (e.g. AIzaSy...)"
+                      className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-3.5 py-2 text-xs font-mono text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral pr-9"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKeySecret(!showApiKeySecret)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-kalvium-muted hover:text-kalvium-coral text-xs p-1"
+                      title={showApiKeySecret ? "Hide API key" : "Show API key"}
+                    >
+                      {showApiKeySecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleSaveApiKey()}
+                      className="px-4 py-2 bg-kalvium-coral text-white text-xs font-bold rounded-xl hover:bg-kalvium-coral/90 transition-colors shadow-soft-xs"
+                    >
+                      Save on Device
+                    </button>
+                    {isEditingKey && (
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingKey(false)}
+                        className="px-3 py-2 border border-kalvium-border dark:border-kalvium-dark-border text-xs font-bold rounded-xl text-kalvium-muted hover:text-kalvium-text transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-kalvium-muted">
+                  <span className="flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                    Zero server storage · Free tier eligible
+                  </span>
+                  <a
+                    href="https://aistudio.google.com/app/apikey"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-kalvium-coral font-semibold hover:underline inline-flex items-center gap-1"
+                  >
+                    <span>Get free Gemini API Key</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* Flash Model Selector */}
+            <div className="pt-3 border-t border-kalvium-border/60 dark:border-kalvium-dark-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-kalvium-coral" />
+                <span className="text-xs font-bold text-kalvium-text dark:text-kalvium-dark-text">
+                  Vision Model:
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40">
+                  ⚡ Flash Optimized
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedModel}
+                  onChange={(e) => handleModelChange(e.target.value)}
+                  className="bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-3 py-1.5 text-xs font-semibold text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral cursor-pointer shadow-soft-xs"
+                >
+                  <option value="gemini-3.6-flash">Gemini 3.6 Flash (Fastest · Recommended)</option>
+                  <option value="gemini-3.1-flash">Gemini 3.1 Flash</option>
+                  <option value="gemini-3.0-flash">Gemini 3.0 Flash</option>
+                  <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                  <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                  <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro Preview (Fallback)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           {/* Dropzone */}
           <div
             onDragOver={(e) => e.preventDefault()}
@@ -421,6 +763,53 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
             <p className="relative z-10 text-xs text-kalvium-muted uppercase tracking-wider font-bold">
               SUPPORTS JPG, JPEG, PNG, WEBP (UP TO 10MB)
             </p>
+          </div>
+
+          {/* Sample Posters Quick-Start (Works Without API Key) */}
+          <div className="p-5 rounded-3xl bg-slate-50/80 dark:bg-kalvium-dark-surface/60 border border-dashed border-kalvium-border dark:border-kalvium-dark-border space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-kalvium-coral" />
+                <h4 className="text-xs font-bold text-kalvium-text dark:text-kalvium-dark-text uppercase tracking-wider">
+                  Or Test Instantly with Sample Posters
+                </h4>
+              </div>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/30">
+                No API Key Required
+              </span>
+            </div>
+
+            <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
+              Don&apos;t have an API key or poster image right now? Click any pre-calibrated campus poster below to test the extraction and verification flow immediately:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+              {SAMPLE_POSTERS.map((sample) => (
+                <button
+                  key={sample.id}
+                  type="button"
+                  onClick={() => {
+                    setPosterPreview(sample.previewUrl);
+                    startAnalysis({ sampleId: sample.id, posterUrl: sample.previewUrl });
+                  }}
+                  className="group relative flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral dark:hover:border-kalvium-coral text-left transition-all duration-200 hover:shadow-soft-sm active:scale-[0.98]"
+                >
+                  <img
+                    src={sample.previewUrl}
+                    alt={sample.name}
+                    className="w-12 h-14 object-cover rounded-lg border border-kalvium-border dark:border-kalvium-dark-border shrink-0 group-hover:scale-105 transition-transform"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <span className="block text-xs font-bold text-kalvium-text dark:text-kalvium-dark-text truncate group-hover:text-kalvium-coral transition-colors">
+                      {sample.name}
+                    </span>
+                    <span className="block text-[10px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">
+                      {sample.category} · 1-Click Test
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Product Guide: How to Use & Poster Upload Rules */}
@@ -956,23 +1345,131 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                 {submitting ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    {user?.role?.toUpperCase() === "STUDENT" ? "Submitting Event Request..." : "Submitting for Verification..."}
+                    {user?.role?.toUpperCase() === "CAMPUS_MANAGER"
+                      ? "Sending to Verification Studio..."
+                      : user?.role?.toUpperCase() === "STUDENT"
+                      ? "Submitting Event Request..."
+                      : "Submitting for Verification..."}
                   </>
                 ) : (
                   <>
                     <FileCheck className="w-4 h-4" />
-                    {user?.role?.toUpperCase() === "STUDENT" ? "Submit Event Request for Campus Verification" : "Submit for Campus Manager Verification"}
+                    {user?.role?.toUpperCase() === "CAMPUS_MANAGER"
+                      ? "Send to Verification Studio for Approval"
+                      : user?.role?.toUpperCase() === "STUDENT"
+                      ? "Submit Event Request for Campus Verification"
+                      : "Submit for Campus Manager Verification"}
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
               <p className="text-center text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-2">
-                {user?.role?.toUpperCase() === "STUDENT"
+                {user?.role?.toUpperCase() === "CAMPUS_MANAGER"
+                  ? "This event will be placed in your Verification Studio queue so you can review details, double-check venue availability, and stamp it approved."
+                  : user?.role?.toUpperCase() === "STUDENT"
                   ? "Your event proposal will be reviewed by the Campus Manager before publishing to students."
                   : "Your event will remain private until a Campus Manager reviews and approves it."}
               </p>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* ─── ON-DEVICE GEMINI API KEY MODAL ─── */}
+      {keyModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="relative w-full max-w-md bg-white dark:bg-kalvium-dark-surface rounded-3xl border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xl p-6 space-y-5">
+            <button
+              type="button"
+              onClick={() => {
+                setKeyModalOpen(false);
+                setPendingUploadPayload(null);
+              }}
+              className="absolute right-4 top-4 p-1.5 rounded-xl text-kalvium-muted hover:text-kalvium-text hover:bg-kalvium-surface-alt transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-kalvium-coral/10 dark:bg-kalvium-coral/20 text-kalvium-coral flex items-center justify-center shrink-0">
+                <Key className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-display font-bold text-kalvium-text dark:text-kalvium-dark-text">
+                  Provide Your Gemini API Key
+                </h3>
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold inline-flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" />
+                  Stored only on your device (Zero DB storage)
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted leading-relaxed">
+              To analyze custom posters with Google Gemini Vision, please provide your personal API key. Your key will be saved strictly in your browser&apos;s localStorage and used only for requests from your device.
+            </p>
+
+            <div className="space-y-2">
+              <label className="block text-[11px] font-bold text-kalvium-muted uppercase tracking-wider">
+                Google Gemini API Key
+              </label>
+              <div className="relative">
+                <input
+                  type={showModalKeySecret ? "text" : "password"}
+                  value={modalKeyInput}
+                  onChange={(e) => setModalKeyInput(e.target.value)}
+                  placeholder="AIzaSy..."
+                  autoFocus
+                  className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-3.5 py-2.5 text-xs font-mono text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral pr-9"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleModalSaveAndAnalyze();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowModalKeySecret(!showModalKeySecret)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-kalvium-muted hover:text-kalvium-coral text-xs p-1"
+                >
+                  {showModalKeySecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+              <div className="flex items-center justify-between text-[11px] pt-1">
+                <span className="text-kalvium-muted">Takes 30 seconds to get</span>
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-kalvium-coral font-semibold hover:underline inline-flex items-center gap-1"
+                >
+                  <span>Get free Gemini API Key ↗</span>
+                </a>
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setKeyModalOpen(false);
+                  setPendingUploadPayload(null);
+                }}
+                className="px-4 py-2.5 rounded-xl border border-kalvium-border dark:border-kalvium-dark-border text-xs font-bold text-kalvium-muted hover:text-kalvium-text transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleModalSaveAndAnalyze}
+                className="px-5 py-2.5 rounded-xl bg-kalvium-coral text-white text-xs font-bold hover:bg-kalvium-coral/90 transition-colors shadow-soft-xs flex items-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Save Key &amp; Analyze Poster</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

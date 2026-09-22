@@ -40,19 +40,19 @@ export async function GET(req: NextRequest) {
       events = events.filter((e: any) => e.category === category);
     }
 
-    // Filter by date: past events are cleanly segregated from upcoming views
+    // Filter by date
     if (dateFilter === "PAST") {
       events = events.filter((e: any) => e.isPast);
+    } else if (dateFilter === "UPCOMING") {
+      events = events.filter((e: any) => !e.isPast);
     } else if (dateFilter === "TODAY") {
       events = events.filter((e: any) => e.date === todayStr && !e.isPast);
     } else if (dateFilter === "TOMORROW") {
       events = events.filter((e: any) => e.date === tomorrowStr && !e.isPast);
     } else if (dateFilter === "THIS_WEEK") {
       events = events.filter((e: any) => e.date >= todayStr && e.date <= nextWeekStr && !e.isPast);
-    } else {
-      // Default: "ALL" / "UPCOMING" or omitted -> Exclusively show upcoming active events
-      events = events.filter((e: any) => !e.isPast);
     }
+    // Note: If dateFilter is "ALL" or omitted, all approved events are included
 
     if (venue && venue !== "ALL") {
       events = events.filter((e: any) => e.venue.toLowerCase().includes(venue.toLowerCase()));
@@ -87,6 +87,18 @@ export async function GET(req: NextRequest) {
       });
     } else { // soonest
       events.sort((a: any, b: any) => {
+        // If sorting soonest and we have both upcoming and past events:
+        // Upcoming events come first (sorted soonest to furthest),
+        // followed by past events (sorted most recent past event first).
+        if (a.isPast !== b.isPast) {
+          return a.isPast ? 1 : -1;
+        }
+        if (a.isPast) {
+          if (a.date !== b.date) return b.date.localeCompare(a.date);
+          const minA = parseTimeToMinutes(a.startTime);
+          const minB = parseTimeToMinutes(b.startTime);
+          return (isNaN(minB) ? 0 : minB) - (isNaN(minA) ? 0 : minA);
+        }
         if (a.date !== b.date) {
           return a.date.localeCompare(b.date);
         }

@@ -42,9 +42,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const isRegisteringRef = React.useRef(false);
+  const isLoggingOutRef = React.useRef(false);
 
   const fetchCurrentUser = async (firebaseUser: any) => {
-    if (isRegisteringRef.current) {
+    if (isRegisteringRef.current || isLoggingOutRef.current) {
       return null;
     }
 
@@ -52,8 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check if session cookie is already valid on server
       try {
         const meRes = await fetch("/api/auth/me", { cache: "no-store" });
+        if (isLoggingOutRef.current) return null;
         if (meRes.ok) {
           const meData = await meRes.json();
+          if (isLoggingOutRef.current) return null;
           if (meData?.user) {
             setUser(meData.user);
             if (typeof document !== "undefined") {
@@ -66,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {
         // ignore
       }
+      if (isLoggingOutRef.current) return null;
       setUser(null);
       setLoading(false);
       return null;
@@ -73,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const idToken = await firebaseUser.getIdToken();
+      if (isLoggingOutRef.current) return null;
       // Use idToken to set session cookie on the backend
       const res = await fetch("/api/auth/session", {
         method: "POST",
@@ -80,8 +85,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ idToken }),
       });
       
+      if (isLoggingOutRef.current) return null;
       if (res.ok) {
         const data = await res.json();
+        if (isLoggingOutRef.current) return null;
         setUser(data.user);
         if (typeof document !== "undefined" && data.user?.role) {
           document.cookie = `campus_user_role=${data.user.role}; path=/; max-age=604800; SameSite=Lax`;
@@ -91,8 +98,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Fallback to /api/auth/me
         try {
           const meRes = await fetch("/api/auth/me", { cache: "no-store" });
+          if (isLoggingOutRef.current) return null;
           if (meRes.ok) {
             const meData = await meRes.json();
+            if (isLoggingOutRef.current) return null;
             if (meData?.user) {
               setUser(meData.user);
               if (typeof document !== "undefined" && meData.user?.role) {
@@ -104,14 +113,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {
           // ignore
         }
+        if (isLoggingOutRef.current) return null;
         setUser(null);
         return null;
       }
     } catch {
+      if (isLoggingOutRef.current) return null;
       setUser(null);
       return null;
     } finally {
-      setLoading(false);
+      if (!isLoggingOutRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -123,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; role?: string; error?: string }> => {
+    isLoggingOutRef.current = false;
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
@@ -149,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (name: string, email: string, password: string, role: string): Promise<{ success: boolean; role?: string; error?: string }> => {
+    isLoggingOutRef.current = false;
     try {
       const cleanEmail = email.toLowerCase().trim();
       const isAllowedDomain = cleanEmail.endsWith("@kalvium.community") || cleanEmail.endsWith("@kalvium.com");
@@ -249,16 +264,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    if (isLoggingOutRef.current) return;
     try {
-      await signOut(auth);
-      await fetch("/api/auth/logout", { method: "POST" });
+      isLoggingOutRef.current = true;
+      setLoading(false);
+      setUser(null);
+
       if (typeof document !== "undefined") {
         document.cookie = "campus_user_role=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       }
-      setUser(null);
-      router.push("/login");
+
+      await Promise.allSettled([
+        fetch("/api/auth/logout", { method: "POST" }),
+        signOut(auth),
+      ]);
+
+      router.replace("/login");
+      router.refresh();
     } catch (e) {
       console.error("Logout error:", e);
+    } finally {
+      setTimeout(() => {
+        isLoggingOutRef.current = false;
+      }, 1000);
     }
   };
 

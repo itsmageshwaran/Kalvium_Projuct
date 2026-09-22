@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, Sparkles } from "lucide-react";
+import { Search, SlidersHorizontal, Sparkles, RefreshCw } from "lucide-react";
 import EventCard, { EventCardData } from "@/components/EventCard";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 import EventDetailDrawer from "@/components/EventDetailDrawer";
@@ -22,7 +22,8 @@ const CATEGORIES = [
 ];
 
 const DATE_FILTERS = [
-  { id: "ALL", label: "All Upcoming" },
+  { id: "ALL", label: "All Events" },
+  { id: "UPCOMING", label: "Upcoming" },
   { id: "TODAY", label: "Today" },
   { id: "TOMORROW", label: "Tomorrow" },
   { id: "THIS_WEEK", label: "This Week" },
@@ -42,7 +43,10 @@ export default function EventsExplorePage() {
 
   // Fetch student's saved event IDs to reflect bookmark state
   const fetchSavedState = async () => {
-    if (!user) return;
+    if (!user || user.role?.toUpperCase() !== "STUDENT") {
+      setSavedEventIds(new Set());
+      return;
+    }
     try {
       const res = await fetch("/api/saved");
       if (res.ok) {
@@ -64,7 +68,10 @@ export default function EventsExplorePage() {
       if (selectedDateFilter && selectedDateFilter !== "ALL") params.set("dateFilter", selectedDateFilter);
       if (sortBy) params.set("sortBy", sortBy);
 
-      const res = await fetch(`/api/events?${params.toString()}`);
+      const res = await fetch(`/api/events?${params.toString()}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
       if (res.ok) {
         const data = await res.json();
         setEvents(data.events || []);

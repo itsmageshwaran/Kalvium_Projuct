@@ -167,9 +167,11 @@ export default function Navbar() {
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => logout()}
                   className="p-1.5 text-kalvium-muted hover:text-kalvium-coral rounded-full hover:bg-white dark:hover:bg-kalvium-dark-surface transition-colors active:scale-95 text-xs"
                   title="Sign out"
+                  aria-label="Sign out"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                 </button>
@@ -312,9 +314,10 @@ export default function Navbar() {
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => {
-                    logout();
                     setMobileMenuOpen(false);
+                    logout();
                   }}
                   className="text-xs text-kalvium-coral font-medium px-3 py-1 rounded-full border border-kalvium-coral/30 hover:bg-kalvium-coral-tint transition-colors"
                 >

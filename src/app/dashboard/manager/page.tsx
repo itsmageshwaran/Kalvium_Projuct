@@ -12,6 +12,7 @@ import {
   Calendar,
   User,
   Sparkles,
+  PenTool,
   ArrowRight,
   Edit3,
   RefreshCw,
@@ -285,11 +286,18 @@ export default function CampusManagerVerificationQueue() {
 
         <div className="flex items-center gap-2 flex-wrap">
           <Link
-            href="/events/create"
+            href="/events/create?mode=manual"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border bg-white dark:bg-kalvium-dark-surface hover:border-kalvium-coral text-kalvium-text dark:text-kalvium-dark-text text-xs font-bold shadow-soft-xs transition shrink-0 active:scale-95"
+          >
+            <PenTool className="w-3.5 h-3.5 text-kalvium-coral" />
+            <span>+ Manual Entry</span>
+          </Link>
+          <Link
+            href="/events/create?mode=ai"
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm transition shrink-0 active:scale-95"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>+ Add Event</span>
+            <span>+ AI Poster Studio</span>
           </Link>
           <button
             onClick={fetchPendingQueue}

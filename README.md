@@ -180,9 +180,8 @@ kalviumProject/Kalvium_Projuct/
 
 ### Prerequisites
 - **Node.js**: v18.17.0 or newer (v20+ recommended)
-- **npm**: v9 or newer
 - A **Firebase Project** (with Authentication, Firestore, and Storage enabled)
-- *(Optional)* A **Google Gemini API Key** for real-time poster extraction (fallback sample presets work offline)
+- *(Optional)* A **Google Gemini API Key** entered by the user in the UI on their device (stored only in client localStorage, zero Firebase DB storage)
 
 ---
 
@@ -201,8 +200,8 @@ npm install
 Create a `.env` file in the project root:
 
 ```env
-# Google Gemini API Key (Optional: for online multimodal poster extraction)
-GEMINI_API_KEY="your-gemini-api-key"
+# Note: Gemini API keys are entered directly by users on their client device (saved in localStorage).
+# Zero API keys are required or stored in .env or the Firebase database.
 
 # Base Application URL
 NEXT_PUBLIC_APP_URL="http://localhost:3000"

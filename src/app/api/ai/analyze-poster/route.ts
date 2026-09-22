@@ -14,7 +14,11 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { sampleId, imageData, mimeType, posterUrl } = body;
+    const { sampleId, imageData, mimeType, posterUrl, apiKey: bodyApiKey, model: bodyModel } = body;
+    const headerApiKey = req.headers.get("x-gemini-api-key") || undefined;
+    const headerModel = req.headers.get("x-gemini-model") || undefined;
+    const apiKey = (bodyApiKey || headerApiKey || "").trim();
+    const preferredModel = (bodyModel || headerModel || "").trim();
 
     if (!sampleId && !imageData && !posterUrl) {
       return NextResponse.json(
@@ -23,11 +27,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Run AI poster analysis
+    if (!sampleId && !apiKey) {
+      return NextResponse.json(
+        { error: "Gemini API key is required to analyze custom posters. Please enter your API key on your device (it stays on your device and is never saved to Firebase)." },
+        { status: 400 }
+      );
+    }
+
+    // Run AI poster analysis using the user's on-device API key and preferred Flash model
     const extractedData = await analyzeEventPoster(
       imageData || posterUrl || "",
       mimeType || "image/png",
-      sampleId
+      sampleId,
+      apiKey,
+      preferredModel || undefined
     );
 
     // Run duplicate event detection
@@ -45,9 +58,16 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("AI poster analysis route error:", error);
+    const msg = error?.message || "AI analysis could not process the poster. Please review fields manually.";
+    const isClientError =
+      msg.includes("API key") ||
+      msg.includes("quota") ||
+      msg.includes("rate limit") ||
+      msg.includes("No poster");
+
     return NextResponse.json(
-      { error: error?.message || "AI analysis could not process the poster. Please review fields manually." },
-      { status: 500 }
+      { error: msg },
+      { status: isClientError ? 400 : 500 }
     );
   }
 }

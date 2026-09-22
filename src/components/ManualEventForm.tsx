@@ -173,6 +173,8 @@ export default function ManualEventForm({ onComplete }: ManualEventFormProps) {
       } else {
         if (user?.role?.toUpperCase() === "STUDENT") {
           router.push("/dashboard/student");
+        } else if (user?.role?.toUpperCase() === "CAMPUS_MANAGER") {
+          router.push("/dashboard/manager");
         } else {
           router.push("/dashboard/organizer");
         }
@@ -439,13 +441,27 @@ export default function ManualEventForm({ onComplete }: ManualEventFormProps) {
             <button type="submit" disabled={submitting}
               className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-kalvium-coral text-white font-bold text-sm rounded-2xl hover:bg-kalvium-coral/90 active:scale-[0.98] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed shadow-soft-sm">
               {submitting ? (
-                <><RefreshCw className="w-4 h-4 animate-spin" /> {user?.role?.toUpperCase() === "STUDENT" ? "Submitting Event Request..." : "Submitting..."}</>
+                <><RefreshCw className="w-4 h-4 animate-spin" /> {
+                  user?.role?.toUpperCase() === "CAMPUS_MANAGER"
+                    ? "Sending to Verification Studio..."
+                    : user?.role?.toUpperCase() === "STUDENT"
+                    ? "Submitting Event Request..."
+                    : "Submitting..."
+                }</>
               ) : (
-                <><FileCheck className="w-4 h-4" /> {user?.role?.toUpperCase() === "STUDENT" ? "Submit Event Request for Campus Verification" : "Submit for Campus Manager Verification"} <ArrowRight className="w-4 h-4" /></>
+                <><FileCheck className="w-4 h-4" /> {
+                  user?.role?.toUpperCase() === "CAMPUS_MANAGER"
+                    ? "Send to Verification Studio for Approval"
+                    : user?.role?.toUpperCase() === "STUDENT"
+                    ? "Submit Event Request for Campus Verification"
+                    : "Submit for Campus Manager Verification"
+                } <ArrowRight className="w-4 h-4" /></>
               )}
             </button>
             <p className="text-center text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-2">
-              {user?.role?.toUpperCase() === "STUDENT"
+              {user?.role?.toUpperCase() === "CAMPUS_MANAGER"
+                ? "This event will be placed in your Verification Studio queue so you can review details, double-check venue availability, and stamp it approved."
+                : user?.role?.toUpperCase() === "STUDENT"
                 ? "Your event proposal stays private until a Campus Manager reviews and approves it."
                 : "Your event stays private until a Campus Manager reviews and approves it."}
             </p>

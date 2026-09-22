@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { Calendar, Clock, MapPin, Bookmark, BookmarkCheck, ArrowUpRight, Flame } from "lucide-react";
+import { Calendar, Clock, MapPin, ArrowUpRight, Flame } from "lucide-react";
 import CampusVerifiedBadge from "./CampusVerifiedBadge";
-import ClashWarningModal from "./ClashWarningModal";
 import TiltCard from "./TiltCard";
-import { useAuth } from "@/context/AuthContext";
 import { isStartingSoon, getHumanCountdown, isEventPast } from "@/lib/time";
 
 export interface EventCardData {
@@ -46,80 +44,12 @@ export default function EventCard({
   onSelectEvent,
   index = 0,
 }: EventCardProps) {
-  const { user } = useAuth();
-  const [isSaved, setIsSaved] = useState(event.isSaved || false);
-  const [saving, setSaving] = useState(false);
-  const [clashModalOpen, setClashModalOpen] = useState(false);
-  const [clashData, setClashData] = useState<any>(null);
-
   const isPast = event.isPast ?? isEventPast(event.date, event.endTime, undefined, event.startTime);
   const startingSoon = !isPast && isStartingSoon(event.date, event.startTime, undefined, event.endTime);
   const countdownText = getHumanCountdown(event.date, event.startTime, undefined, event.endTime);
 
-  const handleSaveClick = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!user) {
-      alert("Please sign in to save events.");
-      return;
-    }
-
-    if (isSaved) {
-      executeToggle(false);
-      return;
-    }
-
-    // Pre-check for clash before saving
-    setSaving(true);
-    try {
-      const clashRes = await fetch("/api/saved/check-clash", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: event.id }),
-      });
-
-      if (clashRes.ok) {
-        const data = await clashRes.json();
-        if (data.hasClash && data.conflictingEvent) {
-          setClashData(data);
-          setClashModalOpen(true);
-          setSaving(false);
-          return;
-        }
-      }
-
-      await executeToggle(true);
-    } catch (err) {
-      console.error("Save error:", err);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const executeToggle = async (targetState: boolean) => {
-    setSaving(true);
-    try {
-      const res = await fetch("/api/saved/toggle", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: event.id }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setIsSaved(data.saved);
-        if (onSaveToggle) onSaveToggle(event.id, data.saved);
-      }
-    } catch (err) {
-      console.error("Save toggle error:", err);
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
-    <>
-      <TiltCard maxTilt={3} className="h-full">
+    <TiltCard maxTilt={3} className="h-full">
         <div className="group relative flex flex-col h-full rounded-2xl sm:rounded-3xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium hover:shadow-kalvium-md transition-all duration-300 overflow-hidden">
           {/* Poster Box */}
           <div className="relative aspect-[16/10] w-full overflow-hidden bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt">
@@ -148,24 +78,6 @@ export default function EventCard({
                 </span>
               ) : null}
             </div>
-
-            {/* Quick Bookmark Save Button */}
-            <button
-              onClick={handleSaveClick}
-              disabled={saving}
-              className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-all duration-200 active:scale-90 hover:scale-105 z-10 ${
-                isSaved
-                  ? "bg-kalvium-coral text-white shadow-md shadow-kalvium-coral/30"
-                  : "bg-white/90 dark:bg-kalvium-dark-surface/90 text-kalvium-text dark:text-kalvium-dark-text hover:text-kalvium-coral border border-kalvium-border dark:border-kalvium-dark-border shadow-xs"
-              }`}
-              title={isSaved ? "Remove from Schedule" : "Save to Schedule"}
-            >
-              {isSaved ? (
-                <BookmarkCheck size={16} className="fill-white" />
-              ) : (
-                <Bookmark size={16} />
-              )}
-            </button>
 
             {/* Verified Badge on Poster */}
             {event.status === "APPROVED" && (
@@ -248,24 +160,5 @@ export default function EventCard({
           </div>
         </div>
       </TiltCard>
-
-      {/* Clash Warning Dialog */}
-      {clashData && (
-        <ClashWarningModal
-          isOpen={clashModalOpen}
-          onClose={() => setClashModalOpen(false)}
-          onConfirmSave={() => executeToggle(true)}
-          conflictingEvent={clashData.conflictingEvent}
-          currentEvent={{
-            title: event.title,
-            startTime: event.startTime,
-            endTime: event.endTime,
-            venue: event.venue,
-            date: event.date,
-          }}
-          overlapStr={clashData.overlap?.formatted || "Direct Overlap"}
-        />
-      )}
-    </>
   );
 }

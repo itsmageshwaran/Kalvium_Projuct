@@ -110,6 +110,11 @@ export async function POST(req: NextRequest) {
       auditSnapshot.originalPosterUrl = `[base64-image-data-length-${auditSnapshot.originalPosterUrl.length}]`;
     }
 
+    // Enforce zero persistence: Ensure API keys are never stored in Firestore database
+    delete (auditSnapshot as any).apiKey;
+    delete (auditSnapshot as any).geminiKey;
+    delete (auditSnapshot as any).key;
+
     // Firestore batch for atomic write
     const batch = adminDb.batch();
 
@@ -128,7 +133,7 @@ export async function POST(req: NextRequest) {
       tags: formattedTags,
       registrationUrl: safeRegistrationUrl,
       contactInfo: contactInfo ? contactInfo.trim() : user.email,
-      status: "PENDING", // Enforce pending status
+      status: "PENDING", // Always PENDING so it enters the Verification Studio for manager review
       organizerId: user.userId,
       submitterRole: user.role,
       createdAt: new Date().toISOString(),
@@ -155,7 +160,9 @@ export async function POST(req: NextRequest) {
 
     await batch.commit();
 
-    const successMessage = user.role === "STUDENT"
+    const successMessage = user.role === "CAMPUS_MANAGER"
+      ? "Event submitted to verification queue. Review and approve it in your Verification Studio."
+      : user.role === "STUDENT"
       ? "Event request submitted successfully for Campus Manager verification."
       : "Event submitted successfully for Campus Manager verification.";
 
