@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { adminDb } from "@/lib/firebase/admin";
 import { getAuthUser } from "@/lib/auth";
 
 export async function GET(
@@ -9,50 +9,54 @@ export async function GET(
   try {
     const { id } = params;
 
-    const event = await prisma.event.findUnique({
-      where: { id },
-      include: {
-        organizer: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-          },
-        },
-        verifiedBy: {
-          select: {
-            id: true,
-            name: true,
-            role: true,
-          },
-        },
-        analyses: {
-          take: 1,
-          orderBy: { analyzedAt: "desc" },
-        },
-        approvalHistory: {
-          orderBy: { timestamp: "desc" },
-        },
-      },
-    });
+    const eventDoc = await adminDb.collection("events").doc(id).get();
 
-    if (!event) {
+    if (!eventDoc.exists) {
       return NextResponse.json({ error: "Event not found." }, { status: 404 });
     }
+
+    const eventData = eventDoc.data();
+    const event = { id: eventDoc.id, ...eventData };
+
+    // Fetch analyses if needed (subcollection)
+    const analysesSnapshot = await adminDb
+      .collection("events")
+      .doc(id)
+      .collection("analyses")
+      .orderBy("analyzedAt", "desc")
+      .limit(1)
+      .get();
+      
+    const analyses = analysesSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+
+    // Fetch approval history if needed (subcollection)
+    const historySnapshot = await adminDb
+      .collection("events")
+      .doc(id)
+      .collection("approvalHistory")
+      .orderBy("timestamp", "desc")
+      .get();
+      
+    const approvalHistory = historySnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+
+    const fullEvent: any = {
+      ...event,
+      analyses,
+      approvalHistory
+    };
 
     const auth = await getAuthUser(req);
 
     // Authorization rule:
     // If not APPROVED, only the event's organizer or a CAMPUS_MANAGER can view it.
-    if (event.status !== "APPROVED") {
+    if (fullEvent.status !== "APPROVED") {
       if (!auth) {
         return NextResponse.json(
           { error: "Event is pending verification and cannot be accessed." },
           { status: 403 }
         );
       }
-      const isOwner = auth.userId === event.organizerId;
+      const isOwner = auth.userId === fullEvent.organizerId;
       const isManager = auth.role === "CAMPUS_MANAGER";
       if (!isOwner && !isManager) {
         return NextResponse.json(
@@ -63,11 +67,11 @@ export async function GET(
     }
 
     // Strip internal moderation data (analyses and approvalHistory) for public callers
-    const isPrivileged = !!(auth && (auth.userId === event.organizerId || auth.role === "CAMPUS_MANAGER"));
+    const isPrivileged = !!(auth && (auth.userId === fullEvent.organizerId || auth.role === "CAMPUS_MANAGER"));
     const sanitizedEvent = isPrivileged
-      ? event
+      ? fullEvent
       : {
-          ...event,
+          ...fullEvent,
           analyses: [],
           approvalHistory: [],
         };

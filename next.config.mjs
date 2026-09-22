@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    serverComponentsExternalPackages: ["tesseract.js", "sharp", "@huggingface/transformers"],
+    serverComponentsExternalPackages: ["@google/generative-ai"],
   },
   webpack: (config, { dev }) => {
     if (dev) {

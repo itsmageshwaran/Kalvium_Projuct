@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Sparkles, ArrowRight, User, Mail, Lock, ShieldAlert } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, getDashboardRoute } from "@/context/AuthContext";
 
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { register, user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [name, setName] = useState("");
@@ -17,6 +17,12 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace(getDashboardRoute(user.role));
+    }
+  }, [user, authLoading, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -24,15 +30,19 @@ export default function RegisterPage() {
     const res = await register(name, email, password, role);
     setLoading(false);
     if (res.success) {
-      if (role === "ORGANIZER") {
-        router.push("/dashboard/organizer");
-      } else {
-        router.push("/events");
-      }
+      router.push(getDashboardRoute(res.role || role));
     } else {
       setError(res.error || "Registration failed.");
     }
   };
+
+  if (authLoading || user) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-kalvium-coral border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto px-4 py-16">
@@ -114,7 +124,7 @@ export default function RegisterPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="e.g. alex@campus.edu"
+              placeholder="e.g. alex@kalvium.community"
               className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl pl-9 pr-3 py-2.5 text-xs text-kalvium-ink dark:text-kalvium-dark-ink focus:outline-none focus:border-kalvium-coral transition"
             />
           </div>

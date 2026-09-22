@@ -1,0 +1,64 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Function to check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Function to check if the user has a specific role
+    function hasRole(role) {
+      return isAuthenticated() && request.auth.token.role == role;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      // Users can read their own profile, anyone can read public basic info (if needed)
+      // For now, restrict reading to the user themselves or Campus Managers
+      allow read: if isAuthenticated() && (request.auth.uid == userId || hasRole('CAMPUS_MANAGER'));
+      // Users can update their own profile
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+
+      // Saved Events Subcollection
+      match /savedEvents/{eventId} {
+        // Only the specific user can read and write their own saved events
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
+    }
+
+    // Events Collection
+    match /events/{eventId} {
+      // Anyone can read APPROVED events (maybe require auth for any event)
+      allow read: if isAuthenticated(); // or true if you want public access to approved events
+      
+      // Organizers, Students, and Campus Managers can create/request events
+      allow create: if hasRole('ORGANIZER') || hasRole('CAMPUS_MANAGER') || hasRole('STUDENT');
+      
+      // Organizers and Students can update their own events, Managers can update any event
+      allow update: if hasRole('CAMPUS_MANAGER') || 
+                   ((hasRole('ORGANIZER') || hasRole('STUDENT')) && resource.data.organizerId == request.auth.uid);
+      
+      // Campus Managers can delete any event, Organizers and Students can delete their own events
+      allow delete: if hasRole('CAMPUS_MANAGER') || 
+                   ((hasRole('ORGANIZER') || hasRole('STUDENT')) && resource.data.organizerId == request.auth.uid);
+
+      // Analyses Subcollection (AI analysis results)
+      match /analyses/{analysisId} {
+        // Organizers can read their own event's analysis, Managers can read any
+        // Assuming we allow any authenticated user to read it for now to avoid complex queries, 
+        // or restrict it
+        allow read: if isAuthenticated();
+        // Only backend admin should really write here, but if client writes:
+        allow write: if false; // Should only be written by admin SDK
+      }
+
+      // Approval History Subcollection
+      match /approvalHistory/{historyId} {
+        allow read: if isAuthenticated();
+        allow write: if false; // Should only be written by admin SDK
+      }
+    }
+  }
+}

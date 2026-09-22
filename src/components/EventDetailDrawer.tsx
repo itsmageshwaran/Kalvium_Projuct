@@ -17,7 +17,7 @@ import {
 import CampusVerifiedBadge from "./CampusVerifiedBadge";
 import ClashWarningModal from "./ClashWarningModal";
 import { useAuth } from "@/context/AuthContext";
-import { isStartingSoon, getHumanCountdown } from "@/lib/time";
+import { isStartingSoon, getHumanCountdown, isEventPast } from "@/lib/time";
 import { EventCardData } from "./EventCard";
 
 interface EventDetailDrawerProps {
@@ -68,12 +68,13 @@ export default function EventDetailDrawer({
 
   if (!isOpen || !event) return null;
 
-  const startingSoon = isStartingSoon(event.date, event.startTime);
+  const isPast = Boolean(event.isPast) || isEventPast(event.date, event.endTime, undefined, event.startTime);
+  const startingSoon = !isPast && isStartingSoon(event.date, event.startTime);
   const countdownText = getHumanCountdown(event.date, event.startTime);
 
   const handleSaveClick = async () => {
     if (!user) {
-      alert("Please sign in or select a demo user in the top bar to save events.");
+      alert("Please sign in to save events.");
       return;
     }
 
@@ -150,6 +151,11 @@ export default function EventDetailDrawer({
               <span className="px-3 py-1 rounded-full text-xs font-medium bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-text dark:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border">
                 {event.category}
               </span>
+              {isPast && (
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-muted border border-kalvium-border dark:border-kalvium-dark-border">
+                  Past Event
+                </span>
+              )}
               <CampusVerifiedBadge size="sm" />
             </div>
 
@@ -172,16 +178,22 @@ export default function EventDetailDrawer({
               <img
                 src={event.posterUrl}
                 alt={event.title}
-                className="w-full h-auto object-cover max-h-[380px] transition-transform duration-500 ease-editorial group-hover:scale-[1.015]"
+                className="w-full h-auto object-contain max-h-[500px] transition-transform duration-500 ease-editorial group-hover:scale-[1.015]"
               />
-              {startingSoon && (
+              {isPast ? (
+                <div className="absolute top-3 left-3">
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-kalvium-surface-alt/90 dark:bg-kalvium-dark-surface/90 text-kalvium-muted border border-kalvium-border dark:border-kalvium-dark-border backdrop-blur flex items-center gap-1.5 shadow-xs">
+                    <span>Past Event • Concluded</span>
+                  </span>
+                </div>
+              ) : startingSoon ? (
                 <div className="absolute top-3 left-3">
                   <span className="px-3 py-1 rounded-full text-xs font-semibold bg-kalvium-coral text-white flex items-center gap-1.5 shadow-md">
                     <Flame className="w-3.5 h-3.5 text-white fill-white" />
                     <span>Starting soon</span>
                   </span>
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* Event Title */}

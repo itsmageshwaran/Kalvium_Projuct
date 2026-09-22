@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { hashPassword, signToken, setAuthCookie } from "@/lib/auth";
+import { adminAuth, adminDb } from "@/lib/firebase/admin";
+import { setAuthCookie } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password, role } = await req.json();
+    const { name, email, role, uid } = await req.json();
 
     if (!name || typeof name !== "string" || name.trim().length === 0) {
       return NextResponse.json(
@@ -19,6 +19,13 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    
+    if (!uid || typeof uid !== "string") {
+      return NextResponse.json(
+        { error: "Firebase UID is required." },
+        { status: 400 }
+      );
+    }
 
     const cleanEmail = email.trim().toLowerCase();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -29,9 +36,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!password || typeof password !== "string" || password.length < 6) {
+    const isAllowedDomain = cleanEmail.endsWith("@kalvium.community") || cleanEmail.endsWith("@kalvium.com");
+    if (!isAllowedDomain) {
       return NextResponse.json(
-        { error: "Password must be at least 6 characters long." },
+        { error: "Only @kalvium.community and @kalvium.com email addresses are allowed for registration." },
         { status: 400 }
       );
     }
@@ -39,34 +47,51 @@ export async function POST(req: NextRequest) {
     // Role protection: CAMPUS_MANAGER cannot be self-registered
     const normalizedRole = role === "ORGANIZER" ? "ORGANIZER" : "STUDENT";
 
-    const existing = await prisma.user.findUnique({
-      where: { email: cleanEmail },
-    });
+    // Check if another account with this email exists under a DIFFERENT UID
+    const existingUsers = await adminDb.collection("users")
+      .where("email", "==", cleanEmail)
+      .get();
 
-    if (existing) {
+    const conflictingUser = existingUsers.docs.find(doc => doc.id !== uid);
+    if (conflictingUser) {
       return NextResponse.json(
-        { error: "An account with this email address already exists." },
+        { error: "An account with this email address already exists in the database." },
         { status: 400 }
       );
     }
 
-    const hashedPassword = await hashPassword(password);
-    const user = await prisma.user.create({
-      data: {
-        name: name.trim(),
-        email: cleanEmail,
-        password: hashedPassword,
-        role: normalizedRole,
-        avatar: `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(cleanEmail)}`,
-      },
-    });
+    // 1. Prepare user profile
+    const user = {
+      id: uid,
+      name: name.trim(),
+      email: cleanEmail,
+      role: normalizedRole,
+      avatar: `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(cleanEmail)}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-    const token = signToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role as "STUDENT" | "ORGANIZER",
+    // 2. Save or update user in Firestore
+    await adminDb.collection("users").doc(uid).set({
       name: user.name,
-    });
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }, { merge: true });
+
+    // 3. Set custom claims on the Firebase user
+    await adminAuth.setCustomUserClaims(uid, { role: normalizedRole });
+
+    // 4. Create session cookie
+    const authHeader = req.headers.get("authorization");
+    let token = "";
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const idToken = authHeader.split(" ")[1];
+      const expiresIn = 60 * 60 * 24 * 7 * 1000; // 7 days
+      token = await adminAuth.createSessionCookie(idToken, { expiresIn });
+    }
 
     const response = NextResponse.json({
       success: true,
@@ -76,17 +101,18 @@ export async function POST(req: NextRequest) {
         email: user.email,
         role: user.role,
         avatar: user.avatar,
-      },
-      token,
+      }
     });
 
-    setAuthCookie(response, token);
+    if (token) {
+      setAuthCookie(response, token, user.role);
+    }
 
     return response;
   } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json(
-      { error: "Internal server error during registration." },
+      { error: error instanceof Error ? error.message : "Internal server error during registration." },
       { status: 500 }
     );
   }

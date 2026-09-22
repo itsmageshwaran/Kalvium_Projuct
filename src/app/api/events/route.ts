@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { adminDb } from "@/lib/firebase/admin";
 import { parseTimeToMinutes } from "@/lib/clash";
-import { formatLocalDate } from "@/lib/time";
+import { formatLocalDate, isEventPast } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const query = searchParams.get("q")?.trim().toLowerCase() || "";
     const category = searchParams.get("category")?.trim() || "";
     const venue = searchParams.get("venue")?.trim() || "";
-    const dateFilter = searchParams.get("dateFilter")?.trim() || ""; // "TODAY" | "TOMORROW" | "THIS_WEEK" | "UPCOMING"
+    const dateFilter = searchParams.get("dateFilter")?.trim() || ""; // "ALL" | "TODAY" | "TOMORROW" | "THIS_WEEK" | "PAST"
     const sortBy = searchParams.get("sortBy") || "soonest"; // "soonest" | "latest" | "recently_added"
 
     // Reference date in local campus time
@@ -26,97 +26,67 @@ export async function GET(req: NextRequest) {
     nextWeek.setDate(now.getDate() + 7);
     const nextWeekStr = formatLocalDate(nextWeek);
 
-    // Build Prisma query condition
-    const where: any = {
-      status: "APPROVED", // Mandatory security rule: ONLY APPROVED events are public
-    };
+    // Query Firestore for approved events (filter in-memory to prevent missing composite index errors)
+    const snapshot = await adminDb.collection("events").where("status", "==", "APPROVED").get();
+    
+    let events: any[] = [];
+    snapshot.forEach((doc: any) => {
+      const data = doc.data();
+      const isPast = isEventPast(data.date, data.endTime, now, data.startTime);
+      events.push({ id: doc.id, ...data, isPast });
+    });
 
     if (category && category !== "ALL") {
-      where.category = { equals: category };
+      events = events.filter((e: any) => e.category === category);
+    }
+
+    // Filter by date: past events are cleanly segregated from upcoming views
+    if (dateFilter === "PAST") {
+      events = events.filter((e: any) => e.isPast);
+    } else if (dateFilter === "TODAY") {
+      events = events.filter((e: any) => e.date === todayStr && !e.isPast);
+    } else if (dateFilter === "TOMORROW") {
+      events = events.filter((e: any) => e.date === tomorrowStr && !e.isPast);
+    } else if (dateFilter === "THIS_WEEK") {
+      events = events.filter((e: any) => e.date >= todayStr && e.date <= nextWeekStr && !e.isPast);
+    } else {
+      // Default: "ALL" / "UPCOMING" or omitted -> Exclusively show upcoming active events
+      events = events.filter((e: any) => !e.isPast);
     }
 
     if (venue && venue !== "ALL") {
-      where.venue = { contains: venue };
+      events = events.filter((e: any) => e.venue.toLowerCase().includes(venue.toLowerCase()));
     }
 
-    if (dateFilter === "TODAY") {
-      where.date = todayStr;
-    } else if (dateFilter === "TOMORROW") {
-      where.date = tomorrowStr;
-    } else if (dateFilter === "THIS_WEEK") {
-      where.date = {
-        gte: todayStr,
-        lte: nextWeekStr,
-      };
-    } else if (dateFilter === "UPCOMING") {
-      where.date = {
-        gte: todayStr,
-      };
-    }
-
-    const pageParam = parseInt(searchParams.get("page") || "", 10);
-    const limitParam = parseInt(searchParams.get("limit") || "", 10);
-    const hasPagination = !isNaN(limitParam) && limitParam > 0;
-    const page = !isNaN(pageParam) && pageParam > 0 ? pageParam : 1;
-    const limit = hasPagination ? Math.min(100, Math.max(1, limitParam)) : 100;
-
-    // Push text search down to SQL if query parameter exists
     if (query) {
-      where.OR = [
-        { title: { contains: query } },
-        { organizerName: { contains: query } },
-        { venue: { contains: query } },
-        { category: { contains: query } },
-        { summary: { contains: query } },
-        { tags: { contains: query } },
-      ];
-    }
-
-    // Fetch matching approved events
-    let events = await prisma.event.findMany({
-      where,
-      include: {
-        organizer: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-          },
-        },
-        verifiedBy: {
-          select: {
-            id: true,
-            name: true,
-            role: true,
-          },
-        },
-      },
-      orderBy:
-        sortBy === "recently_added"
-          ? { createdAt: "desc" }
-          : sortBy === "latest"
-          ? { date: "desc" }
-          : { date: "asc" },
-    });
-
-    // Secondary in-memory search for organizer email/name matches if needed
-    if (query) {
-      events = events.filter((e) => {
+      events = events.filter((e: any) => {
         return (
-          e.title.toLowerCase().includes(query) ||
+          (e.title && e.title.toLowerCase().includes(query)) ||
           (e.organizerName && e.organizerName.toLowerCase().includes(query)) ||
-          e.organizer.name.toLowerCase().includes(query) ||
-          e.venue.toLowerCase().includes(query) ||
-          e.category.toLowerCase().includes(query) ||
-          e.summary.toLowerCase().includes(query)
+          (e.organizer?.name && e.organizer.name.toLowerCase().includes(query)) ||
+          (e.venue && e.venue.toLowerCase().includes(query)) ||
+          (e.category && e.category.toLowerCase().includes(query)) ||
+          (e.summary && e.summary.toLowerCase().includes(query)) ||
+          (e.tags && e.tags.some((t: string) => t.toLowerCase().includes(query)))
         );
       });
     }
 
-    // Sort by soonest (date + startTime)
-    if (sortBy === "soonest") {
-      events.sort((a, b) => {
+    // Sort
+    if (sortBy === "recently_added") {
+      events.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else if (sortBy === "latest" || dateFilter === "PAST") {
+      // For past events or latest sort, show the most recent first
+      events.sort((a: any, b: any) => {
+        if (a.date !== b.date) return b.date.localeCompare(a.date);
+        const minA = parseTimeToMinutes(a.startTime);
+        const minB = parseTimeToMinutes(b.startTime);
+        const safeA = isNaN(minA) ? 0 : minA;
+        const safeB = isNaN(minB) ? 0 : minB;
+        return safeB - safeA;
+      });
+    } else { // soonest
+      events.sort((a: any, b: any) => {
         if (a.date !== b.date) {
           return a.date.localeCompare(b.date);
         }
@@ -127,6 +97,12 @@ export async function GET(req: NextRequest) {
         return safeA - safeB;
       });
     }
+
+    const pageParam = parseInt(searchParams.get("page") || "", 10);
+    const limitParam = parseInt(searchParams.get("limit") || "", 10);
+    const hasPagination = !isNaN(limitParam) && limitParam > 0;
+    const page = !isNaN(pageParam) && pageParam > 0 ? pageParam : 1;
+    const limit = hasPagination ? Math.min(100, Math.max(1, limitParam)) : 100;
 
     const totalCount = events.length;
     const paginatedEvents = hasPagination

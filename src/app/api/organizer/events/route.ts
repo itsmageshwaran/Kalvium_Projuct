@@ -1,41 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { adminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const authResult = await requireAuth(req, ["ORGANIZER", "CAMPUS_MANAGER"]);
+    const authResult = await requireAuth(req, ["STUDENT", "ORGANIZER", "CAMPUS_MANAGER"]);
     if ("errorResponse" in authResult) return authResult.errorResponse;
 
     const { user } = authResult;
 
     // Fetch organizer's submissions
-    const events = await prisma.event.findMany({
-      where: {
-        organizerId: user.userId,
-      },
-      include: {
-        verifiedBy: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-        approvalHistory: {
-          take: 1,
-          orderBy: { timestamp: "desc" },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const snapshot = await adminDb
+      .collection("events")
+      .where("organizerId", "==", user.userId)
+      .get();
+      
+    const eventsData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+
+    // For each event, we need to fetch the approval history (or just the latest one)
+    // to match Prisma behavior. But actually we can do it in a Promise.all
+    const events = await Promise.all(
+      eventsData.map(async (event: any) => {
+        const historySnapshot = await adminDb
+          .collection("events")
+          .doc(event.id)
+          .collection("approvalHistory")
+          .orderBy("timestamp", "desc")
+          .limit(1)
+          .get();
+          
+        return {
+          ...event,
+          approvalHistory: historySnapshot.docs.map((h: any) => ({ id: h.id, ...h.data() }))
+        };
+      })
+    );
+    
+    // Sort events by createdAt desc
+    events.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     const stats = {
       total: events.length,
-      pending: events.filter((e) => e.status === "PENDING").length,
-      approved: events.filter((e) => e.status === "APPROVED").length,
-      declined: events.filter((e) => e.status === "DECLINED").length,
+      pending: events.filter((e: any) => e.status === "PENDING").length,
+      approved: events.filter((e: any) => e.status === "APPROVED").length,
+      declined: events.filter((e: any) => e.status === "DECLINED").length,
     };
 
     return NextResponse.json({

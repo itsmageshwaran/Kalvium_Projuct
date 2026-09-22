@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { adminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
@@ -15,15 +15,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify event exists and is APPROVED
-    const targetEvent = await prisma.event.findUnique({
-      where: { id: eventId },
-    });
+    const eventRef = adminDb.collection("events").doc(eventId);
+    const eventDoc = await eventRef.get();
 
-    if (!targetEvent) {
+    if (!eventDoc.exists) {
       return NextResponse.json({ error: "Event not found." }, { status: 404 });
     }
 
-    if (targetEvent.status !== "APPROVED") {
+    if (eventDoc.data()?.status !== "APPROVED") {
       return NextResponse.json(
         { error: "Only approved campus events can be saved to schedule." },
         { status: 400 }
@@ -31,20 +30,18 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if already saved
-    const existing = await prisma.savedEvent.findUnique({
-      where: {
-        userId_eventId: {
-          userId: user.userId,
-          eventId,
-        },
-      },
-    });
+    const savedEventRef = adminDb
+      .collection("users")
+      .doc(user.userId)
+      .collection("savedEvents")
+      .doc(eventId);
 
-    if (existing) {
+    const existing = await savedEventRef.get();
+
+    if (existing.exists) {
       // Unsave
-      await prisma.savedEvent.delete({
-        where: { id: existing.id },
-      });
+      await savedEventRef.delete();
+      
       return NextResponse.json({
         success: true,
         saved: false,
@@ -52,12 +49,10 @@ export async function POST(req: NextRequest) {
       });
     } else {
       // Save
-      await prisma.savedEvent.create({
-        data: {
-          userId: user.userId,
-          eventId,
-        },
+      await savedEventRef.set({
+        savedAt: new Date().toISOString()
       });
+      
       return NextResponse.json({
         success: true,
         saved: true,

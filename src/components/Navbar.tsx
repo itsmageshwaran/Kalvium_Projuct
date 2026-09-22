@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, getDashboardRoute } from "@/context/AuthContext";
 import ThemeToggle from "@/components/ThemeToggle";
 import CampusHubLogo from "@/components/CampusHubLogo";
 import {
@@ -14,10 +14,11 @@ import {
   LogOut,
   Menu,
   X,
+  GraduationCap,
 } from "lucide-react";
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -29,13 +30,80 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo & Brand Identity */}
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 group select-none">
+            <Link
+              href={user ? getDashboardRoute(user.role) : "/"}
+              className="flex items-center gap-2 group select-none"
+            >
               <CampusHubLogo size="md" />
             </Link>
           </div>
 
           {/* Desktop Navigation Links - Editorial Pill Tabs */}
           <nav className="hidden md:flex items-center gap-1 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt p-1 rounded-full border border-kalvium-border dark:border-kalvium-dark-border">
+            {user?.role?.toUpperCase() === "STUDENT" && (
+              <>
+                <Link
+                  href="/dashboard/student"
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all duration-150 active:scale-95 select-none ${
+                    isActive("/dashboard/student")
+                      ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral font-semibold shadow-xs"
+                      : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text font-medium"
+                  }`}
+                >
+                  <GraduationCap className="w-3.5 h-3.5 text-kalvium-coral" />
+                  <span>Student's Portal</span>
+                </Link>
+                <Link
+                  href="/dashboard/student?tab=create"
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all duration-150 active:scale-95 select-none text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text font-medium"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-kalvium-coral" />
+                  <span>Request Event</span>
+                </Link>
+              </>
+            )}
+
+            {user?.role?.toUpperCase() === "ORGANIZER" && (
+              <Link
+                href="/dashboard/organizer"
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all duration-150 active:scale-95 select-none ${
+                  isActive("/dashboard/organizer")
+                    ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral font-semibold shadow-xs"
+                    : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text font-medium"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-kalvium-coral" />
+                <span>Organizer's Portal</span>
+              </Link>
+            )}
+
+            {user?.role?.toUpperCase() === "CAMPUS_MANAGER" && (
+              <>
+                <Link
+                  href="/dashboard/manager"
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all duration-150 active:scale-95 select-none ${
+                    isActive("/dashboard/manager") || isActive("/dashboard/organizer")
+                      ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral font-semibold shadow-xs"
+                      : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text font-medium"
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-kalvium-success" />
+                  <span>Manager's Portal</span>
+                </Link>
+                <Link
+                  href="/events/create"
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all duration-150 active:scale-95 select-none ${
+                    isActive("/events/create")
+                      ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral font-semibold shadow-xs"
+                      : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text font-medium"
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-kalvium-coral" />
+                  <span>+ Add Event</span>
+                </Link>
+              </>
+            )}
+
             <Link
               href="/events"
               className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all duration-150 active:scale-95 select-none ${
@@ -48,8 +116,7 @@ export default function Navbar() {
               <span>Events</span>
             </Link>
 
-            {/* Student Links: Events -> Schedule */}
-            {(!user || user.role === "STUDENT") && (
+            {user?.role?.toUpperCase() === "STUDENT" && (
               <Link
                 href="/schedule"
                 className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all duration-150 active:scale-95 select-none ${
@@ -62,58 +129,30 @@ export default function Navbar() {
                 <span>My Schedule</span>
               </Link>
             )}
-
-            {/* Organizer Links: Events -> Organizer Studio */}
-            {user?.role === "ORGANIZER" && (
-              <Link
-                href="/dashboard/organizer"
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all duration-150 active:scale-95 select-none ${
-                  isActive("/dashboard/organizer")
-                    ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral font-semibold shadow-xs"
-                    : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text font-medium"
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5 text-kalvium-coral" />
-                <span>Organizer Studio</span>
-              </Link>
-            )}
-
-            {/* Campus Manager Links: Events -> Verification Center */}
-            {user?.role === "CAMPUS_MANAGER" && (
-              <Link
-                href="/dashboard/manager"
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all duration-150 active:scale-95 select-none ${
-                  isActive("/dashboard/manager")
-                    ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral font-semibold shadow-xs"
-                    : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text font-medium"
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-kalvium-success" />
-                <span>Verification Studio</span>
-              </Link>
-            )}
           </nav>
 
           {/* User Profile / Auth Actions & Theme Toggle */}
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
 
-            {user ? (
+            {loading ? (
+              <div className="h-8 w-28 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-full animate-pulse border border-kalvium-border dark:border-kalvium-dark-border" />
+            ) : user ? (
               <div className="flex items-center gap-2.5 p-1 pl-3 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-full border border-kalvium-border dark:border-kalvium-dark-border shadow-xs">
                 <div className="text-right">
                   <p className="text-xs font-semibold text-kalvium-text dark:text-kalvium-dark-text leading-tight">{user.name}</p>
                   <span
                     className={`inline-block text-[10px] font-medium ${
-                      user.role === "CAMPUS_MANAGER"
+                      user.role?.toUpperCase() === "CAMPUS_MANAGER"
                         ? "text-kalvium-success"
-                        : user.role === "ORGANIZER"
+                        : user.role?.toUpperCase() === "ORGANIZER"
                         ? "text-kalvium-warning"
                         : "text-kalvium-muted"
                     }`}
                   >
-                    {user.role === "CAMPUS_MANAGER"
+                    {user.role?.toUpperCase() === "CAMPUS_MANAGER"
                       ? "Campus Manager"
-                      : user.role === "ORGANIZER"
+                      : user.role?.toUpperCase() === "ORGANIZER"
                       ? "Organizer"
                       : "Student"}
                   </span>
@@ -168,51 +207,106 @@ export default function Navbar() {
         {/* Mobile Drawer */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-kalvium-border dark:border-kalvium-dark-border bg-kalvium-surface dark:bg-kalvium-dark-surface px-4 pt-3 pb-5 space-y-2">
-            <Link
-              href="/events"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-xl text-kalvium-text dark:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt text-xs font-medium"
-            >
-              Events
-            </Link>
-            {(!user || user.role === "STUDENT") && (
+            {user?.role?.toUpperCase() === "STUDENT" && (
+              <>
+                <Link
+                  href="/dashboard/student"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block px-3 py-2 rounded-xl text-xs font-semibold ${
+                    isActive("/dashboard/student")
+                      ? "text-kalvium-coral bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint"
+                      : "text-kalvium-text dark:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt"
+                  }`}
+                >
+                  Student's Portal
+                </Link>
+                <Link
+                  href="/dashboard/student?tab=create"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-xl text-xs font-medium text-kalvium-text dark:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt"
+                >
+                  Request Event
+                </Link>
+              </>
+            )}
+            {user?.role?.toUpperCase() === "ORGANIZER" && (
+              <Link
+                href="/dashboard/organizer"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-3 py-2 rounded-xl text-xs font-semibold ${
+                  isActive("/dashboard/organizer")
+                    ? "text-kalvium-coral bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint"
+                    : "text-kalvium-text dark:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt"
+                }`}
+              >
+                Organizer's Portal
+              </Link>
+            )}
+
+            {user?.role?.toUpperCase() === "CAMPUS_MANAGER" && (
+              <>
+                <Link
+                  href="/dashboard/manager"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block px-3 py-2 rounded-xl text-xs font-semibold ${
+                    isActive("/dashboard/manager") || isActive("/dashboard/organizer")
+                      ? "bg-kalvium-success-tint dark:bg-kalvium-dark-success-tint text-kalvium-success"
+                      : "text-kalvium-text dark:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt"
+                  }`}
+                >
+                  Manager's Portal
+                </Link>
+                <Link
+                  href="/events/create"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-xl text-xs font-medium text-kalvium-text dark:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt"
+                >
+                  + Add Event
+                </Link>
+              </>
+            )}
+
+            {user && (
+              <Link
+                href="/events"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-3 py-2 rounded-xl text-xs font-medium ${
+                  isActive("/events")
+                    ? "text-kalvium-coral bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint font-semibold"
+                    : "text-kalvium-text dark:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt"
+                }`}
+              >
+                Events
+              </Link>
+            )}
+
+            {user?.role?.toUpperCase() === "STUDENT" && (
               <Link
                 href="/schedule"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl text-kalvium-text dark:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt text-xs font-medium"
+                className={`block px-3 py-2 rounded-xl text-xs font-medium ${
+                  isActive("/schedule")
+                    ? "text-kalvium-coral bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint font-semibold"
+                    : "text-kalvium-text dark:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt"
+                }`}
               >
                 My Schedule
               </Link>
             )}
 
-            {user?.role === "ORGANIZER" && (
-              <Link
-                href="/dashboard/organizer"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl text-kalvium-coral bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint text-xs font-semibold"
-              >
-                Organizer Studio
-              </Link>
-            )}
-
-            {user?.role === "CAMPUS_MANAGER" && (
-              <Link
-                href="/dashboard/manager"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl bg-kalvium-success-tint dark:bg-kalvium-dark-success-tint text-kalvium-success text-xs font-semibold"
-              >
-                Verification Studio
-              </Link>
-            )}
-
-            {user ? (
+            {loading ? (
+              <div className="pt-3 border-t border-kalvium-border dark:border-kalvium-dark-border flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-kalvium-border/50 dark:bg-kalvium-dark-border/50 animate-pulse" />
+                <div className="h-4 w-28 bg-kalvium-border/50 dark:bg-kalvium-dark-border/50 rounded-md animate-pulse" />
+              </div>
+            ) : user ? (
               <div className="pt-3 border-t border-kalvium-border dark:border-kalvium-dark-border flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-kalvium-text dark:text-kalvium-dark-text">{user.name}</p>
                   <p className="text-[10px] text-kalvium-muted dark:text-kalvium-dark-muted">
-                    {user.role === "CAMPUS_MANAGER"
+                    {user.role?.toUpperCase() === "CAMPUS_MANAGER"
                       ? "Campus Manager"
-                      : user.role === "ORGANIZER"
+                      : user.role?.toUpperCase() === "ORGANIZER"
                       ? "Organizer"
                       : "Student"}
                   </p>
@@ -251,29 +345,19 @@ export default function Navbar() {
 
       {/* Sticky Mobile Bottom Navigation Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-kalvium-surface/95 dark:bg-kalvium-dark-surface/95 backdrop-blur-md border-t border-kalvium-border dark:border-kalvium-dark-border flex items-center justify-around py-2 px-3 shadow-lg">
-        <Link
-          href="/events"
-          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-colors ${
-            isActive("/events") ? "text-kalvium-coral font-bold" : "text-kalvium-muted dark:text-kalvium-dark-muted"
-          }`}
-        >
-          <Compass className="w-4 h-4" />
-          <span className="text-[10px] font-medium">Events</span>
-        </Link>
-
-        {(!user || user.role === "STUDENT") && (
+        {user?.role?.toUpperCase() === "STUDENT" && (
           <Link
-            href="/schedule"
+            href="/dashboard/student"
             className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-colors ${
-              isActive("/schedule") ? "text-kalvium-coral font-bold" : "text-kalvium-muted dark:text-kalvium-dark-muted"
+              isActive("/dashboard/student") ? "text-kalvium-coral font-bold" : "text-kalvium-muted dark:text-kalvium-dark-muted"
             }`}
           >
-            <Clock className="w-4 h-4" />
-            <span className="text-[10px] font-medium">Schedule</span>
+            <GraduationCap className="w-4 h-4" />
+            <span className="text-[10px] font-medium">Portal</span>
           </Link>
         )}
 
-        {user?.role === "ORGANIZER" && (
+        {(user?.role?.toUpperCase() === "ORGANIZER" || user?.role?.toUpperCase() === "CAMPUS_MANAGER") && (
           <Link
             href="/dashboard/organizer"
             className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-colors ${
@@ -281,11 +365,11 @@ export default function Navbar() {
             }`}
           >
             <Sparkles className="w-4 h-4 text-kalvium-coral" />
-            <span className="text-[10px] font-medium">Studio</span>
+            <span className="text-[10px] font-medium">Organizer</span>
           </Link>
         )}
 
-        {user?.role === "CAMPUS_MANAGER" && (
+        {user?.role?.toUpperCase() === "CAMPUS_MANAGER" && (
           <Link
             href="/dashboard/manager"
             className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-colors ${
@@ -297,7 +381,35 @@ export default function Navbar() {
           </Link>
         )}
 
-        {user ? (
+        {user && (
+          <Link
+            href="/events"
+            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-colors ${
+              isActive("/events") ? "text-kalvium-coral font-bold" : "text-kalvium-muted dark:text-kalvium-dark-muted"
+            }`}
+          >
+            <Compass className="w-4 h-4" />
+            <span className="text-[10px] font-medium">Events</span>
+          </Link>
+        )}
+
+        {user?.role?.toUpperCase() === "STUDENT" && (
+          <Link
+            href="/schedule"
+            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-colors ${
+              isActive("/schedule") ? "text-kalvium-coral font-bold" : "text-kalvium-muted dark:text-kalvium-dark-muted"
+            }`}
+          >
+            <Clock className="w-4 h-4" />
+            <span className="text-[10px] font-medium">Schedule</span>
+          </Link>
+        )}
+
+        {loading ? (
+          <div className="flex flex-col items-center gap-1 py-1 px-3">
+            <div className="w-4 h-4 rounded-full bg-kalvium-border/50 dark:bg-kalvium-dark-border/50 animate-pulse" />
+          </div>
+        ) : user ? (
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-kalvium-muted dark:text-kalvium-dark-muted"

@@ -24,10 +24,12 @@ import confetti from "canvas-confetti";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 import DeclineReasonModal from "@/components/DeclineReasonModal";
 import { useAuth } from "@/context/AuthContext";
+import { auth as firebaseClientAuth } from "@/lib/firebase/client";
 import { ConfidenceLevel } from "@/lib/poster-shared";
+import { getTimeGreeting } from "@/lib/time";
 
 export default function CampusManagerVerificationQueue() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -50,7 +52,16 @@ export default function CampusManagerVerificationQueue() {
     if (!user) return;
     setLoading(true);
     try {
-      const res = await fetch("/api/manager/pending", { cache: "no-store" });
+      const headers: Record<string, string> = {};
+      try {
+        const idToken = await firebaseClientAuth.currentUser?.getIdToken();
+        if (idToken) {
+          headers["Authorization"] = `Bearer ${idToken}`;
+        }
+      } catch {
+        // Continue with session cookie
+      }
+      const res = await fetch("/api/manager/pending", { headers, cache: "no-store" });
       if (res.ok) {
         const json = await res.json();
         setData(json);
@@ -69,7 +80,16 @@ export default function CampusManagerVerificationQueue() {
     if (!user) return;
     setHistoryLoading(true);
     try {
-      const res = await fetch("/api/manager/history", { cache: "no-store" });
+      const headers: Record<string, string> = {};
+      try {
+        const idToken = await firebaseClientAuth.currentUser?.getIdToken();
+        if (idToken) {
+          headers["Authorization"] = `Bearer ${idToken}`;
+        }
+      } catch {
+        // Continue with session cookie
+      }
+      const res = await fetch("/api/manager/history", { headers, cache: "no-store" });
       if (res.ok) {
         const json = await res.json();
         setHistory(json.history || []);
@@ -107,9 +127,18 @@ export default function CampusManagerVerificationQueue() {
     if (!selectedEvent) return;
     setActionLoading(true);
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      try {
+        const idToken = await firebaseClientAuth.currentUser?.getIdToken();
+        if (idToken) {
+          headers["Authorization"] = `Bearer ${idToken}`;
+        }
+      } catch {
+        // Continue with session cookie
+      }
       const res = await fetch("/api/manager/verify", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           eventId: selectedEvent.id,
           action: "APPROVE",
@@ -145,9 +174,18 @@ export default function CampusManagerVerificationQueue() {
     if (!selectedEvent) return;
     setActionLoading(true);
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      try {
+        const idToken = await firebaseClientAuth.currentUser?.getIdToken();
+        if (idToken) {
+          headers["Authorization"] = `Bearer ${idToken}`;
+        }
+      } catch {
+        // Continue with session cookie
+      }
       const res = await fetch("/api/manager/verify", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           eventId: selectedEvent.id,
           action: "DECLINE",
@@ -170,7 +208,15 @@ export default function CampusManagerVerificationQueue() {
     }
   };
 
-  if (!user || user.role !== "CAMPUS_MANAGER") {
+  if (authLoading) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-kalvium-coral border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user || user.role?.toUpperCase() !== "CAMPUS_MANAGER") {
     return (
       <div className="max-w-md mx-auto px-4 py-24 text-center">
         <div className="p-8 rounded-3xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-sm text-center">
@@ -180,7 +226,7 @@ export default function CampusManagerVerificationQueue() {
           <h2 className="text-xl font-display font-black text-kalvium-ink dark:text-kalvium-dark-ink mb-2">Campus Manager Portal</h2>
           <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mb-6">
             Only campus leadership and verified managers have authority to approve or decline submissions.
-            Please switch to "Dr. Sharma (Campus Manager)" using the top evaluation bar.
+            Please log in with a Manager account to access this portal.
           </p>
           <Link
             href="/login"
@@ -218,40 +264,40 @@ export default function CampusManagerVerificationQueue() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      {/* Signature Pipeline Concept Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <span className="text-xs font-sans uppercase tracking-widest text-kalvium-success font-bold bg-kalvium-bg dark:bg-kalvium-dark-surface px-3 py-1 rounded-full border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs">
-            Official Campus Certification Studio
-          </span>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <div>
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <span className="text-xs font-sans uppercase tracking-widest text-kalvium-coral dark:text-kalvium-coral font-bold bg-kalvium-bg dark:bg-kalvium-dark-surface px-3 py-1 rounded-full border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs inline-flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-kalvium-success" />
+              <span>Manager's Portal</span>
+            </span>
+            <CampusVerifiedBadge size="sm" />
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-display font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight mt-1.5">
+            {getTimeGreeting()}, {user?.name || "Campus Manager"}
+          </h1>
+          <p className="text-xs sm:text-sm text-kalvium-muted dark:text-kalvium-dark-muted mt-1 max-w-xl">
+            Authenticate event legitimacy against original posters, manage verification queues, and certify approved campus events.
+          </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-display font-black text-kalvium-ink dark:text-kalvium-dark-ink tracking-tight">
-              Event Verification Center
-            </h1>
-            <p className="text-xs sm:text-sm text-kalvium-muted dark:text-kalvium-dark-muted mt-1">
-              Authenticate event legitimacy against original posters before events reach student feeds.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/dashboard/manager/history"
-              className="px-4 py-2 rounded-full bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border text-xs font-bold text-kalvium-ink dark:text-kalvium-dark-ink hover:border-kalvium-coral hover:text-kalvium-coral transition-all duration-200 shadow-soft-xs"
-            >
-              View Audit History →
-            </Link>
-            <button
-              onClick={fetchPendingQueue}
-              className="p-2.5 rounded-full bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-ink hover:border-kalvium-coral transition-all duration-200 shadow-soft-xs"
-              title="Refresh Queue"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-          </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            href="/events/create"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm transition shrink-0 active:scale-95"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>+ Add Event</span>
+          </Link>
+          <button
+            onClick={fetchPendingQueue}
+            className="p-2.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border bg-white dark:bg-kalvium-dark-surface text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text hover:border-kalvium-coral text-xs font-bold shadow-sm transition shrink-0 active:scale-95"
+            title="Refresh Queue"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
@@ -265,69 +311,72 @@ export default function CampusManagerVerificationQueue() {
         </div>
       )}
 
-      {/* 3 Main Task-Focused Tabs: Pending / Approved / Declined */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+      {/* Status Metrics Strip acting as Interactive Tabs */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-8">
         <button
+          type="button"
           onClick={() => setActiveTab("PENDING")}
-          className={`p-4 sm:p-5 rounded-2xl border text-left transition-all duration-200 active:scale-[0.98] ${
+          className={`p-5 rounded-2xl border text-left transition-all duration-200 active:scale-[0.99] ${
             activeTab === "PENDING"
-              ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-warning/60 shadow-soft-md"
-              : "bg-white/70 dark:bg-kalvium-dark-surface/70 border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-warning/40 hover:bg-white dark:hover:bg-kalvium-dark-surface shadow-soft-xs"
+              ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-warning dark:border-kalvium-warning shadow-soft-sm"
+              : "bg-white/80 dark:bg-kalvium-dark-surface/80 border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-warning/50 hover:bg-white dark:hover:bg-kalvium-dark-surface shadow-soft-xs"
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sans uppercase tracking-wider font-semibold text-kalvium-muted dark:text-kalvium-dark-muted">
-              Needs Review
+            <span className="text-[11px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider font-bold block mb-1">
+              Pending Verification
             </span>
-            <span className="w-2 h-2 rounded-full bg-kalvium-warning animate-pulse" />
+            <span className="w-2.5 h-2.5 rounded-full bg-kalvium-warning animate-pulse" />
           </div>
-          <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-ink dark:text-kalvium-dark-ink mt-1">
+          <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-text dark:text-kalvium-dark-text mt-1">
             {stats.pending.toString().padStart(2, "0")}
           </p>
-          <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">Pending verification queue</p>
+          <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">In manager review queue</p>
         </button>
 
         <button
+          type="button"
           onClick={() => {
             setActiveTab("APPROVED");
             fetchHistory();
           }}
-          className={`p-4 sm:p-5 rounded-2xl border text-left transition-all duration-200 active:scale-[0.98] ${
+          className={`p-5 rounded-2xl border text-left transition-all duration-200 active:scale-[0.99] ${
             activeTab === "APPROVED"
-              ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-success/60 shadow-soft-md"
-              : "bg-white/70 dark:bg-kalvium-dark-surface/70 border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-success/40 hover:bg-white dark:hover:bg-kalvium-dark-surface shadow-soft-xs"
+              ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-success dark:border-kalvium-success shadow-soft-sm"
+              : "bg-white/80 dark:bg-kalvium-dark-surface/80 border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-success/50 hover:bg-white dark:hover:bg-kalvium-dark-surface shadow-soft-xs"
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sans uppercase tracking-wider font-semibold text-kalvium-muted dark:text-kalvium-dark-muted">
-              Campus Verified
+            <span className="text-[11px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider font-bold block mb-1">
+              Campus Certified
             </span>
-            <CheckCircle2 className="w-3.5 h-3.5 text-kalvium-success" />
+            <CheckCircle2 className="w-4 h-4 text-kalvium-success" />
           </div>
-          <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-ink dark:text-kalvium-dark-ink mt-1">
+          <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-text dark:text-kalvium-dark-text mt-1">
             {stats.approved.toString().padStart(2, "0")}
           </p>
-          <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">Certified events audit</p>
+          <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">Approved & live on calendar</p>
         </button>
 
         <button
+          type="button"
           onClick={() => {
             setActiveTab("DECLINED");
             fetchHistory();
           }}
-          className={`p-4 sm:p-5 rounded-2xl border text-left transition-all duration-200 active:scale-[0.98] ${
+          className={`p-5 rounded-2xl border text-left transition-all duration-200 active:scale-[0.99] ${
             activeTab === "DECLINED"
-              ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-coral/60 shadow-soft-md"
-              : "bg-white/70 dark:bg-kalvium-dark-surface/70 border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral/40 hover:bg-white dark:hover:bg-kalvium-dark-surface shadow-soft-xs"
+              ? "bg-white dark:bg-kalvium-dark-surface border-kalvium-coral dark:border-kalvium-coral shadow-soft-sm"
+              : "bg-white/80 dark:bg-kalvium-dark-surface/80 border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral/50 hover:bg-white dark:hover:bg-kalvium-dark-surface shadow-soft-xs"
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sans uppercase tracking-wider font-semibold text-kalvium-muted dark:text-kalvium-dark-muted">
+            <span className="text-[11px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider font-bold block mb-1">
               Declined Submissions
             </span>
-            <XCircle className="w-3.5 h-3.5 text-kalvium-coral" />
+            <XCircle className="w-4 h-4 text-kalvium-coral" />
           </div>
-          <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-ink dark:text-kalvium-dark-ink mt-1">
+          <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-text dark:text-kalvium-dark-text mt-1">
             {stats.declined.toString().padStart(2, "0")}
           </p>
           <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">Declined with feedback log</p>
@@ -337,26 +386,122 @@ export default function CampusManagerVerificationQueue() {
       {/* Main Verification Studio & Views */}
       {activeTab === "PENDING" ? (
         loading ? (
-        <div className="py-24 text-center text-kalvium-muted dark:text-kalvium-dark-muted text-sm">
-          Loading verification queue...
-        </div>
-      ) : pendingEvents.length === 0 ? (
-        <div className="py-20 text-center bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border rounded-3xl p-8 max-w-xl mx-auto shadow-soft-sm">
-          <div className="w-12 h-12 rounded-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border text-kalvium-success flex items-center justify-center mx-auto mb-3">
-            <CheckCircle2 className="w-6 h-6" />
+          <div className="py-24 text-center text-kalvium-muted dark:text-kalvium-dark-muted text-sm">
+            Loading verification queue...
           </div>
-          <h3 className="text-lg font-display font-black text-kalvium-ink dark:text-kalvium-dark-ink mb-1">Verification Queue is Clear</h3>
-          <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mb-4">
-            All submitted campus event posters have been certified. New submissions from student organizers will appear here immediately.
-          </p>
-          <Link
-            href="/events"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold transition shadow-soft-xs"
-          >
-            View Public Approved Events
-          </Link>
-        </div>
-      ) : (
+        ) : pendingEvents.length === 0 ? (
+          <div className="space-y-8 animate-fade-in">
+            <div className="py-12 text-center bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border rounded-3xl p-8 max-w-xl mx-auto shadow-soft-sm">
+              <div className="w-12 h-12 rounded-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border text-kalvium-success flex items-center justify-center mx-auto mb-3">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-display font-bold text-kalvium-text dark:text-kalvium-dark-text mb-1">
+                Verification Queue is Clear
+              </h3>
+              <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mb-5 max-w-md mx-auto">
+                All submitted campus event posters have been certified. New submissions from student organizers will appear here immediately.
+              </p>
+              <div className="flex items-center justify-center gap-3 flex-wrap">
+                <Link
+                  href="/events"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold transition shadow-soft-xs"
+                >
+                  View Public Events
+                </Link>
+                <button
+                  onClick={() => {
+                    setActiveTab("APPROVED");
+                    fetchHistory();
+                  }}
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border text-kalvium-text dark:text-kalvium-dark-text text-xs font-bold hover:border-kalvium-coral transition shadow-soft-xs"
+                >
+                  <span>View Certified Events ({stats.approved}) →</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Recently Certified Events preview section so the page is rich and informative */}
+            {history.filter((h) => h.action === "APPROVED").length > 0 && (
+              <div className="pt-2">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-sm font-sans uppercase tracking-wider font-bold text-kalvium-text dark:text-kalvium-dark-text">
+                      Recently Certified Events ({history.filter((h) => h.action === "APPROVED").length})
+                    </h2>
+                    <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
+                      Approved events currently published on the public campus calendar.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setActiveTab("APPROVED");
+                      fetchHistory();
+                    }}
+                    className="text-xs font-bold text-kalvium-coral hover:underline flex items-center gap-1"
+                  >
+                    <span>View All Certified</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {history
+                    .filter((h) => h.action === "APPROVED")
+                    .slice(0, 3)
+                    .map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-success/40 shadow-soft-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-200"
+                      >
+                        <div className="flex items-start gap-4 min-w-0">
+                          <img
+                            src={entry.event?.posterUrl || "/images/placeholder.svg"}
+                            alt={entry.event?.title || "Event"}
+                            className="w-14 h-14 rounded-xl object-cover bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt shrink-0 border border-kalvium-border dark:border-kalvium-dark-border"
+                          />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <span className="text-[10px] font-sans uppercase tracking-wider font-bold bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-success border border-kalvium-border dark:border-kalvium-dark-border px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" />
+                                Approved & Certified
+                              </span>
+                              {(entry.event?.submitterRole === "STUDENT" || entry.event?.organizer?.role === "STUDENT") && (
+                                <span className="text-[10px] font-sans uppercase tracking-wider font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-300/80 px-2 py-0.5 rounded-full">
+                                  🎓 Student
+                                </span>
+                              )}
+                              <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-kalvium-muted dark:text-kalvium-dark-muted bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-2.5 py-0.5 rounded-full">
+                                {entry.event?.category}
+                              </span>
+                            </div>
+                            <h4 className="text-sm font-bold text-kalvium-text dark:text-kalvium-dark-text truncate">{entry.event?.title}</h4>
+                            <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">
+                              {entry.event?.date} • {entry.event?.venue}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between gap-1">
+                          <span className="text-xs text-kalvium-text dark:text-kalvium-dark-text font-semibold">
+                            Verified by {entry.manager?.name || "Manager"}
+                          </span>
+                          {entry.event?.id && (
+                            <Link
+                              href={`/events/${entry.event.id}`}
+                              className="inline-flex items-center gap-1 text-xs font-bold text-kalvium-coral hover:underline"
+                            >
+                              <span>View Live</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Column: Queue List (Select an event to inspect) */}
           <div className="lg:col-span-4 space-y-3">
@@ -387,9 +532,20 @@ export default function CampusManagerVerificationQueue() {
                         className="w-14 h-14 rounded-xl object-cover bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt shrink-0 border border-kalvium-border dark:border-kalvium-dark-border"
                       />
                       <div className="min-w-0 flex-1">
-                        <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-kalvium-coral block mb-0.5">
-                          {event.category}
-                        </span>
+                        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                          <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-kalvium-coral">
+                            {event.category}
+                          </span>
+                          {(event.submitterRole === "STUDENT" || event.organizer?.role === "STUDENT") ? (
+                            <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-300/80 dark:border-amber-700/60 px-2 py-0.5 rounded-full">
+                              🎓 Student Request
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-kalvium-muted dark:text-kalvium-dark-muted bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border px-1.5 py-0.5 rounded-full">
+                              🏛 Club
+                            </span>
+                          )}
+                        </div>
                         <h4 className="text-xs font-bold text-kalvium-ink dark:text-kalvium-dark-ink truncate mb-1">
                           {event.title}
                         </h4>
@@ -414,14 +570,28 @@ export default function CampusManagerVerificationQueue() {
                 {/* Studio Header & Certification Disclaimer */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-kalvium-border dark:border-kalvium-dark-border">
                   <div>
-                    <span className="text-[11px] font-sans uppercase tracking-wider text-kalvium-warning font-bold bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-2.5 py-0.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border">
-                      Pending Manager Certification
-                    </span>
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className="text-[11px] font-sans uppercase tracking-wider text-kalvium-warning font-bold bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-2.5 py-0.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border">
+                        Pending Manager Certification
+                      </span>
+                      {(selectedEvent.submitterRole === "STUDENT" || selectedEvent.organizer?.role === "STUDENT") ? (
+                        <span className="text-[10px] font-sans uppercase tracking-wider font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-300/80 dark:border-amber-700/60 px-2.5 py-0.5 rounded-full">
+                          🎓 Student Event Proposal
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-sans uppercase tracking-wider font-bold text-kalvium-muted dark:text-kalvium-dark-muted bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-2.5 py-0.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border">
+                          🏛 Club Organizer Submission
+                        </span>
+                      )}
+                    </div>
                     <h2 className="text-xl font-display font-black text-kalvium-ink dark:text-kalvium-dark-ink mt-1">
                       {selectedEvent.title}
                     </h2>
                     <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
                       Submitted by <span className="text-kalvium-ink dark:text-kalvium-dark-ink font-semibold">{selectedEvent.organizerName || selectedEvent.organizer?.name}</span> ({selectedEvent.organizer?.email})
+                      {(selectedEvent.submitterRole === "STUDENT" || selectedEvent.organizer?.role === "STUDENT") && (
+                        <span className="ml-2 text-amber-600 dark:text-amber-400 font-semibold">• Student Account</span>
+                      )}
                     </p>
                   </div>
 
@@ -458,7 +628,7 @@ export default function CampusManagerVerificationQueue() {
                         Original Poster Truth
                       </span>
                       <a
-                        href={selectedEvent.posterUrl}
+                        href={selectedEvent.originalPosterUrl || selectedEvent.posterUrl}
                         target="_blank"
                         rel="noreferrer"
                         className="text-[11px] font-semibold text-kalvium-coral hover:underline flex items-center gap-1"
@@ -469,7 +639,7 @@ export default function CampusManagerVerificationQueue() {
 
                     <div className="rounded-2xl overflow-hidden bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-sm group relative">
                       <img
-                        src={selectedEvent.posterUrl}
+                        src={selectedEvent.originalPosterUrl || selectedEvent.posterUrl}
                         alt="Original Poster"
                         className="w-full h-auto object-cover max-h-[480px] transition-transform duration-500 ease-out-expo group-hover:scale-[1.02] will-change-transform"
                       />
@@ -732,6 +902,11 @@ export default function CampusManagerVerificationQueue() {
                             <CheckCircle2 className="w-3 h-3" />
                             Approved & Certified
                           </span>
+                          {(entry.event?.submitterRole === "STUDENT" || entry.event?.organizer?.role === "STUDENT") && (
+                            <span className="text-[10px] font-sans uppercase tracking-wider font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-300/80 px-2 py-0.5 rounded-full">
+                              🎓 Student
+                            </span>
+                          )}
                           <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-kalvium-muted dark:text-kalvium-dark-muted bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-2.5 py-0.5 rounded-full">
                             {entry.event?.category}
                           </span>
@@ -800,6 +975,11 @@ export default function CampusManagerVerificationQueue() {
                               <XCircle className="w-3 h-3 text-kalvium-coral" />
                               Declined
                             </span>
+                            {(entry.event?.submitterRole === "STUDENT" || entry.event?.organizer?.role === "STUDENT") && (
+                              <span className="text-[10px] font-sans uppercase tracking-wider font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-300/80 px-2 py-0.5 rounded-full">
+                                🎓 Student
+                              </span>
+                            )}
                             <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-kalvium-muted dark:text-kalvium-dark-muted bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-2.5 py-0.5 rounded-full">
                               {entry.event?.category}
                             </span>

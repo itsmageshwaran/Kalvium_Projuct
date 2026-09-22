@@ -1,20 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Sparkles, ArrowRight, ShieldCheck, GraduationCap, User, Lock, Mail } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, getDashboardRoute } from "@/context/AuthContext";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 
 export default function LoginPage() {
-  const { login, demoLogin } = useAuth();
+  const { login, user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace(getDashboardRoute(user.role));
+    }
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,11 +29,19 @@ export default function LoginPage() {
     const res = await login(email, password);
     setLoading(false);
     if (res.success) {
-      router.push("/events");
+      router.push(getDashboardRoute(res.role));
     } else {
       setError(res.error || "Invalid credentials.");
     }
   };
+
+  if (authLoading || user) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-kalvium-coral border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto px-4 py-16">
@@ -41,57 +55,7 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Demo Evaluation Presets */}
-      <div className="mb-6 p-4 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border space-y-2.5 shadow-soft-xs">
-        <span className="text-[10px] font-sans uppercase tracking-widest text-kalvium-coral font-bold block">
-          ⚡ 1-Click Demo Evaluation Sign In
-        </span>
-        <div className="grid grid-cols-1 gap-2">
-          <button
-            type="button"
-            onClick={() => demoLogin("STUDENT")}
-            className="flex items-center justify-between p-2.5 rounded-xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt hover:bg-kalvium-coral-tint/40 border border-kalvium-border dark:border-kalvium-dark-border text-xs font-semibold text-kalvium-ink dark:text-kalvium-dark-ink transition"
-          >
-            <span className="flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-kalvium-coral" />
-              <span>Alex Johnson (Student)</span>
-            </span>
-            <span className="text-[10px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted font-bold">Sign In →</span>
-          </button>
 
-          <button
-            type="button"
-            onClick={() => demoLogin("ORGANIZER")}
-            className="flex items-center justify-between p-2.5 rounded-xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt hover:bg-kalvium-warning-tint/40 border border-kalvium-border dark:border-kalvium-dark-border text-xs font-semibold text-kalvium-ink dark:text-kalvium-dark-ink transition"
-          >
-            <span className="flex items-center gap-2">
-              <User className="w-4 h-4 text-kalvium-warning" />
-              <span>Robotics Club (Organizer)</span>
-            </span>
-            <span className="text-[10px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted font-bold">Sign In →</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => demoLogin("CAMPUS_MANAGER")}
-            className="flex items-center justify-between p-2.5 rounded-xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt hover:bg-kalvium-success-tint/40 border border-kalvium-border dark:border-kalvium-dark-border text-xs font-semibold text-kalvium-ink dark:text-kalvium-dark-ink transition"
-          >
-            <span className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-kalvium-success" />
-              <span>Dr. Sharma (Campus Manager)</span>
-            </span>
-            <span className="text-[10px] font-sans text-kalvium-success font-bold">Sign In →</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="relative flex py-2 items-center mb-6">
-        <div className="flex-grow border-t border-kalvium-border dark:border-kalvium-dark-border"></div>
-        <span className="flex-shrink mx-4 text-[10px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-widest">
-          Or Enter Credentials
-        </span>
-        <div className="flex-grow border-t border-kalvium-border dark:border-kalvium-dark-border"></div>
-      </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border rounded-3xl p-6 sm:p-8 space-y-4 shadow-soft-sm">
@@ -112,16 +76,24 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="e.g. alex@campus.edu"
+              placeholder="e.g. alex@kalvium.community"
               className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl pl-9 pr-3 py-2.5 text-xs text-kalvium-ink dark:text-kalvium-dark-ink focus:outline-none focus:border-kalvium-coral transition"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-kalvium-ink dark:text-kalvium-dark-ink uppercase tracking-wider mb-1.5">
-            Password
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs font-bold text-kalvium-ink dark:text-kalvium-dark-ink uppercase tracking-wider">
+              Password
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-[11px] font-semibold text-kalvium-coral hover:text-kalvium-coral-hover transition hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <div className="relative">
             <Lock className="w-4 h-4 text-kalvium-muted dark:text-kalvium-dark-muted absolute left-3 top-1/2 -translate-y-1/2" />
             <input

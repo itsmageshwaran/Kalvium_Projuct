@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { adminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth";
 import { detectDuplicateEvent } from "@/lib/ai-poster-analyzer";
 import { checkTwoEventsClash } from "@/lib/clash";
 
 export async function POST(req: NextRequest) {
   try {
-    const authResult = await requireAuth(req, ["ORGANIZER", "CAMPUS_MANAGER"]);
+    const authResult = await requireAuth(req, ["STUDENT", "ORGANIZER", "CAMPUS_MANAGER"]);
     if ("errorResponse" in authResult) return authResult.errorResponse;
 
     const body = await req.json();
@@ -29,20 +29,19 @@ export async function POST(req: NextRequest) {
 
     // Check 2: Venue schedule collision (overlapping time slots at same venue)
     if (venue && venue.trim() !== "Not specified" && startTime && endTime) {
-      const sameDateVenueEvents = await prisma.event.findMany({
-        where: {
-          date,
-          status: { in: ["APPROVED", "PENDING"] },
-        },
-        select: {
-          id: true,
-          title: true,
-          date: true,
-          startTime: true,
-          endTime: true,
-          venue: true,
-        },
-      });
+      const eventsSnapshot = await adminDb.collection("events")
+        .where("date", "==", date)
+        .where("status", "in", ["APPROVED", "PENDING"])
+        .get();
+
+      const sameDateVenueEvents = eventsSnapshot.docs.map((doc: any) => ({
+        id: doc.id,
+        title: doc.data().title || "",
+        date: doc.data().date,
+        startTime: doc.data().startTime || "",
+        endTime: doc.data().endTime || "",
+        venue: doc.data().venue || "",
+      }));
 
       const targetSlot = {
         title: title || "New Event",

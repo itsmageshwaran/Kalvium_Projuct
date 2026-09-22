@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { adminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth";
-import { isStartingSoon, getEventDateCategory, getHumanCountdown } from "@/lib/time";
+import { isStartingSoon, getEventDateCategory, getHumanCountdown, isEventPast } from "@/lib/time";
 import { checkTwoEventsClash, parseTimeToMinutes } from "@/lib/clash";
 
 export const dynamic = "force-dynamic";
@@ -13,27 +13,39 @@ export async function GET(req: NextRequest) {
 
     const { user } = authResult;
 
-    // Fetch student's saved events
-    const savedRecords = await prisma.savedEvent.findMany({
-      where: { userId: user.userId },
-      include: {
-        event: {
-          include: {
-            organizer: {
-              select: { name: true, email: true },
-            },
-            verifiedBy: {
-              select: { name: true },
-            },
-          },
-        },
-      },
-      orderBy: { event: { date: "asc" } },
-    });
+    // Fetch student's saved events from Firestore subcollection
+    const savedSnapshot = await adminDb
+      .collection("users")
+      .doc(user.userId)
+      .collection("savedEvents")
+      .get();
+      
+    const savedEventIds = savedSnapshot.docs.map((doc: any) => doc.id);
 
-    const events = savedRecords.map((r) => r.event);
+    let events: any[] = [];
+    if (savedEventIds.length > 0) {
+      // Fetch the actual event documents
+      // Firestore 'in' query supports max 30 items. If a user saves more than 30, chunk it.
+      const chunks = [];
+      for (let i = 0; i < savedEventIds.length; i += 30) {
+        chunks.push(savedEventIds.slice(i, i + 30));
+      }
 
-    // Compute pairwise clashes inside student's saved list
+      for (const chunk of chunks) {
+        const eventsSnapshot = await adminDb
+          .collection("events")
+          .where("__name__", "in", chunk)
+          .get();
+          
+        eventsSnapshot.docs.forEach((doc: any) => {
+          events.push({ id: doc.id, ...doc.data() });
+        });
+      }
+    }
+
+    const now = new Date();
+
+    // Compute pairwise clashes inside student's saved list (only for active/upcoming events)
     const conflicts: Array<{
       eventAId: string;
       eventBId: string;
@@ -46,7 +58,13 @@ export async function GET(req: NextRequest) {
     const clashingEventIds = new Set<string>();
 
     for (let i = 0; i < events.length; i++) {
+      const isPastA = isEventPast(events[i].date, events[i].endTime, now, events[i].startTime);
+      if (isPastA) continue; // Don't flag clashes for historical past events
+
       for (let j = i + 1; j < events.length; j++) {
+        const isPastB = isEventPast(events[j].date, events[j].endTime, now, events[j].startTime);
+        if (isPastB) continue;
+
         const clash = checkTwoEventsClash(events[i], events[j]);
         if (clash.hasClash && clash.overlap) {
           conflicts.push({
@@ -63,14 +81,13 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const now = new Date();
-
     // Enrich each event with calculated state
     const enrichedEvents = events.map((event) => {
-      const startingSoon = isStartingSoon(event.date, event.startTime, now);
-      const dateCategory = getEventDateCategory(event.date, now);
-      const countdown = getHumanCountdown(event.date, event.startTime, now);
-      const hasClash = clashingEventIds.has(event.id);
+      const isPast = isEventPast(event.date, event.endTime, now, event.startTime);
+      const startingSoon = !isPast && isStartingSoon(event.date, event.startTime, now, event.endTime);
+      const dateCategory = isPast ? "PAST" : getEventDateCategory(event.date, now, event.endTime, event.startTime);
+      const countdown = getHumanCountdown(event.date, event.startTime, now, event.endTime);
+      const hasClash = !isPast && clashingEventIds.has(event.id);
 
       // Find specific conflicting event if any
       const relatedConflict = conflicts.find(
@@ -79,6 +96,7 @@ export async function GET(req: NextRequest) {
 
       return {
         ...event,
+        isPast,
         isStartingSoon: startingSoon,
         dateCategory,
         countdown,
@@ -96,7 +114,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Sort chronologically by date and startTime
-    enrichedEvents.sort((a, b) => {
+    enrichedEvents.sort((a: any, b: any) => {
       if (a.date !== b.date) return a.date.localeCompare(b.date);
       const minA = parseTimeToMinutes(a.startTime);
       const minB = parseTimeToMinutes(b.startTime);
@@ -106,15 +124,19 @@ export async function GET(req: NextRequest) {
     });
 
     // Grouping for "My Schedule"
-    const startingSoonEvents = enrichedEvents.filter((e) => e.isStartingSoon);
-    const todayEvents = enrichedEvents.filter((e) => e.dateCategory === "TODAY");
-    const tomorrowEvents = enrichedEvents.filter((e) => e.dateCategory === "TOMORROW");
-    const upcomingEvents = enrichedEvents.filter((e) => e.dateCategory === "THIS_WEEK" || e.dateCategory === "UPCOMING");
-    const pastEvents = enrichedEvents.filter((e) => e.dateCategory === "PAST");
+    const startingSoonEvents = enrichedEvents.filter((e: any) => e.isStartingSoon);
+    const todayEvents = enrichedEvents.filter((e: any) => !e.isPast && e.dateCategory === "TODAY");
+    const tomorrowEvents = enrichedEvents.filter((e: any) => !e.isPast && e.dateCategory === "TOMORROW");
+    const upcomingEvents = enrichedEvents.filter(
+      (e: any) => !e.isPast && (e.dateCategory === "THIS_WEEK" || e.dateCategory === "UPCOMING" || e.dateCategory === "TODAY" || e.dateCategory === "TOMORROW")
+    );
+    const pastEvents = enrichedEvents.filter((e: any) => e.isPast || e.dateCategory === "PAST");
 
     return NextResponse.json({
       success: true,
       count: enrichedEvents.length,
+      upcomingCount: upcomingEvents.length,
+      pastCount: pastEvents.length,
       conflictsCount: conflicts.length,
       conflicts,
       events: enrichedEvents,

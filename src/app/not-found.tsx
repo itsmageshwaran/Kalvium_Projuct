@@ -1,7 +1,14 @@
+"use client";
+
 import Link from "next/link";
-import { Compass, Home, ArrowLeft } from "lucide-react";
+import { Compass, LayoutDashboard, Home } from "lucide-react";
+import { useAuth, getDashboardRoute } from "@/context/AuthContext";
 
 export default function NotFound() {
+  const { user } = useAuth();
+  const homeHref = user ? getDashboardRoute(user.role) : "/";
+  const homeText = user ? "My Portal" : "Back to Home";
+
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4 py-16">
       <div className="text-center max-w-md mx-auto space-y-6">
@@ -30,11 +37,11 @@ export default function NotFound() {
             Explore Campus Events
           </Link>
           <Link
-            href="/"
+            href={homeHref}
             className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-kalvium-border dark:border-kalvium-dark-border bg-kalvium-surface dark:bg-kalvium-dark-surface text-kalvium-text dark:text-kalvium-dark-text font-medium text-sm hover:border-kalvium-coral/50 transition-colors inline-flex items-center justify-center gap-2"
           >
-            <Home className="w-4 h-4" />
-            Back to Home
+            {user ? <LayoutDashboard className="w-4 h-4" /> : <Home className="w-4 h-4" />}
+            {homeText}
           </Link>
         </div>
       </div>

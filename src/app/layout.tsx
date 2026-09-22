@@ -3,11 +3,11 @@ import { Caveat, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
-import DemoSwitcherBar from "@/components/DemoSwitcherBar";
+
 import Navbar from "@/components/Navbar";
 import SmoothScroll from "@/components/SmoothScroll";
 import CampusHubLogo from "@/components/CampusHubLogo";
-
+import Image from "next/image";
 const caveatDisplay = Caveat({
   subsets: ["latin"],
   variable: "--font-display",
@@ -45,7 +45,7 @@ export default function RootLayout({
           <ThemeProvider>
             <SmoothScroll>
               <div className="sticky top-0 z-40 w-full">
-                <DemoSwitcherBar />
+
                 <Navbar />
               </div>
               <main className="flex-1">{children}</main>
@@ -54,7 +54,20 @@ export default function RootLayout({
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
                   <div>
                     <div className="mb-3 flex justify-center md:justify-start">
-                      <CampusHubLogo size="md" showTagline />
+                      <Image
+                        src="/brand/campus-hub-full-dark.png?v=2"
+                        alt="CampusHub Logo"
+                        width={200}
+                        height={60}
+                        className="w-48 h-auto object-contain dark:hidden"
+                      />
+                      <Image
+                        src="/brand/campus-hub-full-light.png?v=2"
+                        alt="CampusHub Logo"
+                        width={200}
+                        height={60}
+                        className="w-48 h-auto object-contain hidden dark:block"
+                      />
                     </div>
                     <p className="text-kalvium-muted dark:text-kalvium-dark-muted max-w-md text-xs leading-relaxed">
                       "AI makes event creation faster. Human verification makes event discovery trustworthy."

@@ -26,6 +26,7 @@ const DATE_FILTERS = [
   { id: "TODAY", label: "Today" },
   { id: "TOMORROW", label: "Tomorrow" },
   { id: "THIS_WEEK", label: "This Week" },
+  { id: "PAST", label: "Past Events" },
 ];
 
 export default function EventsExplorePage() {

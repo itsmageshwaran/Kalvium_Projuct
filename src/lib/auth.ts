@@ -1,20 +1,8 @@
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "./prisma";
 
-function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("FATAL: JWT_SECRET environment variable must be configured in production.");
-    }
-    return "campus_event_hub_secure_key_2026_secret";
-  }
-  return secret;
-}
+import { adminAuth, adminDb } from "./firebase/admin";
 
-const JWT_SECRET = getJwtSecret();
+
 
 /**
  * Validates whether a URL is a safe HTTP/HTTPS URL or allowed internal path.
@@ -36,7 +24,11 @@ export function isValidSafeUrl(urlStr: string | null | undefined): boolean {
 
   try {
     const parsed = new URL(trimmed);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
+    return (
+      parsed.protocol === "http:" || 
+      parsed.protocol === "https:" || 
+      (parsed.protocol === "data:" && trimmed.startsWith("data:image/"))
+    );
   } catch {
     // Allow root-relative paths e.g. /posters/...
     return trimmed.startsWith("/");
@@ -62,29 +54,12 @@ export interface TokenPayload {
   name: string;
 }
 
-export function signToken(payload: TokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
-}
 
-export function verifyToken(token: string): TokenPayload | null {
-  try {
-    return jwt.verify(token, JWT_SECRET) as TokenPayload;
-  } catch {
-    return null;
-  }
-}
-
-export async function hashPassword(plain: string): Promise<string> {
-  return bcrypt.hash(plain, 10);
-}
-
-export async function comparePassword(plain: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(plain, hash);
-}
 
 export const AUTH_COOKIE_NAME = "campus_auth_token";
+export const ROLE_COOKIE_NAME = "campus_user_role";
 
-export function setAuthCookie(res: NextResponse, token: string): void {
+export function setAuthCookie(res: NextResponse, token: string, role?: string): void {
   res.cookies.set(AUTH_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -92,6 +67,15 @@ export function setAuthCookie(res: NextResponse, token: string): void {
     maxAge: 7 * 24 * 60 * 60,
     path: "/",
   });
+  if (role) {
+    res.cookies.set(ROLE_COOKIE_NAME, role, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60,
+      path: "/",
+    });
+  }
 }
 
 export function clearAuthCookie(res: NextResponse): void {
@@ -103,25 +87,84 @@ export function clearAuthCookie(res: NextResponse): void {
     expires: new Date(0),
     path: "/",
   });
+  res.cookies.set(ROLE_COOKIE_NAME, "", {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 0,
+    expires: new Date(0),
+    path: "/",
+  });
 }
 
 /**
  * Extracts the authenticated user payload from the incoming NextRequest.
- * Checks Bearer Authorization header or the campus_auth_token HTTP cookie.
+ * Checks Bearer Authorization header (ID Token) or the campus_auth_session HTTP cookie (Session Cookie).
  */
 export async function getAuthUser(req: NextRequest): Promise<TokenPayload | null> {
   const authHeader = req.headers.get("authorization");
-  let token: string | undefined;
 
   if (authHeader && authHeader.startsWith("Bearer ")) {
-    token = authHeader.split(" ")[1];
-  } else {
-    const cookie = req.cookies.get(AUTH_COOKIE_NAME);
-    if (cookie) token = cookie.value;
+    const idToken = authHeader.split(" ")[1];
+    try {
+      const decoded = await adminAuth.verifyIdToken(idToken);
+      let role = (decoded.role as "STUDENT" | "ORGANIZER" | "CAMPUS_MANAGER") || undefined;
+      let name = decoded.name || "";
+      if (!role) {
+        try {
+          const userDoc = await adminDb.collection("users").doc(decoded.uid).get();
+          if (userDoc.exists) {
+            const data = userDoc.data();
+            role = data?.role;
+            if (!name && data?.name) name = data.name;
+          }
+        } catch (dbErr) {
+          console.warn("Failed to fetch user role from firestore:", dbErr);
+        }
+      }
+      return {
+        userId: decoded.uid,
+        email: decoded.email || "",
+        role: role || "STUDENT",
+        name,
+      };
+    } catch (error) {
+      console.error("ID Token verification failed", error);
+      return null;
+    }
   }
 
-  if (!token) return null;
-  return verifyToken(token);
+  const cookie = req.cookies.get(AUTH_COOKIE_NAME);
+  if (cookie && cookie.value) {
+    try {
+      const decoded = await adminAuth.verifySessionCookie(cookie.value, true);
+      let role = (decoded.role as "STUDENT" | "ORGANIZER" | "CAMPUS_MANAGER") || undefined;
+      let name = decoded.name || "";
+      if (!role) {
+        try {
+          const userDoc = await adminDb.collection("users").doc(decoded.uid).get();
+          if (userDoc.exists) {
+            const data = userDoc.data();
+            role = data?.role;
+            if (!name && data?.name) name = data.name;
+          }
+        } catch (dbErr) {
+          console.warn("Failed to fetch user role from firestore:", dbErr);
+        }
+      }
+      return {
+        userId: decoded.uid,
+        email: decoded.email || "",
+        role: role || "STUDENT",
+        name,
+      };
+    } catch (error) {
+      console.error("Session cookie verification failed", error);
+      return null;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -157,30 +200,4 @@ export async function requireAuth(
   return { user };
 }
 
-/**
- * Demo Account definitions for instant evaluation.
- * Note: These log into real seeded database accounts with real JWTs.
- */
-export const DEMO_ACCOUNTS = {
-  STUDENT: {
-    email: "alex@campus.edu",
-    name: "Alex Johnson",
-    role: "STUDENT",
-    title: "CS Sophomore",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-  },
-  ORGANIZER: {
-    email: "robotics@campus.edu",
-    name: "Robotics & AI Society",
-    role: "ORGANIZER",
-    title: "Official Campus Tech Society",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
-  },
-  CAMPUS_MANAGER: {
-    email: "manager@campus.edu",
-    name: "Dr. Alistair Sharma",
-    role: "CAMPUS_MANAGER",
-    title: "Dean of Student Affairs & Campus Life",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
-  },
-};
+

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { adminDb } from "@/lib/firebase/admin";
 import { getAuthUser } from "@/lib/auth";
 import { checkTwoEventsClash } from "@/lib/clash";
 
@@ -16,42 +16,51 @@ export async function POST(req: NextRequest) {
     }
 
     // Fetch the target event to be saved
-    const targetEvent = await prisma.event.findUnique({
-      where: { id: eventId },
-    });
+    const targetEventDoc = await adminDb.collection("events").doc(eventId).get();
 
-    if (!targetEvent) {
+    if (!targetEventDoc.exists) {
       return NextResponse.json({ error: "Target event not found." }, { status: 404 });
     }
 
-    // Check if target event is already saved
-    const existingSave = await prisma.savedEvent.findUnique({
-      where: {
-        userId_eventId: {
-          userId: auth.userId,
-          eventId,
-        },
-      },
-    });
-    const isAlreadySaved = !!existingSave;
+    const targetEvent = {
+      id: targetEventDoc.id,
+      ...targetEventDoc.data()
+    } as any;
 
-    // Fetch only saved events on the exact same date for this user
-    const sameDateSaved = await prisma.savedEvent.findMany({
-      where: {
-        userId: auth.userId,
-        event: {
-          date: targetEvent.date,
-        },
-      },
-      include: {
-        event: true,
-      },
-    });
+    // Check if target event is already saved
+    const savedEventRef = adminDb
+      .collection("users")
+      .doc(auth.userId)
+      .collection("savedEvents")
+      .doc(eventId);
+    
+    const existingSave = await savedEventRef.get();
+    const isAlreadySaved = existingSave.exists;
+
+    // Fetch user's saved events
+    const savedEventsSnapshot = await adminDb
+      .collection("users")
+      .doc(auth.userId)
+      .collection("savedEvents")
+      .get();
+    
+    const savedEventIds = savedEventsSnapshot.docs.map((doc: any) => doc.id);
+
+    // Fetch events on the same date
+    const sameDateEventsSnapshot = await adminDb.collection("events")
+      .where("date", "==", targetEvent.date)
+      .get();
+    
+    const sameDateSaved = sameDateEventsSnapshot.docs
+      .filter((doc: any) => savedEventIds.includes(doc.id))
+      .map((doc: any) => ({
+        id: doc.id,
+        ...doc.data()
+      })) as any[];
 
     // Look for clashes among existing saved events on this date
-    for (const record of sameDateSaved) {
-      if (record.eventId === eventId) continue;
-      const existing = record.event;
+    for (const existing of sameDateSaved) {
+      if (existing.id === eventId) continue;
       const clash = checkTwoEventsClash(targetEvent, existing);
 
       if (clash.hasClash && clash.overlap) {

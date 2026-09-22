@@ -10,13 +10,17 @@ import {
   Sparkles,
   RefreshCw,
   PenTool,
+  Trash2,
+  ShieldCheck,
 } from "lucide-react";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 import CreateEventStudio from "@/components/CreateEventStudio";
+import ManualEventForm from "@/components/ManualEventForm";
 import { useAuth } from "@/context/AuthContext";
+import { getTimeGreeting } from "@/lib/time";
 
 export default function OrganizerDashboardPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"SUBMISSIONS" | "CREATE_AI" | "CREATE_MANUAL">("SUBMISSIONS");
@@ -37,17 +41,45 @@ export default function OrganizerDashboardPage() {
     }
   };
 
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!confirm("Are you sure you want to delete this event? This action cannot be undone.")) return;
+    
+    try {
+      const res = await fetch(`/api/organizer/events/${eventId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        alert("Event deleted successfully");
+        fetchOrganizerData();
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to delete event: ${errorData.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while deleting the event");
+    }
+  };
+
   useEffect(() => {
     fetchOrganizerData();
   }, [user]);
 
-  if (!user || user.role === "STUDENT") {
+  if (authLoading) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-kalvium-coral border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user || user.role?.toUpperCase() === "STUDENT") {
     return (
       <div className="max-w-md mx-auto px-4 py-24 text-center">
         <div className="p-8 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium-md">
           <p className="text-base font-bold text-kalvium-text dark:text-kalvium-dark-text mb-2">Organizer Access Required</p>
           <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mb-6">
-            Please log in as an Organizer or switch to "Robotics Club (Organizer)" using the top demo bar.
+            Please log in with an Organizer account to access this portal.
           </p>
           <Link
             href="/login"
@@ -68,48 +100,48 @@ export default function OrganizerDashboardPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
         <div>
-          <span className="text-xs font-sans uppercase tracking-widest text-kalvium-text dark:text-kalvium-dark-text font-bold bg-kalvium-bg dark:bg-kalvium-dark-surface px-3 py-1 rounded-full border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs">
-            Organizer Studio
+          <span className="text-xs font-sans uppercase tracking-widest text-kalvium-coral dark:text-kalvium-coral font-bold bg-kalvium-bg dark:bg-kalvium-dark-surface px-3 py-1 rounded-full border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs inline-flex items-center gap-1.5">
+            {user?.role?.toUpperCase() === "CAMPUS_MANAGER" ? (
+              <>
+                <ShieldCheck className="w-3.5 h-3.5 text-kalvium-success" />
+                <span>Manager's Portal</span>
+              </>
+            ) : (
+              <span>Organizer's Portal</span>
+            )}
           </span>
           <h1 className="text-3xl sm:text-4xl font-display font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight mt-1.5">
-            {user.name}
+            {getTimeGreeting()}, {user.name}
           </h1>
           <p className="text-xs sm:text-sm text-kalvium-muted dark:text-kalvium-dark-muted mt-1">
-            Submit event flyers for AI extraction or create events manually, monitor review queues, and track campus verification.
+            {user?.role?.toUpperCase() === "CAMPUS_MANAGER"
+              ? "Create campus events directly, manage submissions, and review verification queues."
+              : "Create events manually, monitor review queues, and track campus verification."}
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {activeTab !== "SUBMISSIONS" ? (
+          {user?.role?.toUpperCase() === "CAMPUS_MANAGER" && (
+            <Link
+              href="/dashboard/manager"
+              className="px-4 py-2.5 rounded-full border border-kalvium-success/30 bg-kalvium-success-tint dark:bg-kalvium-dark-success-tint text-kalvium-success text-xs font-bold shadow-soft-xs transition shrink-0 active:scale-95 flex items-center gap-1.5 hover:bg-kalvium-success hover:text-white"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Verification Center →</span>
+            </Link>
+          )}
+          {activeTab !== "SUBMISSIONS" && (
             <button
               onClick={() => setActiveTab("SUBMISSIONS")}
               className="px-4 py-2.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border bg-white dark:bg-kalvium-dark-surface text-kalvium-text dark:text-kalvium-dark-text hover:border-kalvium-coral text-xs font-bold shadow-sm transition shrink-0 active:scale-95"
             >
               ← Back to Submissions
             </button>
-          ) : (
-            <>
-              <button
-                onClick={() => setActiveTab("CREATE_AI")}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm transition shrink-0 active:scale-95"
-              >
-                <Sparkles className="w-4 h-4 text-white" />
-                <span>+ Create with AI</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab("CREATE_MANUAL")}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border bg-white dark:bg-kalvium-dark-surface text-kalvium-text dark:text-kalvium-dark-text hover:border-kalvium-coral hover:text-kalvium-coral text-xs font-bold shadow-sm transition shrink-0 active:scale-95"
-              >
-                <PenTool className="w-3.5 h-3.5 text-kalvium-coral" />
-                <span>+ Add Manually</span>
-              </button>
-            </>
           )}
         </div>
       </div>
 
-      {/* 3 Primary Task-Focused Workspace Tabs */}
+      {/* Workspace Tabs */}
       <div className="flex items-center gap-2 border-b border-kalvium-border dark:border-kalvium-dark-border pb-4 mb-8 overflow-x-auto">
         <button
           onClick={() => setActiveTab("SUBMISSIONS")}
@@ -135,8 +167,8 @@ export default function OrganizerDashboardPage() {
               : "bg-white dark:bg-kalvium-dark-surface text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5 text-kalvium-coral" />
-          <span>Create with AI Poster</span>
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>AI Poster Analysis</span>
         </button>
 
         <button
@@ -147,16 +179,24 @@ export default function OrganizerDashboardPage() {
               : "bg-white dark:bg-kalvium-dark-surface text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
           }`}
         >
-          <PenTool className="w-3.5 h-3.5 text-kalvium-coral" />
-          <span>Manual Event Entry</span>
+          <PenTool className="w-3.5 h-3.5" />
+          <span>Manual Entry</span>
         </button>
       </div>
 
-      {/* View 1: Create with AI or Manual */}
-      {activeTab === "CREATE_AI" || activeTab === "CREATE_MANUAL" ? (
+      {/* AI Poster Analysis Tab */}
+      {activeTab === "CREATE_AI" ? (
         <div className="animate-fade-in">
           <CreateEventStudio
-            initialMode={activeTab === "CREATE_MANUAL" ? "MANUAL" : "AI"}
+            onComplete={() => {
+              setActiveTab("SUBMISSIONS");
+              fetchOrganizerData();
+            }}
+          />
+        </div>
+      ) : activeTab === "CREATE_MANUAL" ? (
+        <div className="animate-fade-in">
+          <ManualEventForm
             onComplete={() => {
               setActiveTab("SUBMISSIONS");
               fetchOrganizerData();
@@ -224,15 +264,15 @@ export default function OrganizerDashboardPage() {
             <div className="py-16 text-center bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border rounded-2xl p-8 shadow-kalvium-sm">
               <p className="text-sm font-bold text-kalvium-text dark:text-kalvium-dark-text mb-2">No event submissions yet</p>
               <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mb-6">
-                Upload your promotional poster and let the AI analyzer extract structured event details.
+                Fill in the event details to submit a new event.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3">
                 <button
                   onClick={() => setActiveTab("CREATE_AI")}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm active:scale-95 transition"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-coral text-white text-xs font-bold shadow-sm active:scale-95 transition hover:bg-kalvium-coral/90"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>Post with AI Poster</span>
+                  <span>AI Poster Analysis</span>
                 </button>
                 <button
                   onClick={() => setActiveTab("CREATE_MANUAL")}
@@ -281,6 +321,13 @@ export default function OrganizerDashboardPage() {
                           Public Page →
                         </Link>
                       )}
+                      <button
+                        onClick={() => handleDeleteEvent(ev.id)}
+                        className="p-2 rounded-full text-kalvium-muted hover:text-kalvium-coral bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt hover:bg-white dark:hover:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border transition shadow-soft-xs active:scale-95"
+                        title="Delete Event"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
 

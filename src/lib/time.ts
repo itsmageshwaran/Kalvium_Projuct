@@ -23,11 +23,57 @@ export function getEventDateTime(dateStr: string, timeStr: string): Date {
 }
 
 /**
- * Checks if an event starts within 24 hours from reference time (now).
- * Returns true if 0 <= (eventStart - now) <= 24 hours.
+ * Checks if an event has already concluded based on its date and optional endTime.
+ * If date < today, it's past.
+ * If date == today, checks if current time > endTime (or > startTime + 3 hours if endTime is missing).
  */
-export function isStartingSoon(dateStr: string, timeStr: string, referenceTime: Date = new Date()): boolean {
+export function isEventPast(
+  dateStr: string,
+  endTimeStr?: string | null,
+  referenceTime: Date = new Date(),
+  startTimeStr?: string | null
+): boolean {
   try {
+    const todayStr = formatLocalDate(referenceTime);
+    if (dateStr < todayStr) return true;
+    if (dateStr > todayStr) return false;
+
+    // Same day: check end time
+    if (endTimeStr) {
+      const endMinutes = parseTimeToMinutes(endTimeStr);
+      if (!isNaN(endMinutes)) {
+        const nowMinutes = referenceTime.getHours() * 60 + referenceTime.getMinutes();
+        return nowMinutes > endMinutes;
+      }
+    } else if (startTimeStr) {
+      const startMinutes = parseTimeToMinutes(startTimeStr);
+      if (!isNaN(startMinutes)) {
+        const nowMinutes = referenceTime.getHours() * 60 + referenceTime.getMinutes();
+        // Fallback: 3 hours after start time
+        return nowMinutes > startMinutes + 180;
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Checks if an event starts within 24 hours from reference time (now).
+ * Returns true if 0 <= (eventStart - now) <= 24 hours and the event has not concluded.
+ */
+export function isStartingSoon(
+  dateStr: string,
+  timeStr: string,
+  referenceTime: Date = new Date(),
+  endTimeStr?: string | null
+): boolean {
+  try {
+    if (isEventPast(dateStr, endTimeStr, referenceTime, timeStr)) {
+      return false;
+    }
+
     const eventTime = getEventDateTime(dateStr, timeStr);
     const diffMs = eventTime.getTime() - referenceTime.getTime();
     const twentyFourHoursMs = 24 * 60 * 60 * 1000;
@@ -42,8 +88,17 @@ export function isStartingSoon(dateStr: string, timeStr: string, referenceTime: 
  * Categorizes an event's date relative to a reference time.
  * Returns: "TODAY" | "TOMORROW" | "THIS_WEEK" | "UPCOMING" | "PAST"
  */
-export function getEventDateCategory(dateStr: string, referenceTime: Date = new Date()): "TODAY" | "TOMORROW" | "THIS_WEEK" | "UPCOMING" | "PAST" {
+export function getEventDateCategory(
+  dateStr: string,
+  referenceTime: Date = new Date(),
+  endTimeStr?: string | null,
+  startTimeStr?: string | null
+): "TODAY" | "TOMORROW" | "THIS_WEEK" | "UPCOMING" | "PAST" {
   try {
+    if (isEventPast(dateStr, endTimeStr, referenceTime, startTimeStr)) {
+      return "PAST";
+    }
+
     const [year, month, day] = dateStr.split("-").map(Number);
     const eventDate = new Date(year, month - 1, day);
     eventDate.setHours(0, 0, 0, 0);
@@ -65,10 +120,22 @@ export function getEventDateCategory(dateStr: string, referenceTime: Date = new 
 
 /**
  * Generates an intuitive human-readable countdown string.
- * e.g., "Starting in 3 hours", "Starting in 45 mins", "Today · 10:00 AM", "Tomorrow · 2:00 PM"
+ * e.g., "Starting in 3 hours", "Starting in 45 mins", "Today · 10:00 AM", "Tomorrow · 2:00 PM", "Past event · Sep 4"
  */
-export function getHumanCountdown(dateStr: string, timeStr: string, referenceTime: Date = new Date()): string {
+export function getHumanCountdown(
+  dateStr: string,
+  timeStr: string,
+  referenceTime: Date = new Date(),
+  endTimeStr?: string | null
+): string {
   try {
+    if (isEventPast(dateStr, endTimeStr, referenceTime, timeStr)) {
+      const [year, month, day] = dateStr.split("-").map(Number);
+      const d = new Date(year, month - 1, day);
+      const monthName = d.toLocaleString("en-US", { month: "short" });
+      return `Past event · ${monthName} ${day}`;
+    }
+
     const eventTime = getEventDateTime(dateStr, timeStr);
     const diffMs = eventTime.getTime() - referenceTime.getTime();
 
@@ -86,7 +153,7 @@ export function getHumanCountdown(dateStr: string, timeStr: string, referenceTim
       return `Starts in ${diffHours} ${diffHours === 1 ? "hour" : "hours"}`;
     }
 
-    const cat = getEventDateCategory(dateStr, referenceTime);
+    const cat = getEventDateCategory(dateStr, referenceTime, endTimeStr, timeStr);
     if (cat === "TODAY") return `Today · ${timeStr}`;
     if (cat === "TOMORROW") return `Tomorrow · ${timeStr}`;
 
@@ -97,4 +164,14 @@ export function getHumanCountdown(dateStr: string, timeStr: string, referenceTim
   } catch {
     return `${dateStr} · ${timeStr}`;
   }
+}
+
+/**
+ * Returns a friendly time-of-day greeting (e.g. "Good morning", "Good afternoon", "Good evening").
+ */
+export function getTimeGreeting(now: Date = new Date()): string {
+  const hour = now.getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
 }

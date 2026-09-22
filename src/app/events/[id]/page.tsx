@@ -21,7 +21,7 @@ import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 import ClashWarningModal from "@/components/ClashWarningModal";
 import MagneticButton from "@/components/MagneticButton";
 import { useAuth } from "@/context/AuthContext";
-import { isStartingSoon, getHumanCountdown } from "@/lib/time";
+import { isStartingSoon, getHumanCountdown, isEventPast } from "@/lib/time";
 
 export default function EventDetailPage() {
   const params = useParams();
@@ -77,7 +77,7 @@ export default function EventDetailPage() {
 
   const handleSaveToggle = async () => {
     if (!user) {
-      alert("Please sign in or select a demo role in the top bar to save events.");
+      alert("Please sign in to save events to your schedule.");
       return;
     }
 
@@ -156,7 +156,8 @@ export default function EventDetailPage() {
     );
   }
 
-  const startingSoon = isStartingSoon(event.date, event.startTime);
+  const isPast = Boolean(event.isPast) || isEventPast(event.date, event.endTime, undefined, event.startTime);
+  const startingSoon = !isPast && isStartingSoon(event.date, event.startTime);
   const countdown = getHumanCountdown(event.date, event.startTime);
 
   return (
@@ -175,12 +176,12 @@ export default function EventDetailPage() {
         initial={{ clipPath: "inset(0 0 100% 0)" }}
         animate={{ clipPath: "inset(0 0 0% 0)" }}
         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-        className="relative aspect-[16/9] w-full overflow-hidden rounded-3xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium-md"
+        className="relative w-full flex justify-center overflow-hidden rounded-3xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium-md"
       >
         <img
           src={event.posterUrl}
           alt={event.title}
-          className="h-full w-full object-cover"
+          className="w-full h-auto max-h-[600px] object-contain"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
@@ -189,6 +190,11 @@ export default function EventDetailPage() {
           <span className="rounded-full bg-white/90 dark:bg-kalvium-dark-surface/90 px-3 py-1 text-xs font-semibold text-kalvium-text dark:text-kalvium-dark-text backdrop-blur border border-kalvium-border dark:border-kalvium-dark-border shadow-xs">
             {event.category}
           </span>
+          {isPast && (
+            <span className="rounded-full bg-kalvium-surface-alt/90 dark:bg-kalvium-dark-surface/90 px-3 py-1 text-xs font-bold text-kalvium-muted border border-kalvium-border dark:border-kalvium-dark-border shadow-xs backdrop-blur">
+              Past Event
+            </span>
+          )}
           {event.status === "APPROVED" && <CampusVerifiedBadge animate />}
         </div>
       </motion.div>
@@ -203,12 +209,16 @@ export default function EventDetailPage() {
         {/* Title and Save Action Bar */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
           <div>
-            {startingSoon && (
+            {isPast ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-3 py-1 text-xs font-bold text-kalvium-muted border border-kalvium-border dark:border-kalvium-dark-border mb-3">
+                <span>Past Event • Concluded</span>
+              </span>
+            ) : startingSoon ? (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint px-3 py-1 text-xs font-bold text-kalvium-coral border border-kalvium-coral/30 mb-3">
                 <Flame size={14} className="animate-pulse" />
                 <span>Starting soon ({countdown})</span>
               </span>
-            )}
+            ) : null}
             <h1 className="font-display text-display-lg font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight leading-tight">
               {event.title}
             </h1>

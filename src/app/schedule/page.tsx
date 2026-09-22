@@ -15,12 +15,20 @@ import {
   Sparkles,
 } from "lucide-react";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
-import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useAuth, getDashboardRoute } from "@/context/AuthContext";
 
 export default function MySchedulePage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!authLoading && user && user.role?.toUpperCase() !== "STUDENT") {
+      router.replace(getDashboardRoute(user.role));
+    }
+  }, [user, authLoading, router]);
 
   const fetchSchedule = async () => {
     if (!user) {
@@ -67,7 +75,7 @@ export default function MySchedulePage() {
           <Clock className="w-10 h-10 text-kalvium-coral mx-auto mb-3" />
           <h2 className="font-sans text-xl font-bold text-kalvium-text dark:text-kalvium-dark-text mb-2">My Schedule</h2>
           <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mb-6">
-            Please sign in or select a demo role in the top evaluation bar to access your personal schedule and clash detector.
+            Please sign in to access your personal schedule and clash detector.
           </p>
           <Link
             href="/login"
@@ -81,7 +89,7 @@ export default function MySchedulePage() {
   }
 
   const conflictsCount = data?.conflictsCount || 0;
-  const groups = data?.groups || { startingSoon: [], today: [], tomorrow: [], upcoming: [] };
+  const groups = data?.groups || { startingSoon: [], today: [], tomorrow: [], upcoming: [], past: [] };
   const totalSaved = data?.count || 0;
 
   return (
@@ -233,7 +241,7 @@ export default function MySchedulePage() {
               <div className="flex items-center justify-between pb-2 border-b border-kalvium-border dark:border-kalvium-dark-border">
                 <div className="flex items-center gap-2">
                   <h2 className="font-sans text-xs font-bold uppercase tracking-widest text-kalvium-text dark:text-kalvium-dark-text">
-                    Later & Upcoming
+                    Later &amp; Upcoming
                   </h2>
                   <span className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted font-normal">
                     • {groups.upcoming.length} {groups.upcoming.length === 1 ? "event" : "events"}
@@ -243,6 +251,29 @@ export default function MySchedulePage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {groups.upcoming.map((event: any) => (
+                  <ScheduleItemCard key={event.id} event={event} onUnsave={handleUnsave} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* SECTION 5: PAST */}
+          {groups.past && groups.past.length > 0 && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-kalvium-border dark:border-kalvium-dark-border">
+                <div className="flex items-center gap-2">
+                  <Calendar size={14} className="text-kalvium-muted dark:text-kalvium-dark-muted" />
+                  <h2 className="font-sans text-xs font-bold uppercase tracking-widest text-kalvium-muted dark:text-kalvium-dark-muted">
+                    Past Events
+                  </h2>
+                  <span className="text-[10px] font-semibold text-kalvium-muted dark:text-kalvium-dark-muted bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-2 py-0.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border">
+                    {groups.past.length}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+                {groups.past.map((event: any) => (
                   <ScheduleItemCard key={event.id} event={event} onUnsave={handleUnsave} />
                 ))}
               </div>
@@ -278,16 +309,22 @@ function ScheduleItemCard({
             <span className="rounded-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-2.5 py-0.5 text-[10px] font-medium text-kalvium-muted dark:text-kalvium-dark-muted border border-kalvium-border dark:border-kalvium-dark-border uppercase tracking-wider">
               {event.category}
             </span>
+            {(event.isPast || event.dateCategory === "PAST") && (
+              <span className="rounded-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-2 py-0.5 text-[10px] font-semibold text-kalvium-muted border border-kalvium-border dark:border-kalvium-dark-border uppercase tracking-wider">
+                Past Event
+              </span>
+            )}
             <CampusVerifiedBadge size="sm" />
           </div>
 
           <button
             onClick={() => onUnsave(event.id)}
-            className="text-kalvium-muted hover:text-kalvium-coral p-1.5 rounded-full hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt transition active:scale-90"
+            className="flex items-center gap-1.5 text-kalvium-muted hover:text-kalvium-coral px-2.5 py-1 rounded-full hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt transition active:scale-90"
             title="Remove from schedule"
             aria-label="Remove from schedule"
           >
-            <BookmarkX size={15} />
+            <BookmarkX size={14} />
+            <span className="text-[10px] font-semibold uppercase tracking-wider">Remove</span>
           </button>
         </div>
 

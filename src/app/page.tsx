@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, ScanLine, ShieldCheck, UploadCloud, Zap, Sparkles, BookOpen, Calendar, Users } from "lucide-react";
 import MagneticButton from "@/components/MagneticButton";
@@ -10,6 +11,7 @@ import CountUp from "@/components/CountUp";
 import StaggerGrid from "@/components/StaggerGrid";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 import TiltCard from "@/components/TiltCard";
+import { useAuth, getDashboardRoute } from "@/context/AuthContext";
 
 const headlineLines = ["Find what's", "actually happening", "on campus."];
 
@@ -37,20 +39,36 @@ const pipeline = [
 ];
 
 export default function LandingPage() {
-  const heroRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
-  const headlineScale = useTransform(scrollYProgress, [0, 1], [1, 0.88]);
-  const headlineOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-  const headlineY = useTransform(scrollYProgress, [0, 1], [0, -45]);
-  const cardsY = useTransform(scrollYProgress, [0, 1], [0, 90]);
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace(getDashboardRoute(user.role));
+    }
+  }, [user, loading, router]);
+
+  const { scrollY } = useScroll();
+
+  const headlineScale = useTransform(scrollY, [0, 450], [1, 0.88]);
+  const headlineOpacity = useTransform(scrollY, [0, 350], [1, 0]);
+  const headlineY = useTransform(scrollY, [0, 450], [0, -45]);
+  const cardsY = useTransform(scrollY, [0, 450], [0, 90]);
+
+  if (loading || user) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-kalvium-coral border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="relative overflow-hidden">
       {/* ---------------------------------------------------------------- */}
       {/* Hero Section (Cinematic Scroll-Driven Parallax)                  */}
       {/* ---------------------------------------------------------------- */}
-      <section ref={heroRef} className="relative overflow-hidden px-6 pt-6 sm:pt-10 pb-16 sm:px-10">
+      <section className="relative overflow-hidden px-6 pt-6 sm:pt-10 pb-16 sm:px-10">
         {/* Subtle Campus Dot Grid Texture with Radial Fade */}
         <div className="absolute inset-0 bg-campus-dot-grid mask-radial-fade pointer-events-none -z-10" />
 
@@ -105,10 +123,10 @@ export default function LandingPage() {
               transition={{ duration: 0.7, delay: 0.75 }}
               className="mt-8 flex flex-wrap items-center gap-4"
             >
-              <MagneticButton href="/events" icon={<ArrowRight size={16} />}>
+              <MagneticButton href="/register" icon={<ArrowRight size={16} />}>
                 Explore events
               </MagneticButton>
-              <MagneticButton href="/events/create" variant="outline">
+              <MagneticButton href="/register" variant="outline">
                 Post an event
               </MagneticButton>
             </motion.div>
@@ -489,7 +507,7 @@ export default function LandingPage() {
               AI makes event creation faster. A human check makes it trustworthy. Never miss what matters on campus.
             </p>
           </div>
-          <MagneticButton href="/events">
+          <MagneticButton href="/register">
             Start Exploring
           </MagneticButton>
         </div>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { adminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
@@ -25,25 +25,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
-    });
+    const eventRef = adminDb.collection("events").doc(eventId);
+    const eventDoc = await eventRef.get();
 
-    if (!event) {
+    if (!eventDoc.exists) {
       return NextResponse.json({ error: "Event not found." }, { status: 404 });
     }
 
+    const eventData = eventDoc.data();
+
     // State Machine Guard: Only events with PENDING status can be verified/declined
-    if (event.status !== "PENDING") {
+    if (eventData?.status !== "PENDING") {
       return NextResponse.json(
         {
-          error: `Event cannot be processed because its status is already '${event.status}'. Only PENDING events can be reviewed.`,
+          error: `Event cannot be processed because its status is already '${eventData?.status}'. Only PENDING events can be reviewed.`,
         },
         { status: 400 }
       );
     }
 
-    const now = new Date();
+    const now = new Date().toISOString();
+    const batch = adminDb.batch();
 
     if (action === "APPROVE") {
       // Apply manager corrections if any
@@ -53,6 +55,12 @@ export async function POST(req: NextRequest) {
         verifiedAt: now,
         declineReason: null,
         declineCustomNotes: null,
+        updatedAt: now,
+        verifiedBy: {
+          id: user.userId,
+          name: user.name,
+          role: user.role
+        }
       };
 
       if (corrections) {
@@ -67,58 +75,58 @@ export async function POST(req: NextRequest) {
         if (corrections.summary) updateData.summary = corrections.summary.trim();
       }
 
-      const [updated] = await prisma.$transaction([
-        prisma.event.update({
-          where: { id: eventId },
-          data: updateData,
-        }),
-        prisma.approvalHistory.create({
-          data: {
-            eventId,
-            managerId: user.userId,
-            action: "APPROVED",
-            notes: customNotes || "Verified against original event poster.",
-            timestamp: now,
-          },
-        }),
-      ]);
+      batch.update(eventRef, updateData);
+
+      const historyRef = eventRef.collection("approvalHistory").doc();
+      batch.set(historyRef, {
+        managerId: user.userId,
+        action: "APPROVED",
+        notes: customNotes || "Verified against original event poster.",
+        timestamp: now,
+      });
+
+      await batch.commit();
 
       return NextResponse.json({
         success: true,
         message: "Event approved successfully. Stamped with ✓ CAMPUS VERIFIED.",
-        event: updated,
+        event: { id: eventId, ...eventData, ...updateData },
       });
     } else {
       // DECLINE action
       const declineReasonText = reason || "Information doesn't match poster";
 
-      const [updated] = await prisma.$transaction([
-        prisma.event.update({
-          where: { id: eventId },
-          data: {
-            status: "DECLINED",
-            declineReason: declineReasonText,
-            declineCustomNotes: customNotes || "Event information could not be verified.",
-            verifiedById: user.userId,
-            verifiedAt: now,
-          },
-        }),
-        prisma.approvalHistory.create({
-          data: {
-            eventId,
-            managerId: user.userId,
-            action: "DECLINED",
-            reason: declineReasonText,
-            notes: customNotes || "Declined by Campus Manager",
-            timestamp: now,
-          },
-        }),
-      ]);
+      const updateData: any = {
+        status: "DECLINED",
+        declineReason: declineReasonText,
+        declineCustomNotes: customNotes || "Event information could not be verified.",
+        verifiedById: user.userId,
+        verifiedAt: now,
+        updatedAt: now,
+        verifiedBy: {
+          id: user.userId,
+          name: user.name,
+          role: user.role
+        }
+      };
+
+      batch.update(eventRef, updateData);
+
+      const historyRef = eventRef.collection("approvalHistory").doc();
+      batch.set(historyRef, {
+        managerId: user.userId,
+        action: "DECLINED",
+        reason: declineReasonText,
+        notes: customNotes || "Declined by Campus Manager",
+        timestamp: now,
+      });
+
+      await batch.commit();
 
       return NextResponse.json({
         success: true,
         message: "Event has been declined.",
-        event: updated,
+        event: { id: eventId, ...eventData, ...updateData },
       });
     }
   } catch (error) {

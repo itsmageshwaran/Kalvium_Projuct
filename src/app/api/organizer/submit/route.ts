@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { adminDb, adminStorage } from "@/lib/firebase/admin";
 import { requireAuth, sanitizeUrl } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
-    const authResult = await requireAuth(req, ["ORGANIZER", "CAMPUS_MANAGER"]);
+    const authResult = await requireAuth(req, ["STUDENT", "ORGANIZER", "CAMPUS_MANAGER"]);
     if ("errorResponse" in authResult) return authResult.errorResponse;
 
     const { user } = authResult;
@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
       venue,
       organizerName,
       posterUrl,
+      originalPosterUrl,
       category,
       tags,
       registrationUrl,
@@ -62,7 +63,36 @@ export async function POST(req: NextRequest) {
 
     const safeRegistrationUrl = sanitizeUrl(registrationUrl, "Not specified");
 
-    // Clean audit snapshot so multi-megabyte base64 strings aren't duplicated into SQLite text columns
+    // Handle Firebase Storage Upload for Base64 Images
+    const eventRef = adminDb.collection("events").doc();
+    const analysisRef = eventRef.collection("analyses").doc();
+    let finalPosterUrl = resolvedPoster;
+
+    if (finalPosterUrl.startsWith("data:image")) {
+      const match = finalPosterUrl.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
+      if (match) {
+        try {
+          const extension = match[1] === "jpeg" ? "jpg" : match[1];
+          const base64Data = match[2];
+          const buffer = Buffer.from(base64Data, "base64");
+          const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+          const bucket = bucketName ? adminStorage.bucket(bucketName) : adminStorage.bucket();
+          const fileName = `event-posters/${eventRef.id}/original.${extension}`;
+          const file = bucket.file(fileName);
+          
+          await file.save(buffer, {
+            metadata: { contentType: `image/${match[1]}` }
+          });
+          
+          await file.makePublic();
+          finalPosterUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+        } catch (storageErr) {
+          console.warn("Storage upload warning, retaining inline image preview:", storageErr);
+        }
+      }
+    }
+
+    // Clean audit snapshot so multi-megabyte base64 strings aren't duplicated into SQLite/Firestore text columns
     const auditSnapshot = { ...body };
     if (
       auditSnapshot.posterUrl &&
@@ -71,39 +101,68 @@ export async function POST(req: NextRequest) {
     ) {
       auditSnapshot.posterUrl = `[base64-image-data-length-${auditSnapshot.posterUrl.length}]`;
     }
+    
+    if (
+      auditSnapshot.originalPosterUrl &&
+      typeof auditSnapshot.originalPosterUrl === "string" &&
+      auditSnapshot.originalPosterUrl.startsWith("data:")
+    ) {
+      auditSnapshot.originalPosterUrl = `[base64-image-data-length-${auditSnapshot.originalPosterUrl.length}]`;
+    }
 
-    // Atomically create event and analysis record
-    const event = await prisma.event.create({
-      data: {
-        title: title.trim(),
-        description: safeDescription,
-        summary: resolvedSummary,
-        date: date.trim(),
-        startTime: startTime.trim(),
-        endTime: endTime.trim(),
-        venue: venue.trim(),
-        organizerName: organizerName ? organizerName.trim() : user.name,
-        posterUrl: resolvedPoster,
-        category: category.trim(),
-        tags: formattedTags,
-        registrationUrl: safeRegistrationUrl,
-        contactInfo: contactInfo ? contactInfo.trim() : user.email,
-        status: "PENDING", // Enforce pending status
-        organizerId: user.userId,
-        analyses: {
-          create: {
-            rawExtractedData: JSON.stringify(auditSnapshot),
-            confidenceData: JSON.stringify(confidences || {}),
-            duplicatesDetected: duplicatesDetected ? JSON.stringify(duplicatesDetected) : null,
-          },
-        },
-      },
-    });
+    // Firestore batch for atomic write
+    const batch = adminDb.batch();
+
+    const eventData = {
+      title: title.trim(),
+      description: safeDescription,
+      summary: resolvedSummary,
+      date: date.trim(),
+      startTime: startTime.trim(),
+      endTime: endTime.trim(),
+      venue: venue.trim(),
+      organizerName: organizerName ? organizerName.trim() : user.name,
+      posterUrl: finalPosterUrl,
+      originalPosterUrl: originalPosterUrl || null,
+      category: category.trim(),
+      tags: formattedTags,
+      registrationUrl: safeRegistrationUrl,
+      contactInfo: contactInfo ? contactInfo.trim() : user.email,
+      status: "PENDING", // Enforce pending status
+      organizerId: user.userId,
+      submitterRole: user.role,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      organizer: {
+        id: user.userId,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: (user as any).avatar || null
+      }
+    };
+
+    batch.set(eventRef, eventData);
+
+    const analysisData = {
+      rawExtractedData: JSON.stringify(auditSnapshot),
+      confidenceData: JSON.stringify(confidences || {}),
+      duplicatesDetected: duplicatesDetected ? JSON.stringify(duplicatesDetected) : null,
+      analyzedAt: new Date().toISOString(),
+    };
+
+    batch.set(analysisRef, analysisData);
+
+    await batch.commit();
+
+    const successMessage = user.role === "STUDENT"
+      ? "Event request submitted successfully for Campus Manager verification."
+      : "Event submitted successfully for Campus Manager verification.";
 
     return NextResponse.json({
       success: true,
-      message: "Event submitted successfully for Campus Manager verification.",
-      event,
+      message: successMessage,
+      event: { id: eventRef.id, ...eventData },
     });
   } catch (error) {
     console.error("Submit event error:", error);

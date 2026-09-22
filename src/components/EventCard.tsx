@@ -7,7 +7,7 @@ import CampusVerifiedBadge from "./CampusVerifiedBadge";
 import ClashWarningModal from "./ClashWarningModal";
 import TiltCard from "./TiltCard";
 import { useAuth } from "@/context/AuthContext";
-import { isStartingSoon, getHumanCountdown } from "@/lib/time";
+import { isStartingSoon, getHumanCountdown, isEventPast } from "@/lib/time";
 
 export interface EventCardData {
   id: string;
@@ -22,6 +22,7 @@ export interface EventCardData {
   category: string;
   status: string;
   isSaved?: boolean;
+  isPast?: boolean;
   description?: string;
   tags?: string;
   registrationUrl?: string | null;
@@ -51,15 +52,16 @@ export default function EventCard({
   const [clashModalOpen, setClashModalOpen] = useState(false);
   const [clashData, setClashData] = useState<any>(null);
 
-  const startingSoon = isStartingSoon(event.date, event.startTime);
-  const countdownText = getHumanCountdown(event.date, event.startTime);
+  const isPast = event.isPast ?? isEventPast(event.date, event.endTime, undefined, event.startTime);
+  const startingSoon = !isPast && isStartingSoon(event.date, event.startTime, undefined, event.endTime);
+  const countdownText = getHumanCountdown(event.date, event.startTime, undefined, event.endTime);
 
   const handleSaveClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (!user) {
-      alert("Please sign in or select a demo role in the top bar to save events.");
+      alert("Please sign in to save events.");
       return;
     }
 
@@ -135,12 +137,16 @@ export default function EventCard({
                 {event.category}
               </span>
 
-              {startingSoon && (
+              {isPast ? (
+                <span className="rounded-full bg-black/75 dark:bg-black/85 px-2.5 py-0.5 text-[11px] font-semibold text-white/90 backdrop-blur-sm border border-white/20 flex items-center gap-1 shadow-xs">
+                  <span>Past Event</span>
+                </span>
+              ) : startingSoon ? (
                 <span className="rounded-full bg-kalvium-coral px-2.5 py-0.5 text-[11px] font-semibold text-white flex items-center gap-1 shadow-xs">
                   <Flame size={12} className="text-white fill-white" />
                   <span>Starting soon</span>
                 </span>
-              )}
+              ) : null}
             </div>
 
             {/* Quick Bookmark Save Button */}
@@ -193,8 +199,8 @@ export default function EventCard({
               {/* Metadata */}
               <div className="space-y-1.5 mb-3 text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
                 <div className="flex items-center gap-2 font-medium text-kalvium-text dark:text-kalvium-dark-text">
-                  <Calendar size={13} className="text-kalvium-coral shrink-0" />
-                  <span>{countdownText}</span>
+                  <Calendar size={13} className={isPast ? "text-kalvium-muted shrink-0" : "text-kalvium-coral shrink-0"} />
+                  <span className={isPast ? "text-kalvium-muted font-normal" : ""}>{countdownText}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock size={13} className="text-kalvium-muted shrink-0" />

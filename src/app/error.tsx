@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { AlertCircle, RefreshCw, Home } from "lucide-react";
+import { AlertCircle, RefreshCw, Home, LayoutDashboard } from "lucide-react";
+import { useAuth, getDashboardRoute } from "@/context/AuthContext";
 
 export default function GlobalError({
   error,
@@ -11,6 +12,10 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { user } = useAuth();
+  const homeHref = user ? getDashboardRoute(user.role) : "/";
+  const homeText = user ? "My Portal" : "Home";
+
   useEffect(() => {
     console.error("Uncaught application error:", error);
   }, [error]);
@@ -43,11 +48,11 @@ export default function GlobalError({
             Try Again
           </button>
           <Link
-            href="/"
+            href={homeHref}
             className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-kalvium-border dark:border-kalvium-dark-border bg-kalvium-surface dark:bg-kalvium-dark-surface text-kalvium-text dark:text-kalvium-dark-text font-medium text-sm hover:border-kalvium-coral/50 transition-colors inline-flex items-center justify-center gap-2"
           >
-            <Home className="w-4 h-4" />
-            Home
+            {user ? <LayoutDashboard className="w-4 h-4" /> : <Home className="w-4 h-4" />}
+            {homeText}
           </Link>
         </div>
       </div>
