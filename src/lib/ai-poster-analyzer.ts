@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { adminDb } from "./firebase/admin";
-import { parseTimeToMinutes } from "./clash";
+import { parseTimeToMinutes, areVenuesMatching } from "./clash";
 import { 
   ConfidenceLevel, 
   FieldConfidence, 
@@ -35,7 +35,7 @@ function sanitizeExtractedValue(value: any, field: string): string {
  * @param mimeType - MIME type of the image (e.g. "image/png", "image/jpeg")
  * @param sampleId - Optional sample poster ID to use pre-defined extraction
  * @param userApiKey - Optional Gemini API key provided by the user on their device
- * @param preferredModel - Optional preferred Gemini model (e.g. gemini-3.6-flash)
+ * @param preferredModel - Optional preferred Gemini model (e.g. gemini-2.0-flash)
  */
 export async function analyzeEventPoster(
   imageBufferOrBase64: string,
@@ -68,24 +68,16 @@ export async function analyzeEventPoster(
 
 /**
  * Dynamically queries Google Gemini API to discover active models for this user's API key.
- * Prioritizes high-speed, cost-effective Flash models like `gemini-3.6-flash`, `gemini-3.1-flash`,
- * `gemini-2.5-flash`, and user-preferred models.
+ * Prioritizes high-speed, cost-effective Flash models like `gemini-2.0-flash`, `gemini-2.0-flash-lite`,
+ * `gemini-1.5-flash`, and user-preferred models.
  */
 async function getPrioritizedCandidateModels(apiKey: string, preferredModel?: string): Promise<string[]> {
   const fallbackList = [
-    "gemini-3.6-flash",
-    "gemini-3.5-flash",
-    "gemini-3.1-flash",
-    "gemini-3.1-flash-preview",
-    "gemini-3.0-flash",
-    "gemini-3-flash-preview",
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-latest",
     "gemini-2.0-flash",
     "gemini-2.0-flash-lite",
     "gemini-1.5-flash",
-    "gemini-3.1-pro-preview",
-    "gemini-3.1-pro",
+    "gemini-1.5-flash-8b",
+    "gemini-1.5-pro",
     "gemini-2.5-pro",
   ];
 
@@ -109,25 +101,18 @@ async function getPrioritizedCandidateModels(apiKey: string, preferredModel?: st
           .filter((name: string) => name && !name.includes("embedding") && !name.includes("aqa"));
 
         if (available.length > 0) {
-          // Priority scoring: FLASH models like 3.6-flash, 3.1-flash, 3.0-flash FIRST!
+          // Priority scoring: Real Flash models FIRST!
           available.sort((a: string, b: string) => {
             const score = (name: string) => {
               if (preferredModel && (name === preferredModel || name.includes(preferredModel))) return 2500;
-              if (name === "gemini-3.6-flash") return 2000;
-              if (name === "gemini-3.5-flash") return 1900;
-              if (name === "gemini-3.1-flash") return 1800;
-              if (name === "gemini-3.1-flash-preview") return 1750;
-              if (name === "gemini-3.0-flash" || name === "gemini-3-flash-preview") return 1700;
-              if (name.includes("flash") && (name.includes("3.") || name.includes("3-"))) return 1600;
-              if (name === "gemini-2.5-flash" || name === "gemini-2.5-flash-latest") return 1500;
-              if (name === "gemini-2.0-flash") return 1400;
-              if (name === "gemini-2.0-flash-lite") return 1350;
-              if (name.includes("flash")) return 1200;
-              if (name === "gemini-1.5-flash") return 1100;
-              // Pro models only as fallbacks if flash models are unavailable
-              if (name === "gemini-3.1-pro-preview") return 600;
-              if (name.includes("3.1-pro")) return 550;
-              if (name.includes("pro")) return 400;
+              if (name === "gemini-2.0-flash") return 2000;
+              if (name === "gemini-2.0-flash-lite") return 1900;
+              if (name === "gemini-1.5-flash") return 1800;
+              if (name === "gemini-1.5-flash-8b") return 1700;
+              if (name.includes("flash")) return 1500;
+              if (name === "gemini-2.5-pro") return 1200;
+              if (name === "gemini-1.5-pro") return 1100;
+              if (name.includes("pro")) return 1000;
               return 100;
             };
             return score(b) - score(a);
@@ -137,7 +122,7 @@ async function getPrioritizedCandidateModels(apiKey: string, preferredModel?: st
           if (preferredModel && !available.includes(preferredModel)) {
             available.unshift(preferredModel);
           } else if (!available.some((m: string) => m.includes("flash"))) {
-            available.unshift("gemini-3.6-flash", "gemini-3.1-flash", "gemini-2.5-flash");
+            available.unshift("gemini-2.0-flash", "gemini-1.5-flash");
           }
 
           console.log("✓ Live Flash Gemini models prioritized:", available.slice(0, 5));
@@ -276,7 +261,7 @@ Respond with ONLY the JSON object. Do not include markdown codeblocks or convers
         const fallbackFlashModel =
           preferredModel ||
           candidateModels.find((m) => m.includes("flash")) ||
-          "gemini-3.6-flash";
+          "gemini-2.0-flash";
 
         try {
           console.log(`[Gemini Poster AI] Attempting direct REST fallback with ${fallbackFlashModel}...`);
@@ -506,8 +491,7 @@ export async function detectDuplicateEvent(
         venue &&
         event.venue &&
         venue.trim() !== "Not specified" &&
-        (venue.toLowerCase().includes(event.venue.toLowerCase()) ||
-          event.venue.toLowerCase().includes(venue.toLowerCase()));
+        areVenuesMatching(venue, event.venue);
 
       const exactTitleMatch = normTargetTitle === normExistingTitle;
       const isSubstantialSubstring =

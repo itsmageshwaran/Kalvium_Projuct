@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth";
 import { detectDuplicateEvent } from "@/lib/ai-poster-analyzer";
-import { checkTwoEventsClash } from "@/lib/clash";
+import { checkTwoEventsClash, areVenuesMatching } from "@/lib/clash";
 
 export async function POST(req: NextRequest) {
   try {
@@ -52,10 +52,8 @@ export async function POST(req: NextRequest) {
       };
 
       for (const existing of sameDateVenueEvents) {
-        // Compare venue similarity
-        const vA = venue.toLowerCase().trim();
-        const vB = existing.venue.toLowerCase().trim();
-        const sameVenue = vA === vB || vA.includes(vB) || vB.includes(vA);
+        // Compare venue similarity with token-aware matching
+        const sameVenue = areVenuesMatching(venue, existing.venue);
 
         if (sameVenue) {
           const clash = checkTwoEventsClash(targetSlot, existing);

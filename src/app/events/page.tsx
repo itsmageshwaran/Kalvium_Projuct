@@ -35,6 +35,7 @@ export default function EventsExplorePage() {
   const [events, setEvents] = useState<EventCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [selectedDateFilter, setSelectedDateFilter] = useState("ALL");
   const [sortBy, setSortBy] = useState("soonest");
@@ -63,7 +64,7 @@ export default function EventsExplorePage() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (searchQuery) params.set("q", searchQuery);
+      if (debouncedSearch) params.set("q", debouncedSearch);
       if (selectedCategory && selectedCategory !== "ALL") params.set("category", selectedCategory);
       if (selectedDateFilter && selectedDateFilter !== "ALL") params.set("dateFilter", selectedDateFilter);
       if (sortBy) params.set("sortBy", sortBy);
@@ -87,12 +88,18 @@ export default function EventsExplorePage() {
     fetchSavedState();
   }, [user]);
 
+  // Debounce only the search text input (300ms)
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchEvents();
-    }, 350);
+      setDebouncedSearch(searchQuery);
+    }, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery, selectedCategory, selectedDateFilter, sortBy]);
+  }, [searchQuery]);
+
+  // Instantly re-fetch when filter pills, date tabs, sort options, or debounced search changes
+  useEffect(() => {
+    fetchEvents();
+  }, [debouncedSearch, selectedCategory, selectedDateFilter, sortBy]);
 
   const handleSaveToggle = (eventId: string, isSaved: boolean) => {
     setSavedEventIds((prev) => {

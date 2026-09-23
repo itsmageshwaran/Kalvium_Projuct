@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
-    "bcryptjs": "^2.4.3",
     "canvas-confetti": "^1.9.3",
     "clsx": "^2.1.1",
     "firebase": "^12.19.0",
@@ -29,7 +28,6 @@
     "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20.16.11",
     "@types/react": "^18.3.11",

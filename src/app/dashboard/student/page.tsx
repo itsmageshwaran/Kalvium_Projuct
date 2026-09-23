@@ -223,8 +223,9 @@ function StudentDashboardContent() {
           }`}
         >
           <Calendar className="w-3.5 h-3.5 shrink-0" />
-          <span>Agenda</span>
-          <span className="hidden sm:inline">& Saved</span>
+          <span>
+            Agenda<span className="hidden sm:inline"> & Saved</span>
+          </span>
           <span
             className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-bold ${
               activeTab === "AGENDA" ? "bg-white/20 text-white" : "bg-kalvium-surface-alt text-kalvium-muted"
@@ -268,8 +269,9 @@ function StudentDashboardContent() {
           }`}
         >
           <Sparkles className="w-3.5 h-3.5 shrink-0" />
-          <span>AI Request</span>
-          <span className="hidden sm:inline">Poster</span>
+          <span>
+            AI Request<span className="hidden sm:inline"> Poster</span>
+          </span>
         </button>
 
         <button
@@ -281,8 +283,9 @@ function StudentDashboardContent() {
           }`}
         >
           <PenTool className="w-3.5 h-3.5 shrink-0" />
-          <span>Manual</span>
-          <span className="hidden sm:inline">Request</span>
+          <span>
+            Manual<span className="hidden sm:inline"> Request</span>
+          </span>
         </button>
       </div>
 

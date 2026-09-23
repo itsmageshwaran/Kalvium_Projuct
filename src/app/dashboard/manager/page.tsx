@@ -712,15 +712,15 @@ export default function CampusManagerVerificationQueue() {
 
                     {/* Field 3: Time (Often MEDIUM/LOW confidence -> visually highlighted) */}
                     <div
-                      className={`p-2.5 rounded-xl border transition ${
+                      className={`p-3 rounded-2xl border transition ${
                         confidenceMap.startTime === "LOW" || confidenceMap.endTime === "LOW"
-                          ? "bg-kalvium-warning-tint/50 border-kalvium-warning/40"
+                          ? "bg-amber-500/[0.08] dark:bg-amber-500/[0.08] border-amber-500/40 dark:border-amber-500/40 ring-1 ring-amber-500/20"
                           : "bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border-kalvium-border dark:border-kalvium-dark-border"
                       }`}
                     >
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="font-semibold text-kalvium-ink dark:text-kalvium-dark-ink flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-kalvium-warning" />
+                      <div className="flex items-center justify-between text-xs mb-1.5">
+                        <span className="font-semibold text-kalvium-ink dark:text-kalvium-dark-ink flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                           <span>Scheduled Time Window</span>
                         </span>
                         {renderConfidenceBadge(confidenceMap.startTime || "MEDIUM")}
@@ -748,13 +748,13 @@ export default function CampusManagerVerificationQueue() {
                           />
                         </div>
                       ) : (
-                        <p className="text-xs font-bold text-kalvium-ink dark:text-kalvium-dark-ink">
+                        <p className="text-sm font-bold text-kalvium-ink dark:text-kalvium-dark-ink">
                           {selectedEvent.startTime} – {selectedEvent.endTime}
                         </p>
                       )}
 
                       {(confidenceMap.startTime !== "HIGH" || confidenceMap.endTime !== "HIGH") && (
-                        <span className="text-[10px] text-kalvium-warning font-semibold block mt-1">
+                        <span className="text-[11px] text-amber-700 dark:text-amber-300 font-semibold block mt-1.5">
                           ⚠ Check poster for exact duration & end-time clarification
                         </span>
                       )}
@@ -784,13 +784,13 @@ export default function CampusManagerVerificationQueue() {
 
                     {/* Field 5: Organizer (Uncertain -> Low Confidence Warning) */}
                     <div
-                      className={`p-2.5 rounded-xl border transition ${
+                      className={`p-3 rounded-2xl border transition ${
                         confidenceMap.organizerName === "LOW"
-                          ? "bg-kalvium-warning-tint/50 border-kalvium-warning/40"
+                          ? "bg-amber-500/[0.08] dark:bg-amber-500/[0.08] border-amber-500/40 dark:border-amber-500/40 ring-1 ring-amber-500/20"
                           : "bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border-kalvium-border dark:border-kalvium-dark-border"
                       }`}
                     >
-                      <div className="flex items-center justify-between text-xs mb-1">
+                      <div className="flex items-center justify-between text-xs mb-1.5">
                         <span className="font-semibold text-kalvium-ink dark:text-kalvium-dark-ink">Organizer / Host</span>
                         {renderConfidenceBadge(confidenceMap.organizerName || "LOW")}
                       </div>
@@ -809,7 +809,7 @@ export default function CampusManagerVerificationQueue() {
                         </p>
                       )}
                       {confidenceMap.organizerName === "LOW" && (
-                        <span className="text-[10px] text-kalvium-warning font-semibold block mt-1">
+                        <span className="text-[11px] text-amber-700 dark:text-amber-300 font-semibold block mt-1.5">
                           ⚠ Needs manual verification: Confirm organizer is registered student union society
                         </span>
                       )}
@@ -1039,27 +1039,27 @@ export default function CampusManagerVerificationQueue() {
 function renderConfidenceBadge(level?: ConfidenceLevel | string) {
   if (level === "MANUAL") {
     return (
-      <span className="text-[10px] font-sans font-semibold text-kalvium-coral bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border px-2 py-0.5 rounded-full">
+      <span className="text-[10px] font-sans font-semibold text-kalvium-coral bg-kalvium-coral/10 border border-kalvium-coral/30 px-2 py-0.5 rounded-full">
         ✍️ Manual Entry
       </span>
     );
   }
   if (level === "HIGH") {
     return (
-      <span className="text-[10px] font-sans font-semibold text-kalvium-success bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border px-2 py-0.5 rounded-full">
+      <span className="text-[10px] font-sans font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
         ✓ High
       </span>
     );
   }
   if (level === "MEDIUM") {
     return (
-      <span className="text-[10px] font-sans font-semibold text-kalvium-warning bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border px-2 py-0.5 rounded-full">
+      <span className="text-[10px] font-sans font-semibold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
         ⚠ Medium
       </span>
     );
   }
   return (
-    <span className="text-[10px] font-sans font-semibold text-kalvium-coral bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border px-2 py-0.5 rounded-full">
+    <span className="text-[10px] font-sans font-semibold text-rose-700 dark:text-rose-400 bg-rose-500/10 border border-rose-500/30 px-2 py-0.5 rounded-full">
       ⚠ Low (Scrutinize)
     </span>
   );

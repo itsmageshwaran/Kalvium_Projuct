@@ -2,10 +2,11 @@
  * Schedule Clash Detection Engine
  * 
  * Formal collision algorithm:
- * Two events clash on the same date IF AND ONLY IF:
+ * Two events clash IF AND ONLY IF:
  *   eventA.start < eventB.end AND eventB.start < eventA.end
  * 
  * Back-to-back events (e.g. 10:00 AM - 12:00 PM and 12:00 PM - 1:00 PM) DO NOT clash.
+ * Accurately detects overnight collisions across midnight boundaries.
  */
 
 export interface TimeSlot {
@@ -31,11 +32,6 @@ export interface ClashResult {
 /**
  * Parses time strings in 12-hour or 24-hour formats into minutes from midnight (0 - 1439).
  * Returns NaN if the time string is invalid or unspecified.
- * Examples:
- *  "10:00 AM" -> 600
- *  "12:00 PM" -> 720
- *  "01:30 PM" -> 810
- *  "14:00"    -> 840
  */
 export function parseTimeToMinutes(timeStr: string | null | undefined): number {
   if (!timeStr || typeof timeStr !== "string") return NaN;
@@ -92,44 +88,48 @@ export function formatMinutesToTime(minutes: number): string {
 }
 
 /**
+ * Converts a TimeSlot into absolute minute intervals since a reference epoch.
+ * Enables clash detection across calendar days for overnight hackathons / events.
+ */
+function getSlotAbsoluteMinutes(slot: TimeSlot): { start: number; end: number } | null {
+  const startMin = parseTimeToMinutes(slot.startTime);
+  let endMin = parseTimeToMinutes(slot.endTime);
+  if (isNaN(startMin) || isNaN(endMin)) return null;
+
+  if (!slot.date || typeof slot.date !== "string") return null;
+  const parts = slot.date.split("-").map(Number);
+  if (parts.length < 3 || isNaN(parts[0]) || isNaN(parts[1]) || isNaN(parts[2])) return null;
+
+  const baseDays = Math.floor(Date.UTC(parts[0], parts[1] - 1, parts[2]) / (1000 * 60 * 60 * 24));
+  const startAbsolute = baseDays * 1440 + startMin;
+  const isOvernight = endMin <= startMin;
+  const endAbsolute = (baseDays + (isOvernight ? 1 : 0)) * 1440 + endMin;
+
+  return { start: startAbsolute, end: endAbsolute };
+}
+
+/**
  * Checks if two events clash.
- * Supports overnight events spanning past midnight.
+ * Accurately detects overlaps for same-day and overnight events.
  */
 export function checkTwoEventsClash(a: TimeSlot, b: TimeSlot): ClashResult {
-  // Must be on the exact same date
-  if (a.date !== b.date) {
+  const absA = getSlotAbsoluteMinutes(a);
+  const absB = getSlotAbsoluteMinutes(b);
+
+  if (!absA || !absB) {
     return { hasClash: false };
   }
 
-  const rawStartA = parseTimeToMinutes(a.startTime);
-  let rawEndA = parseTimeToMinutes(a.endTime);
-  const rawStartB = parseTimeToMinutes(b.startTime);
-  let rawEndB = parseTimeToMinutes(b.endTime);
-
-  // If any time is unspecified or invalid, cannot confirm a clash
-  if (isNaN(rawStartA) || isNaN(rawEndA) || isNaN(rawStartB) || isNaN(rawEndB)) {
-    return { hasClash: false };
-  }
-
-  // Support overnight events where end time wraps past midnight (e.g. 10:00 PM to 02:00 AM)
-  if (rawEndA <= rawStartA) {
-    rawEndA += 1440;
-  }
-  if (rawEndB <= rawStartB) {
-    rawEndB += 1440;
-  }
-
-  // Exact collision formula:
+  // Exact interval overlap formula:
   // startA < endB AND startB < endA
-  const overlaps = rawStartA < rawEndB && rawStartB < rawEndA;
+  const overlaps = absA.start < absB.end && absB.start < absA.end;
 
   if (!overlaps) {
     return { hasClash: false };
   }
 
-  // Calculate the exact overlap window
-  const overlapStart = Math.max(rawStartA, rawStartB);
-  const overlapEnd = Math.min(rawEndA, rawEndB);
+  const overlapStart = Math.max(absA.start, absB.start);
+  const overlapEnd = Math.min(absA.end, absB.end);
   const duration = Math.max(0, overlapEnd - overlapStart);
 
   if (duration === 0) {
@@ -149,6 +149,44 @@ export function checkTwoEventsClash(a: TimeSlot, b: TimeSlot): ClashResult {
 }
 
 /**
+ * Compares two venue names to determine if they refer to the same physical campus space.
+ * Prevents false positives where "Room 1" matches "Room 10", or "Lab A" matches "Lab AB".
+ */
+export function areVenuesMatching(venueA?: string | null, venueB?: string | null): boolean {
+  if (!venueA || !venueB) return false;
+  const cleanA = venueA.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+  const cleanB = venueB.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+  if (!cleanA || !cleanB || cleanA === "not specified" || cleanB === "not specified") return false;
+  if (cleanA === cleanB) return true;
+
+  const tokensA = cleanA.split(" ").filter(Boolean);
+  const tokensB = cleanB.split(" ").filter(Boolean);
+
+  // If different numeric room numbers exist, they are distinct (e.g. Room 1 vs Room 10)
+  const numsA = tokensA.filter((t) => /^\d+$/.test(t));
+  const numsB = tokensB.filter((t) => /^\d+$/.test(t));
+  if (numsA.length > 0 && numsB.length > 0 && numsA.join(" ") !== numsB.join(" ")) {
+    return false;
+  }
+
+  // If different single-letter room suffixes exist (e.g. Lab A vs Lab B)
+  const lettersA = tokensA.filter((t) => /^[a-z]$/.test(t));
+  const lettersB = tokensB.filter((t) => /^[a-z]$/.test(t));
+  if (lettersA.length > 0 && lettersB.length > 0 && lettersA.join(" ") !== lettersB.join(" ")) {
+    return false;
+  }
+
+  // Check if shorter venue name is an exact word subset of longer venue name (minimum 2 words)
+  const [shorter, longer] = tokensA.length <= tokensB.length ? [tokensA, tokensB] : [tokensB, tokensA];
+  if (shorter.length >= 2) {
+    const longerSet = new Set(longer);
+    return shorter.every((t) => longerSet.has(t));
+  }
+
+  return cleanA === cleanB;
+}
+
+/**
  * Checks if a target event clashes with ANY already-saved event in a list.
  */
 export function findClashInList(target: TimeSlot, existingList: TimeSlot[]): ClashResult {
@@ -163,9 +201,11 @@ export function findClashInList(target: TimeSlot, existingList: TimeSlot[]): Cla
 }
 
 /**
- * Finds all clashes among a list of events (e.g. for student dashboard "Schedule Conflicts" count).
+ * Finds all clashes among a list of events.
  */
-export function findAllClashesInList(events: TimeSlot[]): Array<{ eventA: TimeSlot; eventB: TimeSlot; overlapStr: string }> {
+export function findAllClashesInList(
+  events: TimeSlot[]
+): Array<{ eventA: TimeSlot; eventB: TimeSlot; overlapStr: string }> {
   const clashes: Array<{ eventA: TimeSlot; eventB: TimeSlot; overlapStr: string }> = [];
 
   for (let i = 0; i < events.length; i++) {

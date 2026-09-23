@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminStorage } from "@/lib/firebase/admin";
 import { requireAuth, sanitizeUrl } from "@/lib/auth";
+import { parseTimeToMinutes } from "@/lib/clash";
+import { invalidateApprovedEventsCache } from "@/lib/events-cache";
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,6 +35,23 @@ export async function POST(req: NextRequest) {
     if (!title || !date || !startTime || !endTime || !venue || !category) {
       return NextResponse.json(
         { error: "Missing required fields: Title, Date, Start Time, End Time, Venue, and Category are mandatory." },
+        { status: 400 }
+      );
+    }
+
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(String(date).trim())) {
+      return NextResponse.json(
+        { error: "Invalid date format. Expected YYYY-MM-DD." },
+        { status: 400 }
+      );
+    }
+
+    const startMin = parseTimeToMinutes(startTime);
+    const endMin = parseTimeToMinutes(endTime);
+    if (isNaN(startMin) || isNaN(endMin)) {
+      return NextResponse.json(
+        { error: "Invalid time format. Please provide valid start and end times (e.g., 09:00 AM or 14:00)." },
         { status: 400 }
       );
     }
@@ -90,6 +109,13 @@ export async function POST(req: NextRequest) {
           console.warn("Storage upload warning, retaining inline image preview:", storageErr);
         }
       }
+    }
+
+    if (finalPosterUrl.startsWith("data:") && finalPosterUrl.length > 700 * 1024) {
+      return NextResponse.json(
+        { error: "Image data is too large for database storage. Please use a compressed image under 500KB or host it on an external URL." },
+        { status: 413 }
+      );
     }
 
     // Clean audit snapshot so multi-megabyte base64 strings aren't duplicated into SQLite/Firestore text columns
@@ -159,6 +185,7 @@ export async function POST(req: NextRequest) {
     batch.set(analysisRef, analysisData);
 
     await batch.commit();
+    invalidateApprovedEventsCache();
 
     const successMessage = user.role === "CAMPUS_MANAGER"
       ? "Event submitted to verification queue. Review and approve it in your Verification Studio."

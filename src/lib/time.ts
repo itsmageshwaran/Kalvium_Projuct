@@ -1,17 +1,31 @@
 import { parseTimeToMinutes } from "./clash";
 
+export const CAMPUS_TIMEZONE = "Asia/Kolkata";
+
 /**
- * Formats a Date instance as YYYY-MM-DD in local time, avoiding UTC date shifts.
+ * Formats a Date instance as YYYY-MM-DD in campus time (Asia/Kolkata / IST = UTC+5:30),
+ * preventing serverless UTC runtimes from shifting dates to yesterday.
  */
-export function formatLocalDate(d: Date = new Date()): string {
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+export function formatLocalDate(d: Date = new Date(), timeZone: string = CAMPUS_TIMEZONE): string {
+  try {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    return formatter.format(d); // "en-CA" outputs YYYY-MM-DD
+  } catch {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
 }
 
 /**
  * Builds a valid JS Date object from an event's date (YYYY-MM-DD) and startTime ("10:00 AM" or "10:00").
+ * Grounded in campus time (IST = UTC+5:30) so countdowns and starting-soon checks are universally accurate.
  */
 export function getEventDateTime(dateStr: string, timeStr: string): Date {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -19,7 +33,32 @@ export function getEventDateTime(dateStr: string, timeStr: string): Date {
   const validMinutes = isNaN(minutes) ? 0 : minutes;
   const hours = Math.floor(validMinutes / 60);
   const mins = validMinutes % 60;
-  return new Date(year, month - 1, day, hours, mins, 0);
+  
+  // Convert IST (UTC+5:30) to epoch timestamp
+  const istOffsetMinutes = 330;
+  const totalUtcMinutes = hours * 60 + mins - istOffsetMinutes;
+  const utcHours = Math.floor(totalUtcMinutes / 60);
+  const utcMins = ((totalUtcMinutes % 60) + 60) % 60;
+  return new Date(Date.UTC(year, month - 1, day, utcHours, utcMins, 0));
+}
+
+/**
+ * Returns current minutes from midnight in campus timezone.
+ */
+function getCampusMinutesNow(referenceTime: Date = new Date()): number {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: CAMPUS_TIMEZONE,
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    }).formatToParts(referenceTime);
+    const h = parseInt(parts.find((p) => p.type === "hour")?.value || "0", 10);
+    const m = parseInt(parts.find((p) => p.type === "minute")?.value || "0", 10);
+    return (h % 24) * 60 + m;
+  } catch {
+    return referenceTime.getHours() * 60 + referenceTime.getMinutes();
+  }
 }
 
 /**
@@ -38,18 +77,16 @@ export function isEventPast(
     if (dateStr < todayStr) return true;
     if (dateStr > todayStr) return false;
 
-    // Same day: check end time
+    // Same day: check end time in campus timezone
+    const nowMinutes = getCampusMinutesNow(referenceTime);
     if (endTimeStr) {
       const endMinutes = parseTimeToMinutes(endTimeStr);
       if (!isNaN(endMinutes)) {
-        const nowMinutes = referenceTime.getHours() * 60 + referenceTime.getMinutes();
         return nowMinutes > endMinutes;
       }
     } else if (startTimeStr) {
       const startMinutes = parseTimeToMinutes(startTimeStr);
       if (!isNaN(startMinutes)) {
-        const nowMinutes = referenceTime.getHours() * 60 + referenceTime.getMinutes();
-        // Fallback: 3 hours after start time
         return nowMinutes > startMinutes + 180;
       }
     }

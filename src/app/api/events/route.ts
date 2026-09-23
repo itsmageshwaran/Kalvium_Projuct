@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { parseTimeToMinutes } from "@/lib/clash";
 import { formatLocalDate, isEventPast } from "@/lib/time";
+import { getCachedApprovedEvents, setCachedApprovedEvents } from "@/lib/events-cache";
 
 export const dynamic = "force-dynamic";
 
@@ -26,14 +27,17 @@ export async function GET(req: NextRequest) {
     nextWeek.setDate(now.getDate() + 7);
     const nextWeekStr = formatLocalDate(nextWeek);
 
-    // Query Firestore for approved events (filter in-memory to prevent missing composite index errors)
-    const snapshot = await adminDb.collection("events").where("status", "==", "APPROVED").get();
-    
-    let events: any[] = [];
-    snapshot.forEach((doc: any) => {
-      const data = doc.data();
+    // Query Firestore for approved events with in-memory TTL cache to eliminate full-table scan overhead
+    let rawApproved = getCachedApprovedEvents();
+    if (!rawApproved) {
+      const snapshot = await adminDb.collection("events").where("status", "==", "APPROVED").get();
+      rawApproved = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+      setCachedApprovedEvents(rawApproved);
+    }
+
+    let events: any[] = rawApproved.map((data: any) => {
       const isPast = isEventPast(data.date, data.endTime, now, data.startTime);
-      events.push({ id: doc.id, ...data, isPast });
+      return { ...data, isPast };
     });
 
     if (category && category !== "ALL") {

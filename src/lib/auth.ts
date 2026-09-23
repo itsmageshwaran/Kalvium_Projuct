@@ -56,10 +56,23 @@ export interface TokenPayload {
 
 
 
-export const AUTH_COOKIE_NAME = "campus_auth_token";
-export const ROLE_COOKIE_NAME = "campus_user_role";
+export {
+  AUTH_COOKIE_NAME,
+  ROLE_COOKIE_NAME,
+  ROLE_SIG_COOKIE_NAME,
+  isSafeRedirectUrl,
+  createRoleSignature,
+  verifyRoleSignature,
+} from "./auth-shared";
 
-export function setAuthCookie(res: NextResponse, token: string, role?: string): void {
+import {
+  AUTH_COOKIE_NAME,
+  ROLE_COOKIE_NAME,
+  ROLE_SIG_COOKIE_NAME,
+  createRoleSignature,
+} from "./auth-shared";
+
+export async function setAuthCookie(res: NextResponse, token: string, role?: string): Promise<void> {
   res.cookies.set(AUTH_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -68,33 +81,41 @@ export function setAuthCookie(res: NextResponse, token: string, role?: string): 
     path: "/",
   });
   if (role) {
-    res.cookies.set(ROLE_COOKIE_NAME, role, {
+    const normalizedRole = role.toUpperCase();
+    res.cookies.set(ROLE_COOKIE_NAME, normalizedRole, {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60,
       path: "/",
     });
+
+    // Cryptographic role signature (HttpOnly) so client JavaScript tampering cannot forge privileged roles at edge
+    const signature = await createRoleSignature(normalizedRole);
+    if (signature) {
+      res.cookies.set(ROLE_SIG_COOKIE_NAME, signature, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60,
+        path: "/",
+      });
+    }
   }
 }
 
 export function clearAuthCookie(res: NextResponse): void {
-  res.cookies.set(AUTH_COOKIE_NAME, "", {
-    httpOnly: true,
+  const expiredCookieOptions = {
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "lax" as const,
     maxAge: 0,
     expires: new Date(0),
     path: "/",
-  });
-  res.cookies.set(ROLE_COOKIE_NAME, "", {
-    httpOnly: false,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 0,
-    expires: new Date(0),
-    path: "/",
-  });
+  };
+
+  res.cookies.set(AUTH_COOKIE_NAME, "", { ...expiredCookieOptions, httpOnly: true });
+  res.cookies.set(ROLE_COOKIE_NAME, "", { ...expiredCookieOptions, httpOnly: false });
+  res.cookies.set(ROLE_SIG_COOKIE_NAME, "", { ...expiredCookieOptions, httpOnly: true });
 }
 
 /**

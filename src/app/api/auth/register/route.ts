@@ -44,6 +44,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Require and verify caller's ID token to prevent IDOR and account takeover
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { error: "Authentication token required for registration." },
+        { status: 401 }
+      );
+    }
+
+    const idToken = authHeader.split(" ")[1];
+    let decodedToken;
+    try {
+      decodedToken = await adminAuth.verifyIdToken(idToken);
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid or expired authentication token. Please try again." },
+        { status: 401 }
+      );
+    }
+
+    if (decodedToken.uid !== uid) {
+      return NextResponse.json(
+        { error: "Unauthorized: Provided UID does not match the authenticated session." },
+        { status: 403 }
+      );
+    }
+
     // Role protection: CAMPUS_MANAGER cannot be self-registered
     const normalizedRole = role === "ORGANIZER" ? "ORGANIZER" : "STUDENT";
 
@@ -84,14 +111,9 @@ export async function POST(req: NextRequest) {
     // 3. Set custom claims on the Firebase user
     await adminAuth.setCustomUserClaims(uid, { role: normalizedRole });
 
-    // 4. Create session cookie
-    const authHeader = req.headers.get("authorization");
-    let token = "";
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      const idToken = authHeader.split(" ")[1];
-      const expiresIn = 60 * 60 * 24 * 7 * 1000; // 7 days
-      token = await adminAuth.createSessionCookie(idToken, { expiresIn });
-    }
+    // 4. Create session cookie using verified idToken
+    const expiresIn = 60 * 60 * 24 * 7 * 1000; // 7 days
+    const token = await adminAuth.createSessionCookie(idToken, { expiresIn });
 
     const response = NextResponse.json({
       success: true,

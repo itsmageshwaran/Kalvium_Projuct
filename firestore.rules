@@ -15,49 +15,48 @@ service cloud.firestore {
 
     // Users Collection
     match /users/{userId} {
-      // Users can read their own profile, anyone can read public basic info (if needed)
-      // For now, restrict reading to the user themselves or Campus Managers
+      // Users can read their own profile, or Campus Managers can read all profiles
       allow read: if isAuthenticated() && (request.auth.uid == userId || hasRole('CAMPUS_MANAGER'));
-      // Users can update their own profile
-      allow write: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Users can update their own profile, but CANNOT self-elevate role or modify another user's document
+      allow write: if isAuthenticated() && request.auth.uid == userId
+                   && (!('role' in request.resource.data) || (resource != null && request.resource.data.role == resource.data.role));
 
       // Saved Events Subcollection
       match /savedEvents/{eventId} {
-        // Only the specific user can read and write their own saved events
         allow read, write: if isAuthenticated() && request.auth.uid == userId;
       }
     }
 
     // Events Collection
     match /events/{eventId} {
-      // Anyone can read APPROVED events (maybe require auth for any event)
-      allow read: if isAuthenticated(); // or true if you want public access to approved events
+      // Public / authenticated access to campus events
+      allow read: if isAuthenticated();
       
-      // Organizers, Students, and Campus Managers can create/request events
-      allow create: if hasRole('ORGANIZER') || hasRole('CAMPUS_MANAGER') || hasRole('STUDENT');
+      // Organizers, Students, and Campus Managers can create events (non-managers must submit as PENDING)
+      allow create: if (hasRole('ORGANIZER') || hasRole('CAMPUS_MANAGER') || hasRole('STUDENT'))
+                    && (request.resource.data.status == 'PENDING' || hasRole('CAMPUS_MANAGER'));
       
-      // Organizers and Students can update their own events, Managers can update any event
+      // Organizers and Students can update their own events, but CANNOT alter status (cannot self-approve).
+      // Only Campus Managers can approve or decline events.
       allow update: if hasRole('CAMPUS_MANAGER') || 
-                   ((hasRole('ORGANIZER') || hasRole('STUDENT')) && resource.data.organizerId == request.auth.uid);
+                   ((hasRole('ORGANIZER') || hasRole('STUDENT')) && resource.data.organizerId == request.auth.uid
+                    && request.resource.data.status == resource.data.status);
       
-      // Campus Managers can delete any event, Organizers and Students can delete their own events
+      // Campus Managers can delete any event; Organizers and Students can delete their own events
       allow delete: if hasRole('CAMPUS_MANAGER') || 
                    ((hasRole('ORGANIZER') || hasRole('STUDENT')) && resource.data.organizerId == request.auth.uid);
 
       // Analyses Subcollection (AI analysis results)
       match /analyses/{analysisId} {
-        // Organizers can read their own event's analysis, Managers can read any
-        // Assuming we allow any authenticated user to read it for now to avoid complex queries, 
-        // or restrict it
         allow read: if isAuthenticated();
-        // Only backend admin should really write here, but if client writes:
-        allow write: if false; // Should only be written by admin SDK
+        allow write: if false; // Only written by admin SDK
       }
 
       // Approval History Subcollection
       match /approvalHistory/{historyId} {
         allow read: if isAuthenticated();
-        allow write: if false; // Should only be written by admin SDK
+        allow write: if false; // Only written by admin SDK
       }
     }
   }

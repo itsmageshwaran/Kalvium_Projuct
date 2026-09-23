@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Sparkles, ArrowRight, ShieldCheck, GraduationCap, PenTool, User, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { useAuth, getDashboardRoute } from "@/context/AuthContext";
+import { isSafeRedirectUrl } from "@/lib/auth-shared";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 
 function LoginContent() {
@@ -23,7 +24,7 @@ function LoginContent() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      if (redirectParam && redirectParam.startsWith("/")) {
+      if (redirectParam && isSafeRedirectUrl(redirectParam)) {
         const isManagerTarget = redirectParam.includes("/manager") && user.role !== "CAMPUS_MANAGER";
         const isOrganizerTarget = redirectParam.includes("/organizer") && user.role !== "ORGANIZER" && user.role !== "CAMPUS_MANAGER";
         if (!isManagerTarget && !isOrganizerTarget) {
@@ -42,7 +43,7 @@ function LoginContent() {
     const res = await login(email, password);
     setLoading(false);
     if (res.success) {
-      if (redirectParam && redirectParam.startsWith("/")) {
+      if (redirectParam && isSafeRedirectUrl(redirectParam)) {
         const userRole = res.role;
         const isManagerTarget = redirectParam.includes("/manager") && userRole !== "CAMPUS_MANAGER";
         const isOrganizerTarget = redirectParam.includes("/organizer") && userRole !== "ORGANIZER" && userRole !== "CAMPUS_MANAGER";

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth";
+import { invalidateApprovedEventsCache } from "@/lib/events-cache";
 
 export async function DELETE(
   req: NextRequest,
@@ -30,11 +31,22 @@ export async function DELETE(
       );
     }
 
-    // Delete the event document.
-    // Note: To be clean, we should also delete subcollections (analyses, approvalHistory), 
-    // but Firestore doesn't automatically cascade deletes. For now we just delete the document itself.
-    // A cloud function or a batch process could clean up orphaned subcollections.
-    await eventRef.delete();
+    // Clean up subcollection documents to avoid orphaned records
+    const [analysesSnap, historySnap] = await Promise.all([
+      eventRef.collection("analyses").get().catch(() => null),
+      eventRef.collection("approvalHistory").get().catch(() => null),
+    ]);
+    const batch = adminDb.batch();
+    if (analysesSnap && !analysesSnap.empty) {
+      analysesSnap.docs.forEach((d: any) => batch.delete(d.ref));
+    }
+    if (historySnap && !historySnap.empty) {
+      historySnap.docs.forEach((d: any) => batch.delete(d.ref));
+    }
+    batch.delete(eventRef);
+    await batch.commit();
+
+    invalidateApprovedEventsCache();
 
     return NextResponse.json({ success: true, message: "Event deleted successfully." });
   } catch (error) {

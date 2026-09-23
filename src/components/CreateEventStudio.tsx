@@ -115,7 +115,7 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
   const [keyModalOpen, setKeyModalOpen] = useState<boolean>(false);
   const [modalKeyInput, setModalKeyInput] = useState<string>("");
   const [showModalKeySecret, setShowModalKeySecret] = useState<boolean>(false);
-  const [selectedModel, setSelectedModel] = useState<string>("gemini-3.6-flash");
+  const [selectedModel, setSelectedModel] = useState<string>("gemini-2.0-flash");
   const [pendingUploadPayload, setPendingUploadPayload] = useState<{
     imageData?: string;
     mimeType?: string;
@@ -131,7 +131,7 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
         setModalKeyInput(savedKey);
       }
       const savedModel = localStorage.getItem("campushub_gemini_model");
-      if (savedModel) {
+      if (savedModel && !savedModel.includes("3.")) {
         setSelectedModel(savedModel);
       }
     } catch {
@@ -717,12 +717,10 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                   onChange={(e) => handleModelChange(e.target.value)}
                   className="bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-3 py-1.5 text-xs font-semibold text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral cursor-pointer shadow-soft-xs"
                 >
-                  <option value="gemini-3.6-flash">Gemini 3.6 Flash (Fastest · Recommended)</option>
-                  <option value="gemini-3.1-flash">Gemini 3.1 Flash</option>
-                  <option value="gemini-3.0-flash">Gemini 3.0 Flash</option>
-                  <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                  <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                  <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro Preview (Fallback)</option>
+                  <option value="gemini-2.0-flash">Gemini 2.0 Flash (Fastest · Recommended)</option>
+                  <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite (Low Latency)</option>
+                  <option value="gemini-1.5-flash">Gemini 1.5 Flash (High Quota)</option>
+                  <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Analysis)</option>
                 </select>
               </div>
             </div>

@@ -9,13 +9,27 @@ export async function GET(req: NextRequest) {
     const authResult = await requireAuth(req, ["CAMPUS_MANAGER"]);
     if ("errorResponse" in authResult) return authResult.errorResponse;
 
-    // ✅ Fetch approvalHistory + approved events + declined events ALL IN PARALLEL
     let historyData: any[] = [];
     try {
-      const [historySnapshot, approvedSnap, declinedSnap] = await Promise.all([
-        adminDb.collectionGroup("approvalHistory").get(),
-        adminDb.collection("events").where("status", "==", "APPROVED").get(),
-        adminDb.collection("events").where("status", "==", "DECLINED").get(),
+      // Bounded queries with .limit() to prevent unbounded full-table scans
+      let historySnapshot;
+      try {
+        historySnapshot = await adminDb
+          .collectionGroup("approvalHistory")
+          .orderBy("timestamp", "desc")
+          .limit(60)
+          .get();
+      } catch {
+        // Fallback if composite index is still creating
+        historySnapshot = await adminDb
+          .collectionGroup("approvalHistory")
+          .limit(60)
+          .get();
+      }
+
+      const [approvedSnap, declinedSnap] = await Promise.all([
+        adminDb.collection("events").where("status", "==", "APPROVED").limit(50).get(),
+        adminDb.collection("events").where("status", "==", "DECLINED").limit(50).get(),
       ]);
 
       historyData = historySnapshot.docs.map((doc: any) => {
@@ -62,60 +76,83 @@ export async function GET(req: NextRequest) {
       console.warn("History fetch warning:", err);
     }
 
-    // Sort descending by timestamp
+    // Sort descending by timestamp and take top 50
     historyData.sort((a: any, b: any) => {
       const tA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
       const tB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
       return tB - tA;
     });
 
-    const history = await Promise.all(
-      historyData.map(async (h: any) => {
-        // ✅ Fetch event doc + manager doc IN PARALLEL per item (if needed)
-        const needsEventFetch = !h._eventData && h.eventId;
-        const needsManagerFetch = !h._managerData && h.managerId;
+    const topHistory = historyData.slice(0, 50);
 
-        const [eventDoc, userDoc] = await Promise.all([
-          needsEventFetch
-            ? adminDb.collection("events").doc(h.eventId).get().catch(() => null)
-            : Promise.resolve(null),
-          needsManagerFetch
-            ? adminDb.collection("users").doc(h.managerId).get().catch(() => null)
-            : Promise.resolve(null),
-        ]);
-
-        let event = h._eventData || null;
-        if (!event && eventDoc?.exists) {
-          const data = eventDoc.data() || {};
-          event = {
-            id: eventDoc.id,
-            title: data.title,
-            posterUrl: data.posterUrl,
-            category: data.category,
-            date: data.date,
-            venue: data.venue,
-            status: data.status,
-            submitterRole: data.submitterRole,
-            organizer: data.organizer,
-            organizerName: data.organizerName,
-          };
-        }
-
-        let manager = h._managerData || null;
-        if (!manager && userDoc?.exists) {
-          manager = {
-            name: userDoc.data()?.name,
-            email: userDoc.data()?.email,
-          };
-        }
-        if (!manager) {
-          manager = { name: "Campus Manager", email: "manager@kalvium.community" };
-        }
-
-        const { _eventData, _managerData, ...rest } = h;
-        return { ...rest, event, manager };
-      })
+    // ✅ BATCH RESOLVE missing events and managers: eliminates the N+1 query explosion
+    const missingEventIds: string[] = Array.from(
+      new Set(topHistory.filter((h) => !h._eventData && h.eventId).map((h) => h.eventId as string))
     );
+    const missingManagerIds: string[] = Array.from(
+      new Set(topHistory.filter((h) => !h._managerData && h.managerId).map((h) => h.managerId as string))
+    );
+
+    const eventMap = new Map<string, any>();
+    if (missingEventIds.length > 0) {
+      for (let i = 0; i < missingEventIds.length; i += 30) {
+        const chunk = missingEventIds.slice(i, i + 30);
+        try {
+          const snap = await adminDb.collection("events").where("__name__", "in", chunk).get();
+          snap.docs.forEach((d) => eventMap.set(d.id, d.data()));
+        } catch (chunkErr) {
+          console.warn("Event batch fetch chunk warning:", chunkErr);
+        }
+      }
+    }
+
+    const userMap = new Map<string, any>();
+    if (missingManagerIds.length > 0) {
+      for (let i = 0; i < missingManagerIds.length; i += 30) {
+        const chunk = missingManagerIds.slice(i, i + 30);
+        try {
+          const snap = await adminDb.collection("users").where("__name__", "in", chunk).get();
+          snap.docs.forEach((d) => userMap.set(d.id, d.data()));
+        } catch (chunkErr) {
+          console.warn("User batch fetch chunk warning:", chunkErr);
+        }
+      }
+    }
+
+    // Stitch resolved records synchronously in-memory
+    const history = topHistory.map((h: any) => {
+      let event = h._eventData || null;
+      if (!event && h.eventId && eventMap.has(h.eventId)) {
+        const data = eventMap.get(h.eventId) || {};
+        event = {
+          id: h.eventId,
+          title: data.title,
+          posterUrl: data.posterUrl,
+          category: data.category,
+          date: data.date,
+          venue: data.venue,
+          status: data.status,
+          submitterRole: data.submitterRole,
+          organizer: data.organizer,
+          organizerName: data.organizerName,
+        };
+      }
+
+      let manager = h._managerData || null;
+      if (!manager && h.managerId && userMap.has(h.managerId)) {
+        const userData = userMap.get(h.managerId);
+        manager = {
+          name: userData?.name,
+          email: userData?.email,
+        };
+      }
+      if (!manager) {
+        manager = { name: "Campus Manager", email: "manager@kalvium.community" };
+      }
+
+      const { _eventData, _managerData, ...rest } = h;
+      return { ...rest, event, manager };
+    });
 
     return NextResponse.json({
       success: true,
