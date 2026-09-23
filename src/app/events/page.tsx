@@ -90,7 +90,7 @@ export default function EventsExplorePage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchEvents();
-    }, 200);
+    }, 350);
     return () => clearTimeout(timer);
   }, [searchQuery, selectedCategory, selectedDateFilter, sortBy]);
 

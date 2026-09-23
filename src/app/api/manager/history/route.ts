@@ -9,32 +9,22 @@ export async function GET(req: NextRequest) {
     const authResult = await requireAuth(req, ["CAMPUS_MANAGER"]);
     if ("errorResponse" in authResult) return authResult.errorResponse;
 
+    // ✅ Fetch approvalHistory + approved events + declined events ALL IN PARALLEL
     let historyData: any[] = [];
-
-    // Query approvalHistory subcollections without ordering to avoid Firestore missing index error
     try {
-      const historySnapshot = await adminDb
-        .collectionGroup("approvalHistory")
-        .get();
+      const [historySnapshot, approvedSnap, declinedSnap] = await Promise.all([
+        adminDb.collectionGroup("approvalHistory").get(),
+        adminDb.collection("events").where("status", "==", "APPROVED").get(),
+        adminDb.collection("events").where("status", "==", "DECLINED").get(),
+      ]);
 
       historyData = historySnapshot.docs.map((doc: any) => {
         const parentEventRef = doc.ref.parent.parent;
-        return {
-          id: doc.id,
-          ...doc.data(),
-          eventId: parentEventRef?.id,
-        };
+        return { id: doc.id, ...doc.data(), eventId: parentEventRef?.id };
       });
-    } catch (cgErr) {
-      console.warn("approvalHistory collectionGroup query warning:", cgErr);
-    }
 
-    // Keep track of event IDs already accounted for in approvalHistory
-    const coveredEventIds = new Set(historyData.map((h: any) => h.eventId).filter(Boolean));
+      const coveredEventIds = new Set(historyData.map((h: any) => h.eventId).filter(Boolean));
 
-    // Also fetch all approved and declined events directly to ensure verified events are always visible
-    try {
-      const approvedSnap = await adminDb.collection("events").where("status", "==", "APPROVED").get();
       approvedSnap.docs.forEach((doc: any) => {
         if (!coveredEventIds.has(doc.id)) {
           const data = doc.data() || {};
@@ -52,7 +42,6 @@ export async function GET(req: NextRequest) {
         }
       });
 
-      const declinedSnap = await adminDb.collection("events").where("status", "==", "DECLINED").get();
       declinedSnap.docs.forEach((doc: any) => {
         if (!coveredEventIds.has(doc.id)) {
           const data = doc.data() || {};
@@ -69,11 +58,11 @@ export async function GET(req: NextRequest) {
           coveredEventIds.add(doc.id);
         }
       });
-    } catch (eventsErr) {
-      console.warn("Direct events fetch warning:", eventsErr);
+    } catch (err) {
+      console.warn("History fetch warning:", err);
     }
 
-    // Sort in memory descending by timestamp
+    // Sort descending by timestamp
     historyData.sort((a: any, b: any) => {
       const tA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
       const tB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
@@ -82,58 +71,49 @@ export async function GET(req: NextRequest) {
 
     const history = await Promise.all(
       historyData.map(async (h: any) => {
-        let event = h._eventData || null;
-        if (!event && h.eventId) {
-          try {
-            const eventDoc = await adminDb.collection("events").doc(h.eventId).get();
-            if (eventDoc.exists) {
-              const data = eventDoc.data() || {};
-              event = {
-                id: eventDoc.id,
-                title: data.title,
-                posterUrl: data.posterUrl,
-                category: data.category,
-                date: data.date,
-                venue: data.venue,
-                status: data.status,
-                submitterRole: data.submitterRole,
-                organizer: data.organizer,
-                organizerName: data.organizerName,
-              };
-            }
-          } catch {
-            // ignore
-          }
-        }
-        
-        let manager = h._managerData || null;
-        if (!manager && h.managerId) {
-          try {
-            const userDoc = await adminDb.collection("users").doc(h.managerId).get();
-            if (userDoc.exists) {
-              manager = {
-                name: userDoc.data()?.name,
-                email: userDoc.data()?.email,
-              };
-            }
-          } catch {
-            // ignore
-          }
-        }
+        // ✅ Fetch event doc + manager doc IN PARALLEL per item (if needed)
+        const needsEventFetch = !h._eventData && h.eventId;
+        const needsManagerFetch = !h._managerData && h.managerId;
 
-        if (!manager) {
-          manager = {
-            name: "Campus Manager",
-            email: "manager@kalvium.community",
+        const [eventDoc, userDoc] = await Promise.all([
+          needsEventFetch
+            ? adminDb.collection("events").doc(h.eventId).get().catch(() => null)
+            : Promise.resolve(null),
+          needsManagerFetch
+            ? adminDb.collection("users").doc(h.managerId).get().catch(() => null)
+            : Promise.resolve(null),
+        ]);
+
+        let event = h._eventData || null;
+        if (!event && eventDoc?.exists) {
+          const data = eventDoc.data() || {};
+          event = {
+            id: eventDoc.id,
+            title: data.title,
+            posterUrl: data.posterUrl,
+            category: data.category,
+            date: data.date,
+            venue: data.venue,
+            status: data.status,
+            submitterRole: data.submitterRole,
+            organizer: data.organizer,
+            organizerName: data.organizerName,
           };
         }
 
+        let manager = h._managerData || null;
+        if (!manager && userDoc?.exists) {
+          manager = {
+            name: userDoc.data()?.name,
+            email: userDoc.data()?.email,
+          };
+        }
+        if (!manager) {
+          manager = { name: "Campus Manager", email: "manager@kalvium.community" };
+        }
+
         const { _eventData, _managerData, ...rest } = h;
-        return {
-          ...rest,
-          event,
-          manager,
-        };
+        return { ...rest, event, manager };
       })
     );
 

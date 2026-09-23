@@ -22,6 +22,7 @@ import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 import ClashWarningModal from "@/components/ClashWarningModal";
 import MagneticButton from "@/components/MagneticButton";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/components/Toast";
 import { isStartingSoon, getHumanCountdown, isEventPast } from "@/lib/time";
 
 export default function EventDetailPage() {
@@ -82,9 +83,12 @@ export default function EventDetailPage() {
     }
   };
 
+  const { success, warning } = useToast();
+
   const handleSaveToggle = async () => {
     if (!user) {
-      alert("Please sign in to save events to your schedule.");
+      warning("Please sign in to save events to your schedule.");
+      router.push(`/login?redirect=/events/${event.id}`);
       return;
     }
 
@@ -131,6 +135,11 @@ export default function EventDetailPage() {
       if (res.ok) {
         const data = await res.json();
         setIsSaved(data.saved);
+        if (data.saved) {
+          success("Event saved to your personal schedule!");
+        } else {
+          success("Event removed from your schedule.");
+        }
       }
     } finally {
       setSaving(false);

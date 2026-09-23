@@ -15,8 +15,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Event ID is required." }, { status: 400 });
     }
 
-    // Fetch the target event to be saved
-    const targetEventDoc = await adminDb.collection("events").doc(eventId).get();
+    // Fetch target event and user's saved events in parallel
+    const [targetEventDoc, savedEventsSnapshot] = await Promise.all([
+      adminDb.collection("events").doc(eventId).get(),
+      adminDb.collection("users").doc(auth.userId).collection("savedEvents").get(),
+    ]);
 
     if (!targetEventDoc.exists) {
       return NextResponse.json({ error: "Target event not found." }, { status: 404 });
@@ -27,24 +30,8 @@ export async function POST(req: NextRequest) {
       ...targetEventDoc.data()
     } as any;
 
-    // Check if target event is already saved
-    const savedEventRef = adminDb
-      .collection("users")
-      .doc(auth.userId)
-      .collection("savedEvents")
-      .doc(eventId);
-    
-    const existingSave = await savedEventRef.get();
-    const isAlreadySaved = existingSave.exists;
-
-    // Fetch user's saved events
-    const savedEventsSnapshot = await adminDb
-      .collection("users")
-      .doc(auth.userId)
-      .collection("savedEvents")
-      .get();
-    
     const savedEventIds = savedEventsSnapshot.docs.map((doc: any) => doc.id);
+    const isAlreadySaved = savedEventIds.includes(eventId);
 
     // Fetch events on the same date
     const sameDateEventsSnapshot = await adminDb.collection("events")

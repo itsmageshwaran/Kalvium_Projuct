@@ -5,6 +5,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 
 import Navbar from "@/components/Navbar";
+import { ToastProvider } from "@/components/Toast";
 import SmoothScroll from "@/components/SmoothScroll";
 import CampusHubLogo from "@/components/CampusHubLogo";
 import Image from "next/image";
@@ -42,6 +43,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-kalvium-bg dark:bg-kalvium-dark-bg text-kalvium-text dark:text-kalvium-dark-text flex flex-col min-h-screen selection:bg-kalvium-coral/20 selection:text-kalvium-coral transition-colors duration-200">
         <AuthProvider>
+          <ToastProvider>
           <ThemeProvider>
             <SmoothScroll>
               <div className="sticky top-0 z-40 w-full">
@@ -116,6 +118,7 @@ export default function RootLayout({
               </footer>
             </SmoothScroll>
           </ThemeProvider>
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

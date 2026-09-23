@@ -17,10 +17,12 @@ import {
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 import { useRouter } from "next/navigation";
 import { useAuth, getDashboardRoute } from "@/context/AuthContext";
+import { useToast } from "@/components/Toast";
 
 export default function MySchedulePage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { success } = useToast();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -61,6 +63,7 @@ export default function MySchedulePage() {
         body: JSON.stringify({ eventId }),
       });
       if (res.ok) {
+        success("Event removed from your schedule.");
         fetchSchedule();
       }
     } catch (err) {

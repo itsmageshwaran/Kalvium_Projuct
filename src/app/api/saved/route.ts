@@ -31,13 +31,15 @@ export async function GET(req: NextRequest) {
         chunks.push(savedEventIds.slice(i, i + 30));
       }
 
-      for (const chunk of chunks) {
-        const eventsSnapshot = await adminDb
-          .collection("events")
-          .where("__name__", "in", chunk)
-          .get();
-          
-        eventsSnapshot.docs.forEach((doc: any) => {
+      // Fetch all chunks in parallel
+      const chunkSnapshots = await Promise.all(
+        chunks.map((chunk) =>
+          adminDb.collection("events").where("__name__", "in", chunk).get()
+        )
+      );
+
+      for (const snap of chunkSnapshots) {
+        snap.docs.forEach((doc: any) => {
           events.push({ id: doc.id, ...doc.data() });
         });
       }

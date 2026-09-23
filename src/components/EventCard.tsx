@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { Calendar, Clock, MapPin, ArrowUpRight, Flame } from "lucide-react";
+import { Calendar, Clock, MapPin, ArrowUpRight, Flame, Sparkles } from "lucide-react";
 import CampusVerifiedBadge from "./CampusVerifiedBadge";
 import TiltCard from "./TiltCard";
 import { isStartingSoon, getHumanCountdown, isEventPast } from "@/lib/time";
@@ -44,6 +44,7 @@ export default function EventCard({
   onSelectEvent,
   index = 0,
 }: EventCardProps) {
+  const [imgError, setImgError] = useState(false);
   const isPast = event.isPast ?? isEventPast(event.date, event.endTime, undefined, event.startTime);
   const startingSoon = !isPast && isStartingSoon(event.date, event.startTime, undefined, event.endTime);
   const countdownText = getHumanCountdown(event.date, event.startTime, undefined, event.endTime);
@@ -53,12 +54,20 @@ export default function EventCard({
         <div className="group relative flex flex-col h-full rounded-2xl sm:rounded-3xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium hover:shadow-kalvium-md transition-all duration-300 overflow-hidden">
           {/* Poster Box */}
           <div className="relative aspect-[16/10] w-full overflow-hidden bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt">
-            <img
-              src={event.posterUrl}
-              alt={event.title}
-              className="w-full h-full object-cover object-center transition-transform duration-500 ease-editorial group-hover:scale-105 will-change-transform"
-              loading="lazy"
-            />
+            {imgError || !event.posterUrl ? (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-kalvium-coral/15 via-kalvium-surface-alt to-kalvium-surface dark:from-kalvium-coral/20 dark:via-kalvium-dark-surface dark:to-kalvium-dark-bg p-4 text-center select-none">
+                <Sparkles className="w-7 h-7 text-kalvium-coral/40 mb-1" />
+                <span className="text-[10px] font-bold text-kalvium-muted uppercase tracking-wider">{event.category}</span>
+              </div>
+            ) : (
+              <img
+                src={event.posterUrl}
+                alt={event.title}
+                onError={() => setImgError(true)}
+                className="w-full h-full object-cover object-center transition-transform duration-500 ease-editorial group-hover:scale-105 will-change-transform"
+                loading="lazy"
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-70" />
 
             {/* Category & Status Pills */}

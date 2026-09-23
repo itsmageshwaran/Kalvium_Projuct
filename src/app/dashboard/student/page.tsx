@@ -25,7 +25,9 @@ import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 import CreateEventStudio from "@/components/CreateEventStudio";
 import ManualEventForm from "@/components/ManualEventForm";
 import { useAuth, getDashboardRoute } from "@/context/AuthContext";
+import { useToast } from "@/components/Toast";
 import { getTimeGreeting } from "@/lib/time";
+
 
 type TabType = "AGENDA" | "REQUESTS" | "CREATE_AI" | "CREATE_MANUAL";
 
@@ -33,9 +35,13 @@ function StudentDashboardContent() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { success, error } = useToast();
 
   // Tab State: Agenda, Requests, or Create
   const [activeTab, setActiveTab] = useState<TabType>("AGENDA");
+  // Inline delete confirmation — holds the eventId pending deletion
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
 
   // Agenda Data (Saved events & conflicts)
   const [agendaData, setAgendaData] = useState<any>(null);
@@ -44,6 +50,20 @@ function StudentDashboardContent() {
   // Student's Event Submissions / Requests Data
   const [requestsData, setRequestsData] = useState<any>(null);
   const [requestsLoading, setRequestsLoading] = useState(false);
+
+  // Handle tab change: updates both state and URL query param
+  const handleTabChange = (newTab: TabType) => {
+    setActiveTab(newTab);
+    if (newTab === "AGENDA") {
+      router.replace("/dashboard/student", { scroll: false });
+    } else if (newTab === "REQUESTS") {
+      router.replace("/dashboard/student?tab=requests", { scroll: false });
+    } else if (newTab === "CREATE_AI") {
+      router.replace("/dashboard/student?tab=create", { scroll: false });
+    } else if (newTab === "CREATE_MANUAL") {
+      router.replace("/dashboard/student?tab=create_manual", { scroll: false });
+    }
+  };
 
   // Sync tab with URL query parameter if present
   useEffect(() => {
@@ -54,7 +74,7 @@ function StudentDashboardContent() {
       setActiveTab("CREATE_MANUAL");
     } else if (tabParam === "requests") {
       setActiveTab("REQUESTS");
-    } else if (tabParam === "agenda") {
+    } else {
       setActiveTab("AGENDA");
     }
   }, [searchParams]);
@@ -104,23 +124,29 @@ function StudentDashboardContent() {
   }, [user]);
 
   const handleDeleteRequest = async (eventId: string) => {
-    if (!confirm("Are you sure you want to withdraw this event request? This action cannot be undone.")) return;
+    // First call: set the id so inline confirm renders. Second call: actually delete.
+    if (confirmDeleteId !== eventId) {
+      setConfirmDeleteId(eventId);
+      return;
+    }
+    setConfirmDeleteId(null);
     try {
       const res = await fetch(`/api/organizer/events/${eventId}`, {
         method: "DELETE",
       });
       if (res.ok) {
-        alert("Event request withdrawn successfully.");
+        success("Event request withdrawn successfully.");
         fetchRequests();
       } else {
         const err = await res.json();
-        alert(`Failed to withdraw request: ${err.error || "Unknown error"}`);
+        error(`Failed to withdraw request: ${err.error || "Unknown error"}`);
       }
     } catch (e) {
       console.error(e);
-      alert("An error occurred while withdrawing the event request.");
+      error("An error occurred while withdrawing the event request.");
     }
   };
+
 
   if (authLoading || (user && user.role?.toUpperCase() !== "STUDENT")) {
     return (
@@ -177,7 +203,7 @@ function StudentDashboardContent() {
         {/* Quick Action Button to Request Event */}
         {activeTab === "AGENDA" && (
           <button
-            onClick={() => setActiveTab("CREATE_AI")}
+            onClick={() => handleTabChange("CREATE_AI")}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm transition-all duration-200 active:scale-95 shrink-0 self-start sm:self-auto"
           >
             <Sparkles className="w-3.5 h-3.5" />
@@ -187,17 +213,18 @@ function StudentDashboardContent() {
       </div>
 
       {/* Navigation Tabs Bar */}
-      <div className="flex items-center gap-2 border-b border-kalvium-border dark:border-kalvium-dark-border pb-4 mb-8 overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-kalvium-border dark:border-kalvium-dark-border pb-4 mb-8 overflow-x-auto no-scrollbar scroll-smooth">
         <button
-          onClick={() => setActiveTab("AGENDA")}
-          className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-2 shrink-0 ${
+          onClick={() => handleTabChange("AGENDA")}
+          className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-1.5 sm:gap-2 shrink-0 ${
             activeTab === "AGENDA"
               ? "bg-kalvium-coral text-white shadow-sm"
               : "bg-white dark:bg-kalvium-dark-surface text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
           }`}
         >
-          <Calendar className="w-3.5 h-3.5" />
-          <span>My Agenda & Saved</span>
+          <Calendar className="w-3.5 h-3.5 shrink-0" />
+          <span>Agenda</span>
+          <span className="hidden sm:inline">& Saved</span>
           <span
             className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-bold ${
               activeTab === "AGENDA" ? "bg-white/20 text-white" : "bg-kalvium-surface-alt text-kalvium-muted"
@@ -208,15 +235,15 @@ function StudentDashboardContent() {
         </button>
 
         <button
-          onClick={() => setActiveTab("REQUESTS")}
-          className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-2 shrink-0 ${
+          onClick={() => handleTabChange("REQUESTS")}
+          className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-1.5 sm:gap-2 shrink-0 ${
             activeTab === "REQUESTS"
               ? "bg-kalvium-coral text-white shadow-sm"
               : "bg-white dark:bg-kalvium-dark-surface text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
           }`}
         >
-          <Clock className="w-3.5 h-3.5" />
-          <span>My Event Requests</span>
+          <Clock className="w-3.5 h-3.5 shrink-0" />
+          <span>My Requests</span>
           {requestedEvents.length > 0 && (
             <span
               className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-bold ${
@@ -233,27 +260,29 @@ function StudentDashboardContent() {
         </button>
 
         <button
-          onClick={() => setActiveTab("CREATE_AI")}
-          className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-2 shrink-0 ${
+          onClick={() => handleTabChange("CREATE_AI")}
+          className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-1.5 sm:gap-2 shrink-0 ${
             activeTab === "CREATE_AI"
               ? "bg-kalvium-coral text-white shadow-sm"
               : "bg-white dark:bg-kalvium-dark-surface text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Request with AI Poster</span>
+          <Sparkles className="w-3.5 h-3.5 shrink-0" />
+          <span>AI Request</span>
+          <span className="hidden sm:inline">Poster</span>
         </button>
 
         <button
-          onClick={() => setActiveTab("CREATE_MANUAL")}
-          className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-2 shrink-0 ${
+          onClick={() => handleTabChange("CREATE_MANUAL")}
+          className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-1.5 sm:gap-2 shrink-0 ${
             activeTab === "CREATE_MANUAL"
               ? "bg-kalvium-coral text-white shadow-sm"
               : "bg-white dark:bg-kalvium-dark-surface text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
           }`}
         >
-          <PenTool className="w-3.5 h-3.5" />
-          <span>Manual Event Request</span>
+          <PenTool className="w-3.5 h-3.5 shrink-0" />
+          <span>Manual</span>
+          <span className="hidden sm:inline">Request</span>
         </button>
       </div>
 
@@ -511,7 +540,7 @@ function StudentDashboardContent() {
                   Have an idea for a study group, workshop, hack session, or cultural gathering? Propose your event with AI poster analysis.
                 </p>
                 <button
-                  onClick={() => setActiveTab("CREATE_AI")}
+                  onClick={() => handleTabChange("CREATE_AI")}
                   className="w-full py-2 px-4 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm transition active:scale-95 flex items-center justify-center gap-2"
                 >
                   <span>Start Event Request →</span>
@@ -641,14 +670,14 @@ function StudentDashboardContent() {
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3">
                 <button
-                  onClick={() => setActiveTab("CREATE_AI")}
+                  onClick={() => handleTabChange("CREATE_AI")}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-coral text-white text-xs font-bold shadow-sm active:scale-95 transition hover:bg-kalvium-coral/90"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>Request with AI Poster</span>
                 </button>
                 <button
-                  onClick={() => setActiveTab("CREATE_MANUAL")}
+                  onClick={() => handleTabChange("CREATE_MANUAL")}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral text-kalvium-text dark:text-kalvium-dark-text text-xs font-bold shadow-sm active:scale-95 transition"
                 >
                   <PenTool className="w-4 h-4" />
@@ -699,13 +728,31 @@ function StudentDashboardContent() {
                           Public Page →
                         </Link>
                       )}
-                      <button
-                        onClick={() => handleDeleteRequest(ev.id)}
-                        className="p-2 rounded-full text-kalvium-muted hover:text-kalvium-coral bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt hover:bg-white dark:hover:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border transition shadow-soft-xs active:scale-95"
-                        title="Withdraw Event Request"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {confirmDeleteId === ev.id ? (
+                        <div className="flex items-center gap-1.5 animate-fade-in">
+                          <span className="text-[11px] text-kalvium-coral font-medium shrink-0">Withdraw?</span>
+                          <button
+                            onClick={() => handleDeleteRequest(ev.id)}
+                            className="px-3 py-1.5 rounded-full text-[11px] font-bold bg-kalvium-coral text-white hover:bg-kalvium-coral/90 transition active:scale-95 shadow-sm"
+                          >
+                            Yes
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="px-3 py-1.5 rounded-full text-[11px] font-bold bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-muted border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral transition active:scale-95"
+                          >
+                            No
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleDeleteRequest(ev.id)}
+                          className="p-2 rounded-full text-kalvium-muted hover:text-kalvium-coral bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt hover:bg-white dark:hover:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border transition shadow-soft-xs active:scale-95"
+                          title="Withdraw Event Request"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -752,7 +799,7 @@ function StudentDashboardContent() {
 
           <CreateEventStudio
             onComplete={() => {
-              setActiveTab("REQUESTS");
+              handleTabChange("REQUESTS");
               fetchRequests();
             }}
           />
@@ -777,7 +824,7 @@ function StudentDashboardContent() {
 
           <ManualEventForm
             onComplete={() => {
-              setActiveTab("REQUESTS");
+              handleTabChange("REQUESTS");
               fetchRequests();
             }}
           />

@@ -19,7 +19,9 @@ import {
 import CampusVerifiedBadge from "./CampusVerifiedBadge";
 import ClashWarningModal from "./ClashWarningModal";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 import { isStartingSoon, getHumanCountdown, isEventPast } from "@/lib/time";
+
 import { EventCardData } from "./EventCard";
 
 interface EventDetailDrawerProps {
@@ -36,7 +38,9 @@ export default function EventDetailDrawer({
   onSaveToggle,
 }: EventDetailDrawerProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const [isSaved, setIsSaved] = useState(false);
+
   const [saving, setSaving] = useState(false);
   const [clashModalOpen, setClashModalOpen] = useState(false);
   const [clashData, setClashData] = useState<any>(null);
@@ -82,9 +86,12 @@ export default function EventDetailDrawer({
     if (isStaffOrManager) return;
 
     if (!user) {
-      alert("Please sign in to save events.");
+      // Redirect to login with the current event page as redirect target
+      router.push(`/login?redirect=/events/${event.id}`);
+      onClose();
       return;
     }
+
 
     if (isSaved) {
       executeToggle(false);
@@ -353,13 +360,18 @@ export default function EventDetailDrawer({
               <button
                 onClick={handleSaveClick}
                 disabled={saving}
-                className={`w-full py-3.5 px-5 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] shadow-xs ${
+                className={`w-full py-3.5 px-5 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] shadow-xs disabled:opacity-60 disabled:cursor-not-allowed ${
                   isSaved
                     ? "bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-coral border border-kalvium-coral/30 hover:bg-kalvium-coral-tint"
                     : "bg-kalvium-coral hover:bg-kalvium-coral-hover text-white shadow-md shadow-kalvium-coral/25"
                 }`}
               >
-                {isSaved ? (
+                {saving ? (
+                  <>
+                    <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin shrink-0" />
+                    <span>Saving…</span>
+                  </>
+                ) : isSaved ? (
                   <>
                     <BookmarkCheck className="w-4 h-4 fill-kalvium-coral" />
                     <span>Saved to My Schedule (Click to Remove)</span>

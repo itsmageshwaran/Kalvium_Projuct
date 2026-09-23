@@ -11,11 +11,16 @@ export async function GET(req: NextRequest) {
 
     const eventsRef = adminDb.collection("events");
 
-    // Fetch counts using Firestore aggregation queries
-    const pendingCountSnap = await eventsRef.where("status", "==", "PENDING").count().get();
-    const approvedCountSnap = await eventsRef.where("status", "==", "APPROVED").count().get();
-    const declinedCountSnap = await eventsRef.where("status", "==", "DECLINED").count().get();
-    const totalCountSnap = await eventsRef.count().get();
+    // ✅ Run all 4 count queries IN PARALLEL — no sequential waiting
+    const [pendingCountSnap, approvedCountSnap, declinedCountSnap, totalCountSnap, pendingSnapshot] =
+      await Promise.all([
+        eventsRef.where("status", "==", "PENDING").count().get(),
+        eventsRef.where("status", "==", "APPROVED").count().get(),
+        eventsRef.where("status", "==", "DECLINED").count().get(),
+        eventsRef.count().get(),
+        // ✅ Also fetch the actual pending events at the same time
+        eventsRef.where("status", "==", "PENDING").get(),
+      ]);
 
     const stats = {
       pending: pendingCountSnap.data().count || 0,
@@ -24,21 +29,18 @@ export async function GET(req: NextRequest) {
       total: totalCountSnap.data().count || 0,
     };
 
-    // Get pending events for review (sorted in memory to avoid requiring a composite index)
-    const snapshot = await eventsRef
-      .where("status", "==", "PENDING")
-      .get();
+    // Sort pending events oldest-first (FIFO review queue)
+    const pendingEventsData = pendingSnapshot.docs
+      .map((doc: any) => ({ id: doc.id, ...doc.data() }))
+      .sort((a: any, b: any) => {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return timeA - timeB;
+      });
 
-    const pendingEventsData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
-    pendingEventsData.sort((a: any, b: any) => {
-      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return timeA - timeB;
-    });
-
+    // ✅ Fetch analyses for all pending events IN PARALLEL (already was Promise.all, kept as-is)
     const pendingEvents = await Promise.all(
       pendingEventsData.map(async (event: any) => {
-        // Fetch analyses for each pending event
         const analysesSnap = await eventsRef
           .doc(event.id)
           .collection("analyses")
@@ -58,6 +60,7 @@ export async function GET(req: NextRequest) {
       stats,
       pendingEvents,
     });
+
   } catch (error) {
     console.error("Manager pending query error:", error);
     return NextResponse.json(

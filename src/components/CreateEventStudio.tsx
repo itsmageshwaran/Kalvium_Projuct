@@ -33,8 +33,9 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/components/Toast";
 import { auth as firebaseClientAuth } from "@/lib/firebase/client";
-import { ConfidenceLevel, SAMPLE_POSTERS } from "@/lib/ai-poster-constants";
+import { ConfidenceLevel } from "@/lib/ai-poster-constants";
 
 const CATEGORIES = [
   "Workshop",
@@ -71,6 +72,7 @@ interface CreateEventStudioProps {
 export default function CreateEventStudio({ onComplete }: CreateEventStudioProps) {
   const { user } = useAuth();
   const router = useRouter();
+  const { error: toastError, warning: toastWarning } = useToast();
 
   const [step, setStep] = useState<"UPLOAD" | "ANALYZING" | "REVIEW">("UPLOAD");
   const [analyzingStepIndex, setAnalyzingStepIndex] = useState(0);
@@ -149,7 +151,7 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
   const handleSaveApiKey = (keyToSave?: string): boolean => {
     const key = (keyToSave !== undefined ? keyToSave : apiKeyInput).trim();
     if (!key) {
-      alert("Please enter a valid Gemini API key.");
+      toastWarning("Please enter a valid Gemini API key.");
       return false;
     }
     try {
@@ -185,7 +187,7 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
   const handleModalSaveAndAnalyze = () => {
     const key = modalKeyInput.trim();
     if (!key) {
-      alert("Please enter a valid Gemini API key to proceed with AI analysis.");
+      toastWarning("Please enter a valid Gemini API key to proceed with AI analysis.");
       return;
     }
     const saved = handleSaveApiKey(key);
@@ -304,7 +306,7 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
   // Handle Drag & Drop / File Input
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
-      alert("Please upload a valid image file (JPG, PNG, WebP).");
+      toastError("Please upload a valid image file (JPG, PNG, WebP).");
       return;
     }
 
@@ -765,52 +767,6 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
             </p>
           </div>
 
-          {/* Sample Posters Quick-Start (Works Without API Key) */}
-          <div className="p-5 rounded-3xl bg-slate-50/80 dark:bg-kalvium-dark-surface/60 border border-dashed border-kalvium-border dark:border-kalvium-dark-border space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-kalvium-coral" />
-                <h4 className="text-xs font-bold text-kalvium-text dark:text-kalvium-dark-text uppercase tracking-wider">
-                  Or Test Instantly with Sample Posters
-                </h4>
-              </div>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/30">
-                No API Key Required
-              </span>
-            </div>
-
-            <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
-              Don&apos;t have an API key or poster image right now? Click any pre-calibrated campus poster below to test the extraction and verification flow immediately:
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-              {SAMPLE_POSTERS.map((sample) => (
-                <button
-                  key={sample.id}
-                  type="button"
-                  onClick={() => {
-                    setPosterPreview(sample.previewUrl);
-                    startAnalysis({ sampleId: sample.id, posterUrl: sample.previewUrl });
-                  }}
-                  className="group relative flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral dark:hover:border-kalvium-coral text-left transition-all duration-200 hover:shadow-soft-sm active:scale-[0.98]"
-                >
-                  <img
-                    src={sample.previewUrl}
-                    alt={sample.name}
-                    className="w-12 h-14 object-cover rounded-lg border border-kalvium-border dark:border-kalvium-dark-border shrink-0 group-hover:scale-105 transition-transform"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <span className="block text-xs font-bold text-kalvium-text dark:text-kalvium-dark-text truncate group-hover:text-kalvium-coral transition-colors">
-                      {sample.name}
-                    </span>
-                    <span className="block text-[10px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">
-                      {sample.category} · 1-Click Test
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
 
           {/* Product Guide: How to Use & Poster Upload Rules */}
           <div className="pt-8 border-t border-kalvium-border/60 dark:border-kalvium-dark-border/60 space-y-8">
