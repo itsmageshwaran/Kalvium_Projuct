@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (token) {
-      setAuthCookie(response, token, user.role);
+      await setAuthCookie(response, token, user.role);
     }
 
     return response;

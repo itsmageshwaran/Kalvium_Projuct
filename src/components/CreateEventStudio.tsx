@@ -115,7 +115,7 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
   const [keyModalOpen, setKeyModalOpen] = useState<boolean>(false);
   const [modalKeyInput, setModalKeyInput] = useState<string>("");
   const [showModalKeySecret, setShowModalKeySecret] = useState<boolean>(false);
-  const [selectedModel, setSelectedModel] = useState<string>("gemini-2.0-flash");
+  const [selectedModel, setSelectedModel] = useState<string>("gemini-2.5-flash");
   const [pendingUploadPayload, setPendingUploadPayload] = useState<{
     imageData?: string;
     mimeType?: string;
@@ -131,8 +131,21 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
         setModalKeyInput(savedKey);
       }
       const savedModel = localStorage.getItem("campushub_gemini_model");
-      if (savedModel && !savedModel.includes("3.")) {
-        setSelectedModel(savedModel);
+      if (savedModel) {
+        if (
+          savedModel.includes("1.5") ||
+          savedModel.includes("2.0") ||
+          savedModel.includes("flash-lite")
+        ) {
+          setSelectedModel("gemini-2.5-flash");
+          try {
+            localStorage.setItem("campushub_gemini_model", "gemini-2.5-flash");
+          } catch {}
+        } else {
+          setSelectedModel(savedModel);
+        }
+      } else {
+        setSelectedModel("gemini-2.5-flash");
       }
     } catch {
       // LocalStorage unavailable in certain sandbox environments
@@ -527,13 +540,18 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                 {posterPreview && (
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       if (posterFile) {
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                          startAnalysis({ imageData: reader.result as string, mimeType: posterFile.type });
-                        };
-                        reader.readAsDataURL(posterFile);
+                        try {
+                          const { base64, mimeType } = await compressImageForAnalysis(posterFile);
+                          startAnalysis({ imageData: base64, mimeType });
+                        } catch {
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            startAnalysis({ imageData: reader.result as string, mimeType: posterFile.type });
+                          };
+                          reader.readAsDataURL(posterFile);
+                        }
                       } else {
                         startAnalysis({ posterUrl: posterPreview });
                       }
@@ -717,10 +735,9 @@ export default function CreateEventStudio({ onComplete }: CreateEventStudioProps
                   onChange={(e) => handleModelChange(e.target.value)}
                   className="bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-3 py-1.5 text-xs font-semibold text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral cursor-pointer shadow-soft-xs"
                 >
-                  <option value="gemini-2.0-flash">Gemini 2.0 Flash (Fastest · Recommended)</option>
-                  <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite (Low Latency)</option>
-                  <option value="gemini-1.5-flash">Gemini 1.5 Flash (High Quota)</option>
-                  <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Analysis)</option>
+                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (Ultra Fast · Recommended)</option>
+                  <option value="gemini-3.6-flash">Gemini 3.6 Flash (Latest Generation)</option>
+                  <option value="gemini-2.5-pro">Gemini 2.5 Pro (Deep Visual OCR)</option>
                 </select>
               </div>
             </div>

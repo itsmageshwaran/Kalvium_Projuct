@@ -67,18 +67,38 @@ export async function analyzeEventPoster(
   }
 
 /**
+ * Dynamically maps any legacy requested model names to currently active Gemini models.
+ */
+function normalizeModelName(name?: string): string {
+  if (!name) return "gemini-2.5-flash";
+  const trimmed = name.trim().replace(/^models\//, "");
+  if (
+    trimmed === "gemini-2.0-flash" ||
+    trimmed === "gemini-2.0-flash-lite" ||
+    trimmed === "gemini-1.5-flash" ||
+    trimmed === "gemini-1.5-flash-8b" ||
+    trimmed === "gemini-2.5-flash-lite"
+  ) {
+    return "gemini-2.5-flash";
+  }
+  if (trimmed === "gemini-1.5-pro") {
+    return "gemini-2.5-pro";
+  }
+  return trimmed;
+}
+
+/**
  * Dynamically queries Google Gemini API to discover active models for this user's API key.
- * Prioritizes high-speed, cost-effective Flash models like `gemini-2.0-flash`, `gemini-2.0-flash-lite`,
- * `gemini-1.5-flash`, and user-preferred models.
+ * Prioritizes high-speed, cost-effective Flash models like `gemini-2.5-flash`, `gemini-3.6-flash`,
+ * `gemini-2.5-pro`, and user-preferred models.
  */
 async function getPrioritizedCandidateModels(apiKey: string, preferredModel?: string): Promise<string[]> {
+  const targetPreferred = normalizeModelName(preferredModel);
   const fallbackList = [
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-lite",
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-8b",
-    "gemini-1.5-pro",
+    "gemini-2.5-flash",
+    "gemini-3.6-flash",
     "gemini-2.5-pro",
+    "gemini-flash-latest",
   ];
 
   try {
@@ -98,20 +118,19 @@ async function getPrioritizedCandidateModels(apiKey: string, preferredModel?: st
             return methods.includes("generateContent");
           })
           .map((m: any) => String(m.name || "").replace(/^models\//, ""))
-          .filter((name: string) => name && !name.includes("embedding") && !name.includes("aqa"));
+          .filter((name: string) => name && !name.includes("embedding") && !name.includes("aqa") && !name.includes("tts"));
 
         if (available.length > 0) {
           // Priority scoring: Real Flash models FIRST!
           available.sort((a: string, b: string) => {
             const score = (name: string) => {
-              if (preferredModel && (name === preferredModel || name.includes(preferredModel))) return 2500;
-              if (name === "gemini-2.0-flash") return 2000;
-              if (name === "gemini-2.0-flash-lite") return 1900;
-              if (name === "gemini-1.5-flash") return 1800;
-              if (name === "gemini-1.5-flash-8b") return 1700;
+              if (targetPreferred && (name === targetPreferred || name.includes(targetPreferred))) return 3000;
+              if (name === "gemini-2.5-flash") return 2500;
+              if (name === "gemini-3.6-flash") return 2400;
+              if (name === "gemini-2.5-pro") return 2000;
+              if (name.includes("2.5-flash")) return 1900;
+              if (name.includes("3.6-flash")) return 1800;
               if (name.includes("flash")) return 1500;
-              if (name === "gemini-2.5-pro") return 1200;
-              if (name === "gemini-1.5-pro") return 1100;
               if (name.includes("pro")) return 1000;
               return 100;
             };
@@ -119,10 +138,10 @@ async function getPrioritizedCandidateModels(apiKey: string, preferredModel?: st
           });
 
           // Always ensure top Flash candidates are available at head
-          if (preferredModel && !available.includes(preferredModel)) {
-            available.unshift(preferredModel);
-          } else if (!available.some((m: string) => m.includes("flash"))) {
-            available.unshift("gemini-2.0-flash", "gemini-1.5-flash");
+          if (targetPreferred && !available.includes(targetPreferred)) {
+            available.unshift(targetPreferred);
+          } else if (!available.some((m: string) => m.includes("2.5-flash") || m.includes("3.6-flash"))) {
+            available.unshift("gemini-2.5-flash", "gemini-3.6-flash");
           }
 
           console.log("✓ Live Flash Gemini models prioritized:", available.slice(0, 5));
@@ -137,20 +156,18 @@ async function getPrioritizedCandidateModels(apiKey: string, preferredModel?: st
           throw new Error("Invalid Gemini API key. Please check your key at https://aistudio.google.com/app/apikey and re-enter it on your device.");
         }
       }
-      if (res.status === 429 || errText.includes("RESOURCE_EXHAUSTED")) {
-        throw new Error("Gemini API rate limit or quota exceeded for this API key. Please try again shortly or check your Google AI Studio quota.");
-      }
+      // On 429 or other list errors, do not throw; proceed gracefully with known working fallback models
     }
   } catch (discoveryErr: any) {
-    if (discoveryErr.message?.includes("Invalid Gemini API key") || discoveryErr.message?.includes("quota exceeded")) {
+    if (discoveryErr.message?.includes("Invalid Gemini API key")) {
       throw discoveryErr;
     }
     console.warn("Model discovery note, falling back to prioritized list:", discoveryErr?.message || discoveryErr);
   }
 
   // Prepend preferred model to fallback list if specified
-  if (preferredModel && !fallbackList.includes(preferredModel)) {
-    return [preferredModel, ...fallbackList];
+  if (targetPreferred && !fallbackList.includes(targetPreferred)) {
+    return [targetPreferred, ...fallbackList];
   }
   return fallbackList;
 }
@@ -250,18 +267,18 @@ Respond with ONLY the JSON object. Do not include markdown codeblocks or convers
           if (errMsg.includes("API_KEY_INVALID") || errMsg.includes("API key not valid")) {
             throw new Error("Invalid Gemini API key. Please check your key at https://aistudio.google.com/app/apikey and re-enter it on your device.");
           }
-          if (errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("quota") || errMsg.includes("429")) {
-            throw new Error("Gemini API rate limit or quota exceeded for this API key. Please try again shortly or check your Google AI Studio quota.");
-          }
+          // If rate limited or unavailable, do NOT fail immediately!
+          // Log and continue to the next model in the fallback list
+          console.warn(`[Gemini Poster AI] Model ${modelName} encountered issue (${errMsg}). Continuing to fallback model...`);
         }
       }
 
       // Direct REST fallback with prioritized Flash model if all SDK calls missed
       if (!resultText) {
         const fallbackFlashModel =
-          preferredModel ||
+          normalizeModelName(preferredModel) ||
           candidateModels.find((m) => m.includes("flash")) ||
-          "gemini-2.0-flash";
+          "gemini-2.5-flash";
 
         try {
           console.log(`[Gemini Poster AI] Attempting direct REST fallback with ${fallbackFlashModel}...`);
@@ -305,6 +322,10 @@ Respond with ONLY the JSON object. Do not include markdown codeblocks or convers
       }
 
       if (!resultText) {
+        const lastMsg = String(lastModelError?.message || "");
+        if (lastMsg.includes("RESOURCE_EXHAUSTED") || lastMsg.includes("quota") || lastMsg.includes("429")) {
+          throw new Error("Gemini API rate limit or project quota exceeded. In Google AI Studio Free Tier, limits apply across your entire Google Cloud project (15 requests/min). Please wait 60 seconds and retry, or use an API key from a separate Google Cloud project.");
+        }
         throw new Error(
           lastModelError?.message ||
           "Gemini vision extraction could not process the poster image with the provided API key. Please check your key and quota."

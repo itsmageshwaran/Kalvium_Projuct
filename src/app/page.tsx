@@ -65,14 +65,8 @@ const pipeline = [
 ];
 
 export default function LandingPage() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && user) {
-      router.replace(getDashboardRoute(user.role));
-    }
-  }, [user, loading, router]);
 
   const { scrollY } = useScroll();
 
@@ -93,14 +87,6 @@ export default function LandingPage() {
     const term = month >= 0 && month <= 4 ? "Spring" : month <= 6 ? "Summer" : "Autumn";
     return `${term} ${year} semester`;
   }, []);
-
-  if (loading || user) {
-    return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-kalvium-coral border-t-transparent animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="relative overflow-hidden">

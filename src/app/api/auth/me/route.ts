@@ -8,13 +8,21 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await getAuthUser(req);
     if (!auth) {
-      return NextResponse.json({ user: null }, { status: 200 });
+      const res = NextResponse.json({ user: null }, { status: 200 });
+      res.cookies.delete("campus_auth_token");
+      res.cookies.delete("campus_user_role");
+      res.cookies.delete("campus_user_role_sig");
+      return res;
     }
 
     const userDoc = await adminDb.collection("users").doc(auth.userId).get();
     
     if (!userDoc.exists) {
-      return NextResponse.json({ user: null }, { status: 200 });
+      const res = NextResponse.json({ user: null }, { status: 200 });
+      res.cookies.delete("campus_auth_token");
+      res.cookies.delete("campus_user_role");
+      res.cookies.delete("campus_user_role_sig");
+      return res;
     }
 
     const userData = userDoc.data();
@@ -29,7 +37,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ user });
   } catch (error) {
     console.error("Auth me check error:", error);
-    return NextResponse.json({ user: null }, { status: 200 });
+    const res = NextResponse.json({ user: null }, { status: 200 });
+    res.cookies.delete("campus_auth_token");
+    res.cookies.delete("campus_user_role");
+    res.cookies.delete("campus_user_role_sig");
+    return res;
   }
 }
 

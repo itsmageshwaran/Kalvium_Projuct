@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    serverComponentsExternalPackages: ["@google/generative-ai"],
+    serverComponentsExternalPackages: ["firebase-admin", "@google/generative-ai"],
   },
   webpack: (config, { dev }) => {
     if (dev) {

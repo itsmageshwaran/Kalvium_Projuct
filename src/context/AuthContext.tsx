@@ -70,6 +70,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // ignore
       }
       if (isLoggingOutRef.current) return null;
+      if (typeof document !== "undefined") {
+        document.cookie = "campus_auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+        document.cookie = "campus_user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+        document.cookie = "campus_user_role_sig=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+      }
       setUser(null);
       setLoading(false);
       return null;
@@ -129,10 +134,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // Safety fallback: ensure initial auth loading state never hangs
+    const safetyTimeout = setTimeout(() => {
+      setLoading(false);
+    }, 3500);
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      clearTimeout(safetyTimeout);
       fetchCurrentUser(firebaseUser);
     });
-    return () => unsubscribe();
+
+    return () => {
+      clearTimeout(safetyTimeout);
+      unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; role?: string; error?: string }> => {

@@ -9,7 +9,7 @@ import { isSafeRedirectUrl } from "@/lib/auth-shared";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 
 function LoginContent() {
-  const { login, user, loading: authLoading } = useAuth();
+  const { login, user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -58,10 +58,44 @@ function LoginContent() {
     }
   };
 
-  if (authLoading || user) {
+  if (authLoading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
         <div className="w-8 h-8 rounded-full border-2 border-kalvium-coral border-t-transparent animate-spin" />
+        <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted animate-pulse">Checking credentials...</p>
+      </div>
+    );
+  }
+
+  if (user) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-16 text-center">
+        <div className="bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border rounded-3xl p-6 sm:p-8 space-y-4 shadow-soft-sm">
+          <div className="w-12 h-12 rounded-full bg-kalvium-coral-tint border border-kalvium-coral/20 text-kalvium-coral flex items-center justify-center mx-auto mb-2">
+            <Sparkles className="w-6 h-6" />
+          </div>
+          <h2 className="text-xl font-display font-black text-kalvium-ink dark:text-kalvium-dark-ink">
+            Already Signed In
+          </h2>
+          <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
+            You are logged in as <span className="font-semibold text-kalvium-coral">{user.email}</span> ({user.role}).
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <Link
+              href={getDashboardRoute(user.role)}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold transition shadow-soft-xs"
+            >
+              Enter Dashboard →
+            </Link>
+            <button
+              type="button"
+              onClick={() => logout()}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border text-kalvium-text dark:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt text-xs font-bold transition"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

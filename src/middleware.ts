@@ -32,24 +32,6 @@ export async function middleware(req: NextRequest) {
     return "/dashboard/student";
   };
 
-  // If user is authenticated and attempts to access landing page "/" or "/login" or "/register"
-  if (token && (pathname === "/" || pathname === "/login" || pathname === "/register")) {
-    const redirectParam = req.nextUrl.searchParams.get("redirect");
-    if (redirectParam && isSafeRedirectUrl(redirectParam)) {
-      const isManagerRestricted = redirectParam.includes("/manager") && effectiveRole !== "CAMPUS_MANAGER";
-      const isOrganizerRestricted =
-        redirectParam.includes("/organizer") &&
-        effectiveRole !== "ORGANIZER" &&
-        effectiveRole !== "CAMPUS_MANAGER";
-
-      if (!isManagerRestricted && !isOrganizerRestricted) {
-        return NextResponse.redirect(new URL(redirectParam, req.url));
-      }
-    }
-    const target = getTargetDashboard(effectiveRole);
-    return NextResponse.redirect(new URL(target, req.url));
-  }
-
   // Protect /events/create route: require authentication
   if (pathname === "/events/create") {
     if (!token) {
@@ -87,5 +69,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/login", "/register", "/dashboard/:path*", "/events/create"],
+  matcher: ["/dashboard/:path*", "/events/create"],
 };

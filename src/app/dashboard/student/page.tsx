@@ -20,6 +20,7 @@ import {
   RefreshCw,
   Trash2,
   PlusCircle,
+  GraduationCap,
 } from "lucide-react";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 import CreateEventStudio from "@/components/CreateEventStudio";
@@ -82,6 +83,8 @@ function StudentDashboardContent() {
   useEffect(() => {
     if (!authLoading && user && user.role?.toUpperCase() !== "STUDENT") {
       router.replace(getDashboardRoute(user.role));
+    } else if (!authLoading && !user) {
+      router.replace("/login?redirect=/dashboard/student");
     }
   }, [user, authLoading, router]);
 
@@ -158,16 +161,32 @@ function StudentDashboardContent() {
 
   if (!user) {
     return (
-      <div className="max-w-md mx-auto px-4 py-20 text-center">
-        <p className="text-kalvium-muted dark:text-kalvium-dark-muted mb-4">
-          Please log in to view your student portal.
-        </p>
-        <Link
-          href="/login"
-          className="px-5 py-2.5 bg-kalvium-coral hover:bg-kalvium-coral-hover text-white rounded-full text-xs font-bold shadow-sm transition"
-        >
-          Sign In
-        </Link>
+      <div className="max-w-md mx-auto px-4 py-20 text-center animate-fade-in">
+        <div className="p-8 rounded-3xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-sm text-center">
+          <div className="w-12 h-12 rounded-full bg-kalvium-coral/10 text-kalvium-coral flex items-center justify-center mx-auto mb-3">
+            <GraduationCap className="w-6 h-6" />
+          </div>
+          <h2 className="text-xl font-display font-bold text-kalvium-text dark:text-kalvium-dark-text mb-2">
+            Student Portal
+          </h2>
+          <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mb-6">
+            Please log in with your campus credentials to view your agenda, saved events, and event requests.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/login?redirect=/dashboard/student"
+              className="w-full sm:w-auto px-5 py-2.5 bg-kalvium-coral hover:bg-kalvium-coral-hover text-white rounded-full text-xs font-bold shadow-sm transition"
+            >
+              Sign In to Portal
+            </Link>
+            <Link
+              href="/"
+              className="w-full sm:w-auto px-5 py-2.5 border border-kalvium-border dark:border-kalvium-dark-border hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt text-kalvium-text dark:text-kalvium-dark-text rounded-full text-xs font-bold transition"
+            >
+              Return to Home
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
