@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeEventPoster, detectDuplicateEvent } from "@/lib/ai-poster-analyzer";
-import { getAuthUser } from "@/lib/auth";
+import { getAuthUser, isValidSafeUrl } from "@/lib/auth";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,8 +14,53 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const rateLimit = checkRateLimit(
+      req,
+      "ai:analyze",
+      { maxRequests: 15, windowMs: 60 * 1000 },
+      auth.userId
+    );
+
+    if (!rateLimit.success) {
+      return rateLimitResponse(
+        rateLimit.limit,
+        rateLimit.remaining,
+        rateLimit.reset,
+        "AI vision analysis quota exceeded. Please wait a moment before analyzing another poster."
+      );
+    }
+
     const body = await req.json();
     const { sampleId, imageData, mimeType, posterUrl, apiKey: bodyApiKey, model: bodyModel } = body;
+
+    // Defense against memory exhaustion (DoS) from massive base64 payloads
+    if (imageData && typeof imageData === "string" && imageData.length > 8 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "Poster image payload exceeds maximum allowed size (6MB)." },
+        { status: 413 }
+      );
+    }
+
+    if (posterUrl && typeof posterUrl === "string") {
+      if (posterUrl.length > 8 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: "Poster URL payload exceeds maximum allowed size." },
+          { status: 413 }
+        );
+      }
+      if (!isValidSafeUrl(posterUrl)) {
+        return NextResponse.json(
+          { error: "Invalid or unsafe poster URL provided." },
+          { status: 400 }
+        );
+      }
+    }
+
+    const allowedMimes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
+    const sanitizedMimeType = typeof mimeType === "string" && allowedMimes.includes(mimeType)
+      ? mimeType
+      : "image/png";
+
     const headerApiKey = req.headers.get("x-gemini-api-key") || undefined;
     const headerModel = req.headers.get("x-gemini-model") || undefined;
     const apiKey = (bodyApiKey || headerApiKey || "").trim();
@@ -37,7 +83,7 @@ export async function POST(req: NextRequest) {
     // Run AI poster analysis using the user's on-device API key and preferred Flash model
     const extractedData = await analyzeEventPoster(
       imageData || posterUrl || "",
-      mimeType || "image/png",
+      sanitizedMimeType,
       sampleId,
       apiKey,
       preferredModel || undefined

@@ -23,7 +23,8 @@ import {
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
-import DeclineReasonModal from "@/components/DeclineReasonModal";
+import dynamic from "next/dynamic";
+const DeclineReasonModal = dynamic(() => import("@/components/DeclineReasonModal"), { ssr: false });
 import { useAuth } from "@/context/AuthContext";
 import { auth as firebaseClientAuth } from "@/lib/firebase/client";
 import { ConfidenceLevel } from "@/lib/poster-shared";

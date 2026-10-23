@@ -15,10 +15,18 @@ import {
   Menu,
   X,
   GraduationCap,
+  HelpCircle,
 } from "lucide-react";
 
 function NavbarContent() {
-  const { user, loading, logout } = useAuth();
+  const { user: authUser, loading, logout } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const user = mounted ? authUser : null;
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -176,6 +184,30 @@ function NavbarContent() {
                 <span>My Schedule</span>
               </Link>
             )}
+
+            <Link
+              href="/guidelines"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all duration-150 active:scale-95 select-none ${
+                isActive("/guidelines")
+                  ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral font-semibold shadow-xs"
+                  : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text font-medium"
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Guidelines</span>
+            </Link>
+
+            <Link
+              href="/faq"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all duration-150 active:scale-95 select-none ${
+                isActive("/faq")
+                  ? "bg-white dark:bg-kalvium-dark-surface text-kalvium-coral font-semibold shadow-xs"
+                  : "text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text font-medium"
+              }`}
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>Help</span>
+            </Link>
           </nav>
 
           {/* User Profile / Auth Actions & Theme Toggle */}
@@ -374,6 +406,30 @@ function NavbarContent() {
                 My Schedule
               </Link>
             )}
+
+            <Link
+              href="/guidelines"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-3 py-2 rounded-xl text-xs font-medium ${
+                isActive("/guidelines")
+                  ? "text-kalvium-coral bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint font-semibold"
+                  : "text-kalvium-text dark:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt"
+              }`}
+            >
+              Event Guidelines
+            </Link>
+
+            <Link
+              href="/faq"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-3 py-2 rounded-xl text-xs font-medium ${
+                isActive("/faq")
+                  ? "text-kalvium-coral bg-kalvium-coral-tint dark:bg-kalvium-dark-coral-tint font-semibold"
+                  : "text-kalvium-text dark:text-kalvium-dark-text hover:bg-kalvium-surface-alt dark:hover:bg-kalvium-dark-surface-alt"
+              }`}
+            >
+              Help &amp; FAQ
+            </Link>
 
             {loading ? (
               <div className="pt-3 border-t border-kalvium-border dark:border-kalvium-dark-border flex items-center gap-3">

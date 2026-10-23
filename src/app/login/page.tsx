@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Sparkles, ArrowRight, ShieldCheck, GraduationCap, PenTool, User, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { useAuth, getDashboardRoute } from "@/context/AuthContext";
-import { isSafeRedirectUrl } from "@/lib/auth-shared";
+import { isSafeRedirectUrl } from "@/lib/safe-redirect";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 
 function LoginContent() {
@@ -152,7 +152,7 @@ function LoginContent() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="e.g. alex@kalvium.community"
+              placeholder="e.g. udeep.chowdary.s83@kalvium.community"
               className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl pl-9 pr-3 py-2.5 text-xs text-kalvium-ink dark:text-kalvium-dark-ink focus:outline-none focus:border-kalvium-coral transition"
             />
           </div>
@@ -210,7 +210,7 @@ function LoginContent() {
             }
             className="text-kalvium-coral font-bold hover:underline"
           >
-            Register as Student / Club
+            Register as Student
           </Link>
         </p>
       </form>

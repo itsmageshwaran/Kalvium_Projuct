@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { Search, SlidersHorizontal, Sparkles, RefreshCw } from "lucide-react";
 import EventCard, { EventCardData } from "@/components/EventCard";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
-import EventDetailDrawer from "@/components/EventDetailDrawer";
+import dynamic from "next/dynamic";
+const EventDetailDrawer = dynamic(() => import("@/components/EventDetailDrawer"), { ssr: false });
 import StaggerGrid from "@/components/StaggerGrid";
 import { useAuth } from "@/context/AuthContext";
 
@@ -70,8 +71,7 @@ export default function EventsExplorePage() {
       if (sortBy) params.set("sortBy", sortBy);
 
       const res = await fetch(`/api/events?${params.toString()}`, {
-        cache: "no-store",
-        headers: { "Cache-Control": "no-cache" },
+        next: { revalidate: 60 },
       });
       if (res.ok) {
         const data = await res.json();
@@ -223,17 +223,39 @@ export default function EventsExplorePage() {
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
-              className="bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border rounded-2xl overflow-hidden flex flex-col h-[380px] animate-pulse"
+              className="group relative flex flex-col h-full rounded-2xl sm:rounded-3xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-kalvium animate-pulse overflow-hidden min-h-[400px]"
             >
-              <div className="h-44 w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt" />
-              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                <div className="space-y-2.5">
-                  <div className="h-4 w-24 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-md" />
-                  <div className="h-6 w-5/6 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-md" />
-                  <div className="h-3.5 w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-md" />
+              {/* Poster Box Skeleton */}
+              <div className="relative aspect-[16/10] w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt/70">
+                <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                  <div className="h-5 w-16 bg-white/50 dark:bg-kalvium-dark-surface/50 rounded-full" />
                 </div>
-                <div className="space-y-2 pt-3 border-t border-kalvium-border dark:border-kalvium-dark-border">
-                  <div className="h-4 w-1/2 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-md" />
+              </div>
+
+              {/* Body Skeleton */}
+              <div className="p-5 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="h-6 w-3/4 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-md mb-3" />
+                  
+                  <div className="space-y-2 mb-4">
+                    <div className="h-3 w-1/2 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-md" />
+                    <div className="h-3 w-2/3 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-md" />
+                    <div className="h-3 w-1/3 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-md" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="h-3 w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-md" />
+                    <div className="h-3 w-5/6 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-md" />
+                  </div>
+                </div>
+
+                {/* Footer Skeleton */}
+                <div className="pt-4 mt-4 border-t border-kalvium-border dark:border-kalvium-dark-border flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="h-2 w-16 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-sm" />
+                    <div className="h-3 w-24 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-md" />
+                  </div>
+                  <div className="h-6 w-20 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt rounded-full" />
                 </div>
               </div>
             </div>

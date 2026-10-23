@@ -1,14 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebase/admin";
 import { setAuthCookie } from "@/lib/auth";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
+    const rateLimit = checkRateLimit(req, "auth:session", {
+      maxRequests: 30,
+      windowMs: 60 * 1000, // 30 requests per minute per IP
+    });
+
+    if (!rateLimit.success) {
+      return rateLimitResponse(
+        rateLimit.limit,
+        rateLimit.remaining,
+        rateLimit.reset,
+        "Too many login attempts. Please wait a moment and try again."
+      );
+    }
+
     const { idToken } = await req.json();
 
-    if (!idToken) {
+    if (!idToken || typeof idToken !== "string") {
       return NextResponse.json(
         { error: "Firebase ID token is required." },
         { status: 400 }
@@ -25,15 +40,15 @@ export async function POST(req: NextRequest) {
     let userDoc = await userRef.get();
     let user = userDoc.data();
 
-    if (!userDoc.exists) {
-      // Enforce domain check on self-registration via session
-      if (!isAllowedDomain) {
-        return NextResponse.json(
-          { error: "Access restricted to @kalvium.community and @kalvium.com email addresses." },
-          { status: 403 }
-        );
-      }
+    // Defense-in-depth: Even if a document exists, non-manager users MUST have an institutional domain
+    if (!isAllowedDomain && user?.role !== "CAMPUS_MANAGER") {
+      return NextResponse.json(
+        { error: "Access restricted to @kalvium.community and @kalvium.com email addresses." },
+        { status: 403 }
+      );
+    }
 
+    if (!userDoc.exists) {
       const name = decoded.name || (email ? email.split("@")[0] : "Campus Member");
       const role = (decoded.role as "STUDENT" | "ORGANIZER" | "CAMPUS_MANAGER") || "STUDENT";
 

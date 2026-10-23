@@ -56,7 +56,7 @@ export const SAMPLE_POSTERS = [
       description: "Join the Robotics & AI Society for an intensive, hands-on workshop on building and programming autonomous mobile robots. Participants will implement computer vision tracking algorithms on edge microcontrollers and test their bots on our custom obstacle course. All microcontrollers and sensor kits provided on site.",
       tags: ["Artificial Intelligence", "Robotics", "Hardware", "Edge Computing", "Open Source"],
       registrationUrl: "https://campus-hub.edu/register/robotics-2026",
-      contactInfo: "robotics-leads@campus.edu | Lab Coordinator: Room E-304",
+      contactInfo: "udeep.chowdary.s83@kalvium.community | Lab Coordinator: Room E-304",
       confidences: {
         title: "HIGH",
         date: "HIGH",
@@ -88,7 +88,7 @@ export const SAMPLE_POSTERS = [
       description: "Campus Hack 2026 brings together over 200 student developers, designers, and thinkers to craft high-impact solutions across AI, decentralized networks, and campus climate tools. Mentorship from alumni engineers, high-speed WiFi, and 24-hour food stations provided.",
       tags: ["Hackathon", "Coding", "Innovation", "Startups", "Prizes"],
       registrationUrl: "https://campushack2026.dev",
-      contactInfo: "hackathon@campus.edu",
+      contactInfo: "mageshwaran.t.s83@kalvium.community",
       confidences: {
         title: "HIGH",
         date: "HIGH",
@@ -120,7 +120,7 @@ export const SAMPLE_POSTERS = [
       description: "Harmony 2026 is our annual signature cultural evening featuring student acoustic ensembles, indie rock bands, theatrical skits, and student art installations across the amphitheatre lawn. Free admission for all students with valid campus ID.",
       tags: ["Music", "Dance", "Arts", "Festival", "Live Performance"],
       registrationUrl: "Not specified",
-      contactInfo: "cultural@campus.edu",
+      contactInfo: "udeep.chowdary.s83@kalvium.community",
       confidences: {
         title: "HIGH",
         date: "HIGH",
@@ -152,7 +152,7 @@ export const SAMPLE_POSTERS = [
       description: "Learn how to build editorial-grade digital interfaces with a focus on hierarchy, spacing systems, and interactive prototypes. Students will design a live product screen from scratch and receive direct critiques.",
       tags: ["UI/UX", "Product Design", "Figma", "Design Systems"],
       registrationUrl: "https://campus-hub.edu/design-sprint",
-      contactInfo: "uxguild@campus.edu",
+      contactInfo: "mageshwaran.t.s83@kalvium.community",
       confidences: {
         title: "HIGH",
         date: "HIGH",

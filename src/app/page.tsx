@@ -81,11 +81,7 @@ export default function LandingPage() {
   const [organizerMode, setOrganizerMode] = React.useState<"vision" | "manual">("vision");
 
   const currentSemester = React.useMemo(() => {
-    const now = new Date();
-    const month = now.getMonth();
-    const year = now.getFullYear();
-    const term = month >= 0 && month <= 4 ? "Spring" : month <= 6 ? "Summer" : "Autumn";
-    return `${term} ${year} semester`;
+    return "Winter 2026 semester";
   }, []);
 
   return (

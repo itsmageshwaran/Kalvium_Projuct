@@ -56,7 +56,7 @@ export default function EventCard({
           <div className="relative aspect-[16/10] w-full overflow-hidden bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt">
             {imgError || !event.posterUrl ? (
               <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-kalvium-coral/15 via-kalvium-surface-alt to-kalvium-surface dark:from-kalvium-coral/20 dark:via-kalvium-dark-surface dark:to-kalvium-dark-bg p-4 text-center select-none">
-                <Sparkles className="w-7 h-7 text-kalvium-coral/40 mb-1" />
+                <Sparkles className="w-7 h-7 text-kalvium-coral/40 mb-1" aria-hidden="true" />
                 <span className="text-[10px] font-bold text-kalvium-muted uppercase tracking-wider">{event.category}</span>
               </div>
             ) : (
@@ -82,7 +82,7 @@ export default function EventCard({
                 </span>
               ) : startingSoon ? (
                 <span className="rounded-full bg-kalvium-coral px-2.5 py-0.5 text-[11px] font-semibold text-white flex items-center gap-1 shadow-xs">
-                  <Flame size={12} className="text-white fill-white" />
+                  <Flame size={12} className="text-white fill-white" aria-hidden="true" />
                   <span>Starting soon</span>
                 </span>
               ) : null}
@@ -104,13 +104,14 @@ export default function EventCard({
                   type="button"
                   onClick={() => onSelectEvent(event)}
                   className="text-left w-full focus:outline-none"
+                  aria-label={`View details for ${event.title}`}
                 >
                   <h3 className="font-display text-lg font-bold text-kalvium-text dark:text-kalvium-dark-text leading-snug group-hover:text-kalvium-coral transition-colors duration-200 line-clamp-1 mb-2.5 tracking-tight">
                     {event.title}
                   </h3>
                 </button>
               ) : (
-                <Link href={`/events/${event.id}`}>
+                <Link href={`/events/${event.id}`} aria-label={`View details for ${event.title}`}>
                   <h3 className="font-display text-lg font-bold text-kalvium-text dark:text-kalvium-dark-text leading-snug group-hover:text-kalvium-coral transition-colors duration-200 line-clamp-1 mb-2.5 tracking-tight">
                     {event.title}
                   </h3>
@@ -120,15 +121,15 @@ export default function EventCard({
               {/* Metadata */}
               <div className="space-y-1.5 mb-3 text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
                 <div className="flex items-center gap-2 font-medium text-kalvium-text dark:text-kalvium-dark-text">
-                  <Calendar size={13} className={isPast ? "text-kalvium-muted shrink-0" : "text-kalvium-coral shrink-0"} />
+                  <Calendar size={13} className={isPast ? "text-kalvium-muted shrink-0" : "text-kalvium-coral shrink-0"} aria-hidden="true" />
                   <span className={isPast ? "text-kalvium-muted font-normal" : ""}>{countdownText}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock size={13} className="text-kalvium-muted shrink-0" />
+                  <Clock size={13} className="text-kalvium-muted shrink-0" aria-hidden="true" />
                   <span>{event.startTime} – {event.endTime}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <MapPin size={13} className="text-kalvium-muted shrink-0" />
+                  <MapPin size={13} className="text-kalvium-muted shrink-0" aria-hidden="true" />
                   <span className="truncate">{event.venue}</span>
                 </div>
               </div>
@@ -152,17 +153,19 @@ export default function EventCard({
                   type="button"
                   onClick={() => onSelectEvent(event)}
                   className="inline-flex items-center gap-1 font-semibold text-kalvium-coral hover:text-kalvium-coral-hover py-1 px-3 rounded-full hover:bg-kalvium-coral-tint dark:hover:bg-kalvium-dark-coral-tint transition active:scale-95"
+                  aria-label={`Details for ${event.title}`}
                 >
                   <span>Details</span>
-                  <ArrowUpRight size={14} />
+                  <ArrowUpRight size={14} aria-hidden="true" />
                 </button>
               ) : (
                 <Link
                   href={`/events/${event.id}`}
                   className="inline-flex items-center gap-1 font-semibold text-kalvium-coral hover:text-kalvium-coral-hover py-1 px-3 rounded-full hover:bg-kalvium-coral-tint dark:hover:bg-kalvium-dark-coral-tint transition active:scale-95"
+                  aria-label={`Details for ${event.title}`}
                 >
                   <span>Details</span>
-                  <ArrowUpRight size={14} />
+                  <ArrowUpRight size={14} aria-hidden="true" />
                 </Link>
               )}
             </div>

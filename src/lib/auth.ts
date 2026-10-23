@@ -13,10 +13,15 @@ export function isValidSafeUrl(urlStr: string | null | undefined): boolean {
   const trimmed = urlStr.trim();
   if (trimmed === "" || trimmed === "Not specified" || trimmed === "Needs verification") return true;
 
+  // Reject control characters, newlines, null bytes
+  if (/[\x00-\x1F\x7F]/.test(trimmed)) return false;
+
   const lower = trimmed.toLowerCase();
   if (
     lower.startsWith("javascript:") ||
     lower.startsWith("data:text") ||
+    lower.startsWith("data:application") ||
+    lower.startsWith("data:image/svg+xml") || // Disallow SVG data URIs to prevent inline script execution
     lower.startsWith("vbscript:")
   ) {
     return false;
@@ -27,11 +32,16 @@ export function isValidSafeUrl(urlStr: string | null | undefined): boolean {
     return (
       parsed.protocol === "http:" || 
       parsed.protocol === "https:" || 
-      (parsed.protocol === "data:" && trimmed.startsWith("data:image/"))
+      (parsed.protocol === "data:" && (lower.startsWith("data:image/png") || lower.startsWith("data:image/jpeg") || lower.startsWith("data:image/webp") || lower.startsWith("data:image/gif")))
     );
   } catch {
-    // Allow root-relative paths e.g. /posters/...
-    return trimmed.startsWith("/");
+    // Allow root-relative paths e.g. /posters/... but NOT protocol-relative (//) or backslash evasion (/\\)
+    return (
+      trimmed.startsWith("/") &&
+      !trimmed.startsWith("//") &&
+      !trimmed.startsWith("/\\") &&
+      !trimmed.includes("\\")
+    );
   }
 }
 

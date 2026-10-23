@@ -1,21 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebase/admin";
 import { setAuthCookie } from "@/lib/auth";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { sanitizePlainText } from "@/lib/sanitize";
+import { logSecurityEvent } from "@/lib/audit-logger";
 
 export async function POST(req: NextRequest) {
   try {
+    const rateLimit = checkRateLimit(req, "auth:register", {
+      maxRequests: 10,
+      windowMs: 15 * 60 * 1000, // 10 attempts per 15 minutes per IP
+    });
+
+    if (!rateLimit.success) {
+      return rateLimitResponse(
+        rateLimit.limit,
+        rateLimit.remaining,
+        rateLimit.reset,
+        "Too many registration attempts from this network. Please try again later."
+      );
+    }
+
     const { name, email, role, uid } = await req.json();
 
-    if (!name || typeof name !== "string" || name.trim().length === 0) {
+    if (!name || typeof name !== "string" || name.trim().length === 0 || name.trim().length > 100) {
       return NextResponse.json(
-        { error: "Full name is required." },
+        { error: "Full name must be between 1 and 100 characters." },
         { status: 400 }
       );
     }
 
-    if (!email || typeof email !== "string") {
+    if (!email || typeof email !== "string" || email.trim().length > 150) {
       return NextResponse.json(
-        { error: "Email address is required." },
+        { error: "Please provide a valid email address." },
         { status: 400 }
       );
     }
@@ -71,8 +88,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Role protection: CAMPUS_MANAGER cannot be self-registered
-    const normalizedRole = role === "ORGANIZER" ? "ORGANIZER" : "STUDENT";
+    // Role protection: CAMPUS_MANAGER and ORGANIZER cannot be self-registered
+    const normalizedRole = "STUDENT";
 
     // Check if another account with this email exists under a DIFFERENT UID
     const existingUsers = await adminDb.collection("users")
@@ -88,9 +105,10 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Prepare user profile
+    const safeName = sanitizePlainText(name, 100);
     const user = {
       id: uid,
-      name: name.trim(),
+      name: safeName,
       email: cleanEmail,
       role: normalizedRole,
       avatar: `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(cleanEmail)}`,
@@ -114,6 +132,13 @@ export async function POST(req: NextRequest) {
     // 4. Create session cookie using verified idToken
     const expiresIn = 60 * 60 * 24 * 7 * 1000; // 7 days
     const token = await adminAuth.createSessionCookie(idToken, { expiresIn });
+
+    logSecurityEvent({
+      action: "AUTH_REGISTER",
+      actorId: uid,
+      actorRole: normalizedRole,
+      details: { email: cleanEmail },
+    });
 
     const response = NextResponse.json({
       success: true,

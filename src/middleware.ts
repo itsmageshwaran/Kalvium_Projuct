@@ -10,6 +10,52 @@ import {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // 1. CSRF Protection for state-changing API endpoints
+  if (pathname.startsWith("/api/")) {
+    const method = req.method.toUpperCase();
+    const isMutating = ["POST", "PUT", "DELETE", "PATCH"].includes(method);
+
+    if (isMutating) {
+      const origin = req.headers.get("origin");
+      const referer = req.headers.get("referer");
+      const host = req.headers.get("host");
+
+      if (origin) {
+        try {
+          const originUrl = new URL(origin);
+          if (host && originUrl.host !== host) {
+            return NextResponse.json(
+              { error: "Cross-site request blocked by security policy (CSRF protection)." },
+              { status: 403 }
+            );
+          }
+        } catch {
+          return NextResponse.json(
+            { error: "Invalid origin header provided." },
+            { status: 403 }
+          );
+        }
+      } else if (referer) {
+        try {
+          const refererUrl = new URL(referer);
+          if (host && refererUrl.host !== host) {
+            return NextResponse.json(
+              { error: "Cross-site request blocked by security policy (CSRF protection)." },
+              { status: 403 }
+            );
+          }
+        } catch {
+          return NextResponse.json(
+            { error: "Invalid referer header provided." },
+            { status: 403 }
+          );
+        }
+      }
+    }
+    return NextResponse.next();
+  }
+
   const token = req.cookies.get(AUTH_COOKIE_NAME)?.value;
   const rawRole = req.cookies.get(ROLE_COOKIE_NAME)?.value?.toUpperCase();
   const roleSig = req.cookies.get(ROLE_SIG_COOKIE_NAME)?.value;
@@ -69,5 +115,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/events/create"],
+  matcher: ["/dashboard/:path*", "/events/create", "/api/:path*"],
 };

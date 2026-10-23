@@ -8,11 +8,27 @@ export const AUTH_COOKIE_NAME = "campus_auth_token";
 export const ROLE_COOKIE_NAME = "campus_user_role";
 export const ROLE_SIG_COOKIE_NAME = "campus_user_role_sig";
 
-const SIGNING_SECRET =
-  process.env.COOKIE_SECRET ||
-  process.env.FIREBASE_CLIENT_EMAIL ||
-  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
-  "kalvium-campus-hub-secure-salt-2026";
+export { isSafeRedirectUrl } from "./safe-redirect";
+
+function getSigningSecret(): string {
+  // Private server/edge environment secrets only. Never fall back to NEXT_PUBLIC_* variables.
+  const secret =
+    process.env.COOKIE_SECRET ||
+    process.env.FIREBASE_PRIVATE_KEY ||
+    process.env.FIREBASE_CLIENT_EMAIL;
+
+  if (secret && secret.length >= 16) {
+    return secret;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    console.error(
+      "SECURITY WARNING: COOKIE_SECRET or FIREBASE_PRIVATE_KEY must be configured in production for cryptographic role signatures."
+    );
+  }
+
+  return "kalvium-campus-hub-dev-secret-internal-salt-2026";
+}
 
 /**
  * Computes an HMAC-SHA256 hex signature using standard Web Crypto API.
@@ -22,7 +38,7 @@ export async function createRoleSignature(role: string): Promise<string> {
     const enc = new TextEncoder();
     const key = await crypto.subtle.importKey(
       "raw",
-      enc.encode(SIGNING_SECRET),
+      enc.encode(getSigningSecret()),
       { name: "HMAC", hash: "SHA-256" },
       false,
       ["sign"]
@@ -38,29 +54,26 @@ export async function createRoleSignature(role: string): Promise<string> {
 }
 
 /**
- * Verifies an HMAC-SHA256 signature for a given role string.
+ * Verifies an HMAC-SHA256 signature for a given role string using constant-time comparison.
  */
 export async function verifyRoleSignature(
   role: string | null | undefined,
   signature: string | null | undefined
 ): Promise<boolean> {
-  if (!role || !signature) return false;
+  if (!role || !signature || typeof signature !== "string") return false;
   try {
     const expected = await createRoleSignature(role);
-    return expected.length > 0 && expected === signature;
+    if (!expected || expected.length === 0 || expected.length !== signature.length) {
+      return false;
+    }
+    // Constant-time character comparison to prevent timing side-channel attacks
+    let diff = 0;
+    for (let i = 0; i < expected.length; i++) {
+      diff |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+    }
+    return diff === 0;
   } catch {
     return false;
   }
 }
 
-/**
- * Validates that an incoming redirect URL is safe to navigate to.
- * Disallows protocol-relative URLs (//attacker.com), backslashes, and external origins.
- */
-export function isSafeRedirectUrl(url: string | null | undefined): boolean {
-  if (!url || typeof url !== "string") return false;
-  const trimmed = url.trim();
-  if (trimmed.length === 0) return false;
-  // Must start with a single slash, not double slash, and not contain backslashes
-  return trimmed.startsWith("/") && !trimmed.startsWith("//") && !trimmed.includes("\\");
-}

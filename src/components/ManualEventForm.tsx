@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   CheckCircle2,
   AlertTriangle,
@@ -13,6 +14,7 @@ import {
   Trash2,
   Check,
   Upload,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -432,8 +434,24 @@ export default function ManualEventForm({ onComplete }: ManualEventFormProps) {
           {/* Contact Info */}
           <div>
             <label className="block text-xs font-bold text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider mb-1">Contact Info</label>
-            <input type="text" placeholder="organizer@campus.edu or WhatsApp number" value={formData.contactInfo} onChange={(e) => setFormData({ ...formData, contactInfo: e.target.value })}
+            <input type="text" placeholder="udeep.chowdary.s83@kalvium.community or WhatsApp number" value={formData.contactInfo} onChange={(e) => setFormData({ ...formData, contactInfo: e.target.value })}
               className="w-full bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border rounded-xl px-4 py-2.5 text-sm text-kalvium-text dark:text-kalvium-dark-text focus:outline-none focus:border-kalvium-coral" />
+          </div>
+
+          {/* Compliance & Policy Notice */}
+          <div className="p-3.5 rounded-2xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border flex items-start gap-3 text-xs text-kalvium-muted dark:text-kalvium-dark-muted">
+            <ShieldCheck className="w-4 h-4 text-kalvium-success shrink-0 mt-0.5" />
+            <span className="leading-relaxed">
+              By submitting, you certify that this event complies with the{" "}
+              <Link
+                href="/guidelines"
+                target="_blank"
+                className="font-semibold text-kalvium-text dark:text-kalvium-dark-text underline hover:text-kalvium-coral transition"
+              >
+                Campus Event Guidelines
+              </Link>{" "}
+              and that venue and timing details are authentic.
+            </span>
           </div>
 
           {/* Submit */}

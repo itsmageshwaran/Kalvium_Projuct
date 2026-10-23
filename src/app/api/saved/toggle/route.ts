@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,6 +9,23 @@ export async function POST(req: NextRequest) {
     if ("errorResponse" in authResult) return authResult.errorResponse;
 
     const { user } = authResult;
+
+    const rateLimit = checkRateLimit(
+      req,
+      "saved:toggle",
+      { maxRequests: 60, windowMs: 60 * 1000 },
+      user.userId
+    );
+
+    if (!rateLimit.success) {
+      return rateLimitResponse(
+        rateLimit.limit,
+        rateLimit.remaining,
+        rateLimit.reset,
+        "Too many requests to update saved events. Please slow down."
+      );
+    }
+
     const { eventId } = await req.json();
 
     if (!eventId) {

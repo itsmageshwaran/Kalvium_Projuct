@@ -3,6 +3,9 @@ import { adminDb, adminStorage } from "@/lib/firebase/admin";
 import { requireAuth, sanitizeUrl } from "@/lib/auth";
 import { parseTimeToMinutes } from "@/lib/clash";
 import { invalidateApprovedEventsCache } from "@/lib/events-cache";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { sanitizePlainText } from "@/lib/sanitize";
+import { logSecurityEvent } from "@/lib/audit-logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,6 +13,23 @@ export async function POST(req: NextRequest) {
     if ("errorResponse" in authResult) return authResult.errorResponse;
 
     const { user } = authResult;
+
+    const rateLimit = checkRateLimit(
+      req,
+      "organizer:submit",
+      { maxRequests: 20, windowMs: 60 * 1000 },
+      user.userId
+    );
+
+    if (!rateLimit.success) {
+      return rateLimitResponse(
+        rateLimit.limit,
+        rateLimit.remaining,
+        rateLimit.reset,
+        "Submission rate limit reached. Please wait a minute before submitting another event."
+      );
+    }
+
     const body = await req.json();
 
     const {
@@ -37,6 +57,20 @@ export async function POST(req: NextRequest) {
         { error: "Missing required fields: Title, Date, Start Time, End Time, Venue, and Category are mandatory." },
         { status: 400 }
       );
+    }
+
+    // Input length boundaries
+    if (typeof title !== "string" || title.trim().length > 200) {
+      return NextResponse.json({ error: "Title must not exceed 200 characters." }, { status: 400 });
+    }
+    if (typeof venue !== "string" || venue.trim().length > 150) {
+      return NextResponse.json({ error: "Venue must not exceed 150 characters." }, { status: 400 });
+    }
+    if (description && (typeof description !== "string" || description.length > 10000)) {
+      return NextResponse.json({ error: "Description must not exceed 10,000 characters." }, { status: 400 });
+    }
+    if (summary && (typeof summary !== "string" || summary.length > 1000)) {
+      return NextResponse.json({ error: "Summary must not exceed 1,000 characters." }, { status: 400 });
     }
 
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -68,19 +102,27 @@ export async function POST(req: NextRequest) {
     const defaultPoster = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80";
     const resolvedPoster = sanitizeUrl(posterUrl, defaultPoster);
 
-    const safeDescription = (description || "").trim();
-    const resolvedSummary =
-      summary && summary.trim().length > 0
-        ? summary.trim()
-        : safeDescription.substring(0, 150) + "...";
+    const safeTitle = sanitizePlainText(title, 200);
+    const safeVenue = sanitizePlainText(venue, 150);
+    const safeCategory = sanitizePlainText(category, 50);
+    const safeDescription = sanitizePlainText(description || "", 10000);
+    const resolvedSummary = summary && summary.trim().length > 0
+      ? sanitizePlainText(summary, 1000)
+      : safeDescription.substring(0, 150) + "...";
 
     const formattedTags = Array.isArray(tags)
-      ? tags.join(", ")
+      ? tags.map((t) => sanitizePlainText(String(t), 50)).join(", ")
       : typeof tags === "string"
-      ? tags
+      ? sanitizePlainText(tags, 200)
       : "Campus Event";
 
     const safeRegistrationUrl = sanitizeUrl(registrationUrl, "Not specified");
+    const safeOrganizerName = organizerName
+      ? sanitizePlainText(organizerName, 100)
+      : user.name;
+    const safeContactInfo = contactInfo
+      ? sanitizePlainText(contactInfo, 200)
+      : user.email;
 
     // Handle Firebase Storage Upload for Base64 Images
     const eventRef = adminDb.collection("events").doc();
@@ -145,20 +187,20 @@ export async function POST(req: NextRequest) {
     const batch = adminDb.batch();
 
     const eventData = {
-      title: title.trim(),
+      title: safeTitle,
       description: safeDescription,
       summary: resolvedSummary,
       date: date.trim(),
       startTime: startTime.trim(),
       endTime: endTime.trim(),
-      venue: venue.trim(),
-      organizerName: organizerName ? organizerName.trim() : user.name,
+      venue: safeVenue,
+      organizerName: safeOrganizerName,
       posterUrl: finalPosterUrl,
       originalPosterUrl: originalPosterUrl || null,
-      category: category.trim(),
+      category: safeCategory,
       tags: formattedTags,
       registrationUrl: safeRegistrationUrl,
-      contactInfo: contactInfo ? contactInfo.trim() : user.email,
+      contactInfo: safeContactInfo,
       status: "PENDING", // Always PENDING so it enters the Verification Studio for manager review
       organizerId: user.userId,
       submitterRole: user.role,
@@ -186,6 +228,18 @@ export async function POST(req: NextRequest) {
 
     await batch.commit();
     invalidateApprovedEventsCache();
+
+    logSecurityEvent({
+      action: "EVENT_SUBMITTED",
+      actorId: user.userId,
+      actorRole: user.role,
+      targetId: eventRef.id,
+      details: {
+        title: safeTitle,
+        venue: safeVenue,
+        date: date.trim(),
+      },
+    });
 
     const successMessage = user.role === "CAMPUS_MANAGER"
       ? "Event submitted to verification queue. Review and approve it in your Verification Studio."

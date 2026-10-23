@@ -105,14 +105,19 @@ async function seedRoles() {
     results.push(res);
   }
 
-  // Also ensure current user is synced
-  for (const email of ["udeep.chowdary.s83@kalvium.com", "udeep.chowdary.s83@kalvium.community"]) {
+  // Also ensure lead students are synced with CAMPUS_MANAGER privileges
+  for (const email of [
+    "udeep.chowdary.s83@kalvium.com",
+    "udeep.chowdary.s83@kalvium.community",
+    "mageshwaran.t.s83@kalvium.community",
+  ]) {
     try {
       const mainUser = await adminAuth.getUserByEmail(email);
       await adminAuth.setCustomUserClaims(mainUser.uid, { role: "CAMPUS_MANAGER" });
+      const defaultName = email.includes("mageshwaran") ? "Mageshwaran T" : "Udeep Chowdary";
       await adminDb.collection("users").doc(mainUser.uid).set(
         {
-          name: mainUser.displayName || "Udeep Chowdary",
+          name: mainUser.displayName || defaultName,
           email: mainUser.email,
           role: "CAMPUS_MANAGER",
           avatar: `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(mainUser.email)}`,

@@ -1,0 +1,21 @@
+{
+  "name": "CampusHub",
+  "short_name": "CampusHub",
+  "description": "Verified campus events and scheduling.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#F35D5D",
+  "icons": [
+    {
+      "src": "/brand/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

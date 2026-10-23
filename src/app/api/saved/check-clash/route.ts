@@ -2,12 +2,29 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { getAuthUser } from "@/lib/auth";
 import { checkTwoEventsClash } from "@/lib/clash";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
     const auth = await getAuthUser(req);
     if (!auth) {
       return NextResponse.json({ hasClash: false });
+    }
+
+    const rateLimit = checkRateLimit(
+      req,
+      "saved:check-clash",
+      { maxRequests: 60, windowMs: 60 * 1000 },
+      auth.userId
+    );
+
+    if (!rateLimit.success) {
+      return rateLimitResponse(
+        rateLimit.limit,
+        rateLimit.remaining,
+        rateLimit.reset,
+        "Too many clash check requests. Please slow down."
+      );
     }
 
     const { eventId } = await req.json();

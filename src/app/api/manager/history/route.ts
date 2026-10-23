@@ -147,7 +147,7 @@ export async function GET(req: NextRequest) {
         };
       }
       if (!manager) {
-        manager = { name: "Campus Manager", email: "manager@kalvium.community" };
+        manager = { name: "Udeep Chowdary", email: "udeep.chowdary.s83@kalvium.community" };
       }
 
       const { _eventData, _managerData, ...rest } = h;

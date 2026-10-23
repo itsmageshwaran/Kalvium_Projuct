@@ -3,11 +3,30 @@ import { adminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth";
 import { detectDuplicateEvent } from "@/lib/ai-poster-analyzer";
 import { checkTwoEventsClash, areVenuesMatching } from "@/lib/clash";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
     const authResult = await requireAuth(req, ["STUDENT", "ORGANIZER", "CAMPUS_MANAGER"]);
     if ("errorResponse" in authResult) return authResult.errorResponse;
+
+    const { user } = authResult;
+
+    const rateLimit = checkRateLimit(
+      req,
+      "organizer:conflict-check",
+      { maxRequests: 60, windowMs: 60 * 1000 },
+      user.userId
+    );
+
+    if (!rateLimit.success) {
+      return rateLimitResponse(
+        rateLimit.limit,
+        rateLimit.remaining,
+        rateLimit.reset,
+        "Too many conflict checks. Please slow down."
+      );
+    }
 
     const body = await req.json();
     const { title = "", date = "", startTime = "", endTime = "", venue = "" } = body;

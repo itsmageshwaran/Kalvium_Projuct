@@ -19,7 +19,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
-import ClashWarningModal from "@/components/ClashWarningModal";
+import dynamic from "next/dynamic";
+const ClashWarningModal = dynamic(() => import("@/components/ClashWarningModal"), { ssr: false });
 import MagneticButton from "@/components/MagneticButton";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/Toast";
