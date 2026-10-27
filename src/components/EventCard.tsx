@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Calendar, Clock, MapPin, ArrowUpRight, Flame, Sparkles } from "lucide-react";
+import { Calendar, Clock, MapPin, ArrowUpRight, Flame, Sparkles, Users, CheckCircle2 } from "lucide-react";
 import CampusVerifiedBadge from "./CampusVerifiedBadge";
 import TiltCard from "./TiltCard";
 import { isStartingSoon, getHumanCountdown, isEventPast } from "@/lib/time";
@@ -20,6 +20,8 @@ export interface EventCardData {
   category: string;
   status: string;
   isSaved?: boolean;
+  isEnrolled?: boolean;
+  enrolledCount?: number;
   isPast?: boolean;
   description?: string;
   tags?: string;
@@ -132,6 +134,20 @@ export default function EventCard({
                   <MapPin size={13} className="text-kalvium-muted shrink-0" aria-hidden="true" />
                   <span className="truncate">{event.venue}</span>
                 </div>
+                {((event.enrolledCount !== undefined && event.enrolledCount > 0) || event.isEnrolled) && (
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-kalvium-muted dark:text-kalvium-dark-muted bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt px-2 py-0.5 rounded-full">
+                      <Users size={11} className="text-kalvium-coral shrink-0" aria-hidden="true" />
+                      <span>{event.enrolledCount || 1} Enrolled</span>
+                    </span>
+                    {event.isEnrolled && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-kalvium-success bg-kalvium-success-tint dark:bg-kalvium-dark-success-tint px-2 py-0.5 rounded-full">
+                        <CheckCircle2 size={11} className="shrink-0" />
+                        <span>Applied</span>
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
 
               <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted line-clamp-2 leading-relaxed mb-4 font-normal">

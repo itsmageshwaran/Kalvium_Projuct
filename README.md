@@ -250,18 +250,20 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🔑 Demo Accounts
+## 🔐 Authentication & Role Access Control
 
-Use these accounts to test the entire lifecycle:
+CampusHub enforces institutional role-based access control (RBAC):
 
-| Role | Email | Password | Allowed Access |
-| :--- | :--- | :--- | :--- |
-| **🛡 Campus Manager** | `manager@kalvium.com` | `Manager@12345` | Verification Studio, Approval History, Full Moderation |
-| **🏛 Event Organizer** | `organizer@kalvium.community` | `Organizer@12345` | AI Poster Studio, Submissions Dashboard, Duplicate Alerts |
-| **🎓 Student** | `student@kalvium.community` | `Student@12345` | Verified Events Feed, Personal Agenda, Clash Alerts, Proposals |
+| Role | Access Level | Responsibilities |
+| :--- | :--- | :--- |
+| **🛡 Campus Manager** | Manager Portal (`/dashboard/manager`) | Verification Studio, Official Event Approvals, Approval History, Attendee Rosters |
+| **🏛 Event Organizer** | Organizer Portal (`/dashboard/organizer`) | AI Poster Studio, Event Proposals, Submissions Dashboard, Duplicate Clash Alerts |
+| **🎓 Student** | Student Portal (`/dashboard/student`) | Verified Campus Feed, Event Applications & Enrollments, Personal Schedule, Proposals |
 
-> [!NOTE]
-> Public self-registration on the `/register` page is restricted to `@kalvium.community` and `@kalvium.com` emails. Registration defaults to the `STUDENT` role (`CAMPUS_MANAGER` cannot be self-registered).
+> [!IMPORTANT]
+> - **Institutional Domain Security**: Account registration on `/register` is restricted to institutional `@kalvium.community` and `@kalvium.com` addresses.
+> - **Role Elevation Protection**: Self-registration defaults strictly to the `STUDENT` role. Elevation to `ORGANIZER` or `CAMPUS_MANAGER` requires administrative provisioning via `node scripts/set-role.mjs <email> <ROLE>` and cannot be self-elevated.
+> - **Security Policy**: Administrative and user credentials must never be committed to source code or repository documentation.
 
 ---
 

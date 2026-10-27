@@ -31,21 +31,21 @@ const adminDb = getFirestore();
 
 const DEMO_USERS = [
   {
-    name: "Dr. Alistair Sharma",
-    email: "manager@kalvium.com",
-    password: "Manager@12345",
+    name: "Siva Subramaniyan",
+    email: "siva.subramaniyan@kalvium.com",
+    password: process.env.MANAGER_PASSWORD || undefined,
     role: "CAMPUS_MANAGER",
   },
   {
     name: "Robotics & AI Society",
     email: "organizer@kalvium.community",
-    password: "Organizer@12345",
+    password: process.env.ORGANIZER_PASSWORD || "Organizer@12345",
     role: "ORGANIZER",
   },
   {
     name: "Alex Johnson",
     email: "student@kalvium.community",
-    password: "Student@12345",
+    password: process.env.STUDENT_PASSWORD || "Student@12345",
     role: "STUDENT",
   },
 ];
@@ -56,10 +56,13 @@ async function provisionUser(demoUser) {
     const existing = await adminAuth.getUserByEmail(demoUser.email);
     uid = existing.uid;
     console.log(`- Existing auth account found for ${demoUser.email} (UID: ${uid})`);
-    await adminAuth.updateUser(uid, {
+    const updatePayload = {
       displayName: demoUser.name,
-      password: demoUser.password,
-    });
+    };
+    if (demoUser.password) {
+      updatePayload.password = demoUser.password;
+    }
+    await adminAuth.updateUser(uid, updatePayload);
   } catch (err) {
     if (err.code === "auth/user-not-found") {
       const created = await adminAuth.createUser({

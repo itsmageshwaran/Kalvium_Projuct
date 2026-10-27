@@ -3,7 +3,16 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase/client";
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail } from "firebase/auth";
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  updateProfile,
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
 
 export interface User {
   id: string;
@@ -28,6 +37,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; role?: string; error?: string }>;
+  loginWithGoogle: (roleOverride?: string) => Promise<{ success: boolean; role?: string; error?: string }>;
   register: (name: string, email: string, password: string, role: string) => Promise<{ success: boolean; role?: string; error?: string }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
@@ -177,6 +187,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loginWithGoogle = async (roleOverride?: string): Promise<{ success: boolean; role?: string; error?: string }> => {
+    isLoggingOutRef.current = false;
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      const userCredential = await signInWithPopup(auth, provider);
+      const firebaseUser = userCredential.user;
+      const cleanEmail = (firebaseUser.email || "").toLowerCase().trim();
+
+      const token = await firebaseUser.getIdTokenResult(true);
+      let role = (token.claims.role as string) || roleOverride;
+
+      const isAllowedDomain = cleanEmail.endsWith("@kalvium.community") || cleanEmail.endsWith("@kalvium.com");
+      if (role !== "CAMPUS_MANAGER" && !isAllowedDomain) {
+        await signOut(auth);
+        return {
+          success: false,
+          error: "Access restricted to @kalvium.community or @kalvium.com institutional Google accounts.",
+        };
+      }
+
+      const fetchedUser = await fetchCurrentUser(firebaseUser);
+      const effectiveRole = role || fetchedUser?.role || "STUDENT";
+      if (typeof document !== "undefined") {
+        document.cookie = `campus_user_role=${effectiveRole}; path=/; max-age=604800; SameSite=Lax`;
+      }
+
+      return { success: true, role: effectiveRole };
+    } catch (e: any) {
+      if (e.code === "auth/popup-closed-by-user") {
+        return { success: false, error: "Sign in was cancelled." };
+      }
+      return { success: false, error: e.message || "Google sign-in failed." };
+    }
+  };
+
   const register = async (name: string, email: string, password: string, role: string): Promise<{ success: boolean; role?: string; error?: string }> => {
     isLoggingOutRef.current = false;
     try {
@@ -311,6 +357,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         loading,
         login,
+        loginWithGoogle,
         register,
         resetPassword,
         logout,

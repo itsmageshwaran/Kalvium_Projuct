@@ -12,21 +12,33 @@ export async function GET(req: NextRequest) {
     const eventsRef = adminDb.collection("events");
 
     // ✅ Run all 4 count queries IN PARALLEL — no sequential waiting
-    const [pendingCountSnap, approvedCountSnap, declinedCountSnap, totalCountSnap, pendingSnapshot] =
-      await Promise.all([
-        eventsRef.where("status", "==", "PENDING").count().get(),
-        eventsRef.where("status", "==", "APPROVED").count().get(),
-        eventsRef.where("status", "==", "DECLINED").count().get(),
-        eventsRef.count().get(),
-        // ✅ Also fetch the actual pending events at the same time
-        eventsRef.where("status", "==", "PENDING").get(),
-      ]);
+    const [
+      pendingCountSnap,
+      approvedCountSnap,
+      declinedCountSnap,
+      totalCountSnap,
+      pendingSnapshot,
+      deletionRequestsSnap,
+    ] = await Promise.all([
+      eventsRef.where("status", "==", "PENDING").count().get(),
+      eventsRef.where("status", "==", "APPROVED").count().get(),
+      eventsRef.where("status", "==", "DECLINED").count().get(),
+      eventsRef.count().get(),
+      eventsRef.where("status", "==", "PENDING").get(),
+      eventsRef.where("deletionRequested", "==", true).get(),
+    ]);
+
+    const deletionRequests = deletionRequestsSnap.docs.map((doc: any) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
 
     const stats = {
       pending: pendingCountSnap.data().count || 0,
       approved: approvedCountSnap.data().count || 0,
       declined: declinedCountSnap.data().count || 0,
       total: totalCountSnap.data().count || 0,
+      deletionRequests: deletionRequests.length,
     };
 
     // Sort pending events oldest-first (FIFO review queue)
@@ -59,6 +71,7 @@ export async function GET(req: NextRequest) {
       success: true,
       stats,
       pendingEvents,
+      deletionRequests,
     });
 
   } catch (error) {

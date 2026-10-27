@@ -21,16 +21,21 @@ import {
   Trash2,
   PlusCircle,
   GraduationCap,
+  Users,
+  Award,
+  Trophy,
+  ExternalLink,
 } from "lucide-react";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 import CreateEventStudio from "@/components/CreateEventStudio";
 import ManualEventForm from "@/components/ManualEventForm";
+import UploadCertificateModal from "@/components/UploadCertificateModal";
 import { useAuth, getDashboardRoute } from "@/context/AuthContext";
 import { useToast } from "@/components/Toast";
 import { getTimeGreeting } from "@/lib/time";
 
 
-type TabType = "AGENDA" | "REQUESTS" | "CREATE_AI" | "CREATE_MANUAL";
+type TabType = "AGENDA" | "ENROLLED" | "ACHIEVEMENTS" | "REQUESTS" | "CREATE_AI" | "CREATE_MANUAL";
 
 function StudentDashboardContent() {
   const { user, loading: authLoading } = useAuth();
@@ -38,7 +43,7 @@ function StudentDashboardContent() {
   const searchParams = useSearchParams();
   const { success, error } = useToast();
 
-  // Tab State: Agenda, Requests, or Create
+  // Tab State: Agenda, Enrolled, Requests, or Create
   const [activeTab, setActiveTab] = useState<TabType>("AGENDA");
   // Inline delete confirmation — holds the eventId pending deletion
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -47,6 +52,16 @@ function StudentDashboardContent() {
   // Agenda Data (Saved events & conflicts)
   const [agendaData, setAgendaData] = useState<any>(null);
   const [agendaLoading, setAgendaLoading] = useState(true);
+
+  // Enrolled Events Data
+  const [enrolledEvents, setEnrolledEvents] = useState<any[]>([]);
+  const [enrolledLoading, setEnrolledLoading] = useState(false);
+
+  // Student Participations & Certificates Data (Part 2)
+  const [participationsData, setParticipationsData] = useState<any>(null);
+  const [participationsLoading, setParticipationsLoading] = useState(false);
+  const [certModalOpen, setCertModalOpen] = useState(false);
+  const [selectedCertEvent, setSelectedCertEvent] = useState<{ id: string; title: string; date?: string; venue?: string } | null>(null);
 
   // Student's Event Submissions / Requests Data
   const [requestsData, setRequestsData] = useState<any>(null);
@@ -57,6 +72,11 @@ function StudentDashboardContent() {
     setActiveTab(newTab);
     if (newTab === "AGENDA") {
       router.replace("/dashboard/student", { scroll: false });
+    } else if (newTab === "ENROLLED") {
+      router.replace("/dashboard/student?tab=enrolled", { scroll: false });
+    } else if (newTab === "ACHIEVEMENTS") {
+      router.replace("/dashboard/student?tab=achievements", { scroll: false });
+      fetchStudentParticipations();
     } else if (newTab === "REQUESTS") {
       router.replace("/dashboard/student?tab=requests", { scroll: false });
     } else if (newTab === "CREATE_AI") {
@@ -73,6 +93,11 @@ function StudentDashboardContent() {
       setActiveTab("CREATE_AI");
     } else if (tabParam === "create_manual") {
       setActiveTab("CREATE_MANUAL");
+    } else if (tabParam === "enrolled") {
+      setActiveTab("ENROLLED");
+    } else if (tabParam === "achievements") {
+      setActiveTab("ACHIEVEMENTS");
+      fetchStudentParticipations();
     } else if (tabParam === "requests") {
       setActiveTab("REQUESTS");
     } else {
@@ -104,6 +129,55 @@ function StudentDashboardContent() {
     }
   };
 
+  // Fetch events the student applied/enrolled into
+  const fetchEnrolledEvents = async () => {
+    setEnrolledLoading(true);
+    try {
+      const res = await fetch("/api/student/enrolled", { cache: "no-store" });
+      if (res.ok) {
+        const json = await res.json();
+        setEnrolledEvents(json.enrolledEvents || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch enrolled events:", e);
+    } finally {
+      setEnrolledLoading(false);
+    }
+  };
+
+  // Fetch student participations & certificates (Part 2)
+  const fetchStudentParticipations = async () => {
+    setParticipationsLoading(true);
+    try {
+      const res = await fetch("/api/student/participations", { cache: "no-store" });
+      if (res.ok) {
+        const json = await res.json();
+        setParticipationsData(json);
+      }
+    } catch (e) {
+      console.error("Failed to fetch student participations:", e);
+    } finally {
+      setParticipationsLoading(false);
+    }
+  };
+
+  const handleWithdrawEnrollment = async (eventId: string) => {
+    try {
+      const res = await fetch(`/api/events/${eventId}/apply`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        success("Your application has been withdrawn.");
+        fetchEnrolledEvents();
+      } else {
+        const err = await res.json();
+        error(err.error || "Failed to withdraw enrollment.");
+      }
+    } catch {
+      error("Network error while withdrawing.");
+    }
+  };
+
   // Fetch student's own event proposals/requests
   const fetchRequests = async () => {
     setRequestsLoading(true);
@@ -123,6 +197,7 @@ function StudentDashboardContent() {
   useEffect(() => {
     if (!user || user.role?.toUpperCase() !== "STUDENT") return;
     fetchAgenda();
+    fetchEnrolledEvents();
     fetchRequests();
   }, [user]);
 
@@ -252,6 +327,52 @@ function StudentDashboardContent() {
           >
             {savedEvents.length}
           </span>
+        </button>
+
+        <button
+          onClick={() => handleTabChange("ENROLLED")}
+          className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-1.5 sm:gap-2 shrink-0 ${
+            activeTab === "ENROLLED"
+              ? "bg-kalvium-coral text-white shadow-sm"
+              : "bg-white dark:bg-kalvium-dark-surface text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
+          }`}
+        >
+          <Users className="w-3.5 h-3.5 shrink-0" />
+          <span>My Enrollments</span>
+          {enrolledEvents.length > 0 && (
+            <span
+              className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-bold ${
+                activeTab === "ENROLLED"
+                  ? "bg-white/20 text-white"
+                  : "bg-kalvium-success/20 text-kalvium-success"
+              }`}
+            >
+              {enrolledEvents.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => handleTabChange("ACHIEVEMENTS")}
+          className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-1.5 sm:gap-2 shrink-0 ${
+            activeTab === "ACHIEVEMENTS"
+              ? "bg-kalvium-coral text-white shadow-sm"
+              : "bg-white dark:bg-kalvium-dark-surface text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-text dark:hover:text-kalvium-dark-text border border-kalvium-border dark:border-kalvium-dark-border"
+          }`}
+        >
+          <Trophy className="w-3.5 h-3.5 shrink-0 text-amber-500" />
+          <span>Certificates & Awards</span>
+          {participationsData?.stats?.totalCertificates > 0 && (
+            <span
+              className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-bold ${
+                activeTab === "ACHIEVEMENTS"
+                  ? "bg-white/20 text-white"
+                  : "bg-amber-500/20 text-amber-600 dark:text-amber-400"
+              }`}
+            >
+              {participationsData.stats.totalCertificates}
+            </span>
+          )}
         </button>
 
         <button
@@ -605,6 +726,383 @@ function StudentDashboardContent() {
         </div>
       )}
 
+      {/* TAB: MY ENROLLED EVENTS */}
+      {activeTab === "ENROLLED" && (
+        <div className="space-y-6 animate-fade-in">
+          {/* Header & Refresh */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-display font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight">
+                My Enrolled Events
+              </h2>
+              <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mt-1">
+                Official applications and registered campus events. Event organizers and campus managers have received your enrollment.
+              </p>
+            </div>
+            <button
+              onClick={fetchEnrolledEvents}
+              disabled={enrolledLoading}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border bg-white dark:bg-kalvium-dark-surface hover:bg-kalvium-surface-alt text-xs font-semibold text-kalvium-text dark:text-kalvium-dark-text transition disabled:opacity-50 self-start sm:self-auto"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${enrolledLoading ? "animate-spin text-kalvium-coral" : ""}`} />
+              <span>Refresh</span>
+            </button>
+          </div>
+
+          {/* Metrics Strip */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs">
+              <span className="text-[11px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider font-semibold block mb-1">
+                Confirmed Enrollments
+              </span>
+              <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-text dark:text-kalvium-dark-text mt-1">
+                {enrolledEvents.length}
+              </p>
+              <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">
+                Active campus applications
+              </p>
+            </div>
+
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs">
+              <span className="text-[11px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider font-semibold block mb-1">
+                Upcoming Events
+              </span>
+              <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-coral mt-1">
+                {enrolledEvents.filter((e) => !e.isPast).length}
+              </p>
+              <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">
+                On your upcoming calendar
+              </p>
+            </div>
+
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs">
+              <span className="text-[11px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider font-semibold block mb-1">
+                Completed / Past
+              </span>
+              <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-text dark:text-kalvium-dark-text mt-1">
+                {enrolledEvents.filter((e) => e.isPast).length}
+              </p>
+              <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">
+                Concluded events
+              </p>
+            </div>
+          </div>
+
+          {/* Enrolled Events List */}
+          {enrolledLoading ? (
+            <div className="p-12 text-center text-xs text-kalvium-muted flex flex-col items-center justify-center gap-2">
+              <RefreshCw className="w-5 h-5 animate-spin text-kalvium-coral" />
+              <span>Loading your enrolled events...</span>
+            </div>
+          ) : enrolledEvents.length === 0 ? (
+            <div className="p-10 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border text-center shadow-soft-xs">
+              <div className="w-12 h-12 rounded-full bg-kalvium-coral/10 text-kalvium-coral flex items-center justify-center mx-auto mb-3">
+                <Users className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-display font-bold text-kalvium-text dark:text-kalvium-dark-text mb-1">
+                No Event Applications Yet
+              </h3>
+              <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted max-w-md mx-auto mb-5">
+                When you apply for events, your confirmed registration and attendee records will appear here. The campus manager and organizers can view your registration.
+              </p>
+              <Link
+                href="/events"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm transition"
+              >
+                <Compass className="w-3.5 h-3.5" />
+                <span>Explore Campus Events</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {enrolledEvents.map((ev: any) => (
+                <div
+                  key={ev.id}
+                  className="p-5 rounded-2xl border border-kalvium-border dark:border-kalvium-dark-border bg-white dark:bg-kalvium-dark-surface shadow-soft-xs hover:border-kalvium-coral/40 dark:hover:border-kalvium-coral/40 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <span className="text-[10px] font-sans uppercase bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-coral px-2.5 py-0.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border font-semibold">
+                        {ev.category}
+                      </span>
+                      <span className="text-[10px] font-sans font-bold px-2.5 py-0.5 rounded-full bg-kalvium-success/15 text-kalvium-success border border-kalvium-success/20 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Confirmed Registration</span>
+                      </span>
+                      {ev.isPast && (
+                        <span className="text-[10px] font-sans uppercase tracking-wider font-semibold bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-kalvium-muted border border-kalvium-border dark:border-kalvium-dark-border px-2 py-0.5 rounded-full">
+                          Past Event
+                        </span>
+                      )}
+                    </div>
+
+                    <Link href={`/events/${ev.id}`}>
+                      <h3 className="text-base font-bold text-kalvium-text dark:text-kalvium-dark-text hover:text-kalvium-coral transition-colors truncate">
+                        {ev.title}
+                      </h3>
+                    </Link>
+
+                    <div className="flex items-center gap-3 text-xs text-kalvium-muted dark:text-kalvium-dark-muted mt-2 flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5 text-kalvium-coral" />
+                        {ev.date}
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-kalvium-coral" />
+                        {ev.startTime} – {ev.endTime}
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5 text-kalvium-coral" />
+                        {ev.venue}
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1 font-semibold text-kalvium-text dark:text-kalvium-dark-text">
+                        <Users className="w-3.5 h-3.5 text-kalvium-coral" />
+                        {ev.enrolledCount || 1} Enrolled
+                      </span>
+                    </div>
+
+                    {ev.enrolledAt && (
+                      <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-2">
+                        Applied: {new Date(ev.enrolledAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 shrink-0 self-start md:self-center">
+                    <button
+                      onClick={() => {
+                        setSelectedCertEvent({
+                          id: ev.id,
+                          title: ev.title,
+                          date: ev.date,
+                          venue: ev.venue,
+                        });
+                        setCertModalOpen(true);
+                      }}
+                      className="px-3.5 py-2 rounded-full border border-kalvium-coral/30 bg-kalvium-coral/10 hover:bg-kalvium-coral text-kalvium-coral hover:text-white text-xs font-bold transition flex items-center gap-1.5 active:scale-95"
+                    >
+                      <Award className="w-3.5 h-3.5" />
+                      <span>Upload Certificate</span>
+                    </button>
+
+                    <Link
+                      href={`/events/${ev.id}`}
+                      className="px-4 py-2 rounded-full border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-coral/50 bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt text-xs font-bold text-kalvium-text dark:text-kalvium-dark-text transition hover:text-kalvium-coral flex items-center gap-1.5"
+                    >
+                      <span>View Event</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+
+                    <button
+                      onClick={() => handleWithdrawEnrollment(ev.id)}
+                      title="Withdraw your application"
+                      className="px-3.5 py-2 rounded-full border border-kalvium-border dark:border-kalvium-dark-border hover:border-kalvium-error/40 hover:bg-kalvium-error/10 text-xs font-medium text-kalvium-muted hover:text-kalvium-error transition flex items-center gap-1.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Withdraw</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB: MY CERTIFICATES & AWARDS SHOWCASE */}
+      {activeTab === "ACHIEVEMENTS" && (
+        <div className="space-y-6 animate-fade-in">
+          {/* Header & Refresh */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-display font-bold text-kalvium-text dark:text-kalvium-dark-text tracking-tight flex items-center gap-2">
+                <span>My Certificates & Achievements</span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white uppercase tracking-wider">
+                  Portfolio
+                </span>
+              </h2>
+              <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted mt-1">
+                Verified certificates of participation, hackathon prize wins, and podium achievements across campus events.
+              </p>
+            </div>
+            <button
+              onClick={fetchStudentParticipations}
+              disabled={participationsLoading}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-kalvium-border dark:border-kalvium-dark-border bg-white dark:bg-kalvium-dark-surface hover:bg-kalvium-surface-alt text-xs font-semibold text-kalvium-text dark:text-kalvium-dark-text transition disabled:opacity-50 self-start sm:self-auto"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${participationsLoading ? "animate-spin text-kalvium-coral" : ""}`} />
+              <span>Refresh</span>
+            </button>
+          </div>
+
+          {/* Metrics Strip */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs">
+              <span className="text-[11px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider font-semibold block mb-1">
+                Certificates Earned
+              </span>
+              <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-text dark:text-kalvium-dark-text mt-1">
+                {participationsData?.stats?.totalCertificates || 0}
+              </p>
+              <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">
+                Verified event credentials
+              </p>
+            </div>
+
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs">
+              <span className="text-[11px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider font-semibold block mb-1">
+                Prizes & Awards Won
+              </span>
+              <p className="text-2xl sm:text-3xl font-sans font-bold text-amber-500 mt-1">
+                {participationsData?.stats?.awardsCount || 0}
+              </p>
+              <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">
+                Podium & hackathon wins
+              </p>
+            </div>
+
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border shadow-soft-xs">
+              <span className="text-[11px] font-sans text-kalvium-muted dark:text-kalvium-dark-muted uppercase tracking-wider font-semibold block mb-1">
+                Team Competitions
+              </span>
+              <p className="text-2xl sm:text-3xl font-sans font-bold text-kalvium-coral mt-1">
+                {participationsData?.stats?.teamProjectsCount || 0}
+              </p>
+              <p className="text-[11px] text-kalvium-muted dark:text-kalvium-dark-muted mt-0.5">
+                Hackathons & group projects
+              </p>
+            </div>
+          </div>
+
+          {/* List or Empty State */}
+          {participationsLoading ? (
+            <div className="p-12 text-center text-xs text-kalvium-muted flex flex-col items-center justify-center gap-2">
+              <RefreshCw className="w-5 h-5 animate-spin text-kalvium-coral" />
+              <span>Loading your certificates and awards...</span>
+            </div>
+          ) : !participationsData?.participations || participationsData.participations.length === 0 ? (
+            <div className="p-10 rounded-2xl bg-white dark:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border text-center shadow-soft-xs">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto mb-3">
+                <Trophy className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-display font-bold text-kalvium-text dark:text-kalvium-dark-text mb-1">
+                No Certificates Uploaded Yet
+              </h3>
+              <p className="text-xs text-kalvium-muted dark:text-kalvium-dark-muted max-w-md mx-auto mb-5 leading-relaxed">
+                When you participate in campus events, upload your certificates, winner photos, and hackathon project links to build your campus achievement portfolio!
+              </p>
+              <button
+                onClick={() => handleTabChange("ENROLLED")}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-kalvium-coral hover:bg-kalvium-coral-hover text-white text-xs font-bold shadow-sm transition"
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>View Enrolled Events to Upload</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {participationsData.participations.map((part: any) => (
+                <div
+                  key={part.id}
+                  className="p-5 rounded-2xl border border-kalvium-border dark:border-kalvium-dark-border bg-white dark:bg-kalvium-dark-surface shadow-soft-xs hover:border-kalvium-coral/30 transition-all space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      {part.awardPhotoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={part.awardPhotoUrl}
+                          alt="Award"
+                          className="w-12 h-12 rounded-xl object-cover border border-amber-500/30 shrink-0"
+                        />
+                      ) : part.hasWonPrize ? (
+                        <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0 border border-amber-500/20">
+                          <Trophy size={20} />
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 rounded-xl bg-kalvium-success/10 text-kalvium-success flex items-center justify-center shrink-0 border border-kalvium-success/20">
+                          <Award size={20} />
+                        </div>
+                      )}
+                      <div>
+                        {part.hasWonPrize && (
+                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500 text-white uppercase tracking-wider mb-1">
+                            {part.awardTitle || "Award Winner"}
+                          </span>
+                        )}
+                        <h4 className="font-display font-bold text-sm text-kalvium-text dark:text-kalvium-dark-text truncate max-w-xs">
+                          {part.eventTitle}
+                        </h4>
+                        <p className="text-[11px] text-kalvium-muted">
+                          {part.eventDate} {part.eventVenue ? `• ${part.eventVenue}` : ""}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setSelectedCertEvent({
+                          id: part.eventId,
+                          title: part.eventTitle,
+                          date: part.eventDate,
+                          venue: part.eventVenue,
+                        });
+                        setCertModalOpen(true);
+                      }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-kalvium-surface-alt hover:bg-kalvium-coral hover:text-white transition active:scale-95 border border-kalvium-border"
+                    >
+                      Edit
+                    </button>
+                  </div>
+
+                  {part.isTeamEvent && part.teamName && (
+                    <div className="p-2.5 rounded-xl bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border text-xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-kalvium-coral">Team: {part.teamName}</span>
+                        {part.projectTitle && (
+                          <span className="text-[11px] text-kalvium-muted">Entry: {part.projectTitle}</span>
+                        )}
+                      </div>
+                      {part.teammates && part.teammates.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {part.teammates.map((m: any, i: number) => (
+                            <span key={i} className="px-2 py-0.5 rounded-md bg-white dark:bg-kalvium-dark-surface text-[10px] border border-kalvium-border">
+                              {m.name} {m.role ? `(${m.role})` : ""}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between pt-2 border-t border-kalvium-border dark:border-kalvium-dark-border text-xs">
+                    <span className="text-kalvium-success font-medium text-[11px] flex items-center gap-1">
+                      <CheckCircle2 size={12} />
+                      Verified {part.certificateType === "PARTICIPATION" ? "Participation Certificate" : part.certificateType}
+                    </span>
+
+                    {part.certificateUrl && (
+                      <a
+                        href={part.certificateUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-kalvium-coral hover:underline"
+                      >
+                        <span>View Certificate</span>
+                        <ExternalLink size={12} />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* TAB 2: MY EVENT REQUESTS */}
       {activeTab === "REQUESTS" && (
         <div className="space-y-6 animate-fade-in">
@@ -851,6 +1349,25 @@ function StudentDashboardContent() {
             }}
           />
         </div>
+      )}
+
+      {/* Certificate & Achievement Upload Modal */}
+      {selectedCertEvent && (
+        <UploadCertificateModal
+          isOpen={certModalOpen}
+          onClose={() => {
+            setCertModalOpen(false);
+            setSelectedCertEvent(null);
+          }}
+          eventId={selectedCertEvent.id}
+          eventTitle={selectedCertEvent.title}
+          eventDate={selectedCertEvent.date}
+          eventVenue={selectedCertEvent.venue}
+          onSuccess={() => {
+            fetchEnrolledEvents();
+            fetchStudentParticipations();
+          }}
+        />
       )}
     </div>
   );

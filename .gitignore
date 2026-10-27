@@ -48,5 +48,7 @@ next-env.d.ts
 eng.traineddata
 test-*.mjs
 test-*.ts
+scripts/setup-*.mjs
+scripts/verify-*.mjs
 *.db
 prisma/

@@ -13,10 +13,12 @@ import {
   PenTool,
   Trash2,
   ShieldCheck,
+  AlertTriangle,
 } from "lucide-react";
 import CampusVerifiedBadge from "@/components/CampusVerifiedBadge";
 import CreateEventStudio from "@/components/CreateEventStudio";
 import ManualEventForm from "@/components/ManualEventForm";
+import RequestDeleteModal from "@/components/RequestDeleteModal";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/Toast";
 import { getTimeGreeting } from "@/lib/time";
@@ -30,6 +32,7 @@ function OrganizerDashboardContent() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"SUBMISSIONS" | "CREATE_AI" | "CREATE_MANUAL">("SUBMISSIONS");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleteRequestEvent, setDeleteRequestEvent] = useState<{ id: string; title: string; date?: string; venue?: string } | null>(null);
   const { success, error } = useToast();
 
 
@@ -94,6 +97,22 @@ function OrganizerDashboardContent() {
     }
   };
 
+  const handleCancelDeletionRequest = async (eventId: string) => {
+    try {
+      const res = await fetch(`/api/organizer/events/${eventId}/request-delete`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        success("Deletion request withdrawn.");
+        fetchOrganizerData();
+      } else {
+        const errorData = await res.json();
+        error(errorData.error || "Failed to withdraw deletion request.");
+      }
+    } catch {
+      error("Network error while withdrawing deletion request.");
+    }
+  };
 
   useEffect(() => {
     fetchOrganizerData();
@@ -355,7 +374,33 @@ function OrganizerDashboardContent() {
                           Public Page →
                         </Link>
                       )}
-                      {confirmDeleteId === ev.id ? (
+                      {ev.deletionRequested ? (
+                        <div className="flex items-center gap-1.5 animate-fade-in">
+                          <button
+                            onClick={() => handleCancelDeletionRequest(ev.id)}
+                            className="px-3 py-1.5 rounded-full text-[11px] font-semibold text-kalvium-muted dark:text-kalvium-dark-muted hover:text-kalvium-coral bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt border border-kalvium-border dark:border-kalvium-dark-border transition active:scale-95"
+                            title="Withdraw your deletion request"
+                          >
+                            Withdraw Request
+                          </button>
+                        </div>
+                      ) : ev.status === "APPROVED" ? (
+                        <button
+                          onClick={() =>
+                            setDeleteRequestEvent({
+                              id: ev.id,
+                              title: ev.title,
+                              date: ev.date,
+                              venue: ev.venue,
+                            })
+                          }
+                          className="px-3 py-1.5 rounded-full text-xs font-semibold text-kalvium-muted hover:text-kalvium-coral bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt hover:bg-white dark:hover:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border transition shadow-soft-xs active:scale-95 flex items-center gap-1"
+                          title="Request Event Deletion from Manager"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Request Deletion</span>
+                        </button>
+                      ) : confirmDeleteId === ev.id ? (
                         <div className="flex items-center gap-1.5 animate-fade-in">
                           <span className="text-[11px] text-kalvium-coral font-medium shrink-0">Delete?</span>
                           <button
@@ -375,13 +420,31 @@ function OrganizerDashboardContent() {
                         <button
                           onClick={() => handleDeleteEvent(ev.id)}
                           className="p-2 rounded-full text-kalvium-muted hover:text-kalvium-coral bg-kalvium-surface-alt dark:bg-kalvium-dark-surface-alt hover:bg-white dark:hover:bg-kalvium-dark-surface border border-kalvium-border dark:border-kalvium-dark-border transition shadow-soft-xs active:scale-95"
-                          title="Delete Event"
+                          title="Delete Draft Proposal"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>
                   </div>
+
+                  {/* Deletion Request Notice Banner */}
+                  {ev.deletionRequested && (
+                    <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400">
+                        <AlertTriangle className="w-4 h-4" />
+                        <span>Deletion Request Pending Campus Manager Review</span>
+                      </div>
+                      <p className="text-kalvium-text dark:text-kalvium-dark-text">
+                        <span className="font-semibold">Reason:</span> {ev.deletionReason}
+                      </p>
+                      {ev.deletionNotes && (
+                        <p className="text-kalvium-muted dark:text-kalvium-dark-muted text-[11px]">
+                          Note: {ev.deletionNotes}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Decline Feedback Banner */}
                   {ev.status === "DECLINED" && (
@@ -406,6 +469,18 @@ function OrganizerDashboardContent() {
             </div>
           )}
         </div>
+      )}
+
+      {deleteRequestEvent && (
+        <RequestDeleteModal
+          isOpen={Boolean(deleteRequestEvent)}
+          onClose={() => setDeleteRequestEvent(null)}
+          eventId={deleteRequestEvent.id}
+          eventTitle={deleteRequestEvent.title}
+          eventDate={deleteRequestEvent.date}
+          eventVenue={deleteRequestEvent.venue}
+          onSuccess={fetchOrganizerData}
+        />
       )}
     </div>
   );

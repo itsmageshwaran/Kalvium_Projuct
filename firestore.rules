@@ -26,6 +26,16 @@ service cloud.firestore {
       match /savedEvents/{eventId} {
         allow read, write: if isAuthenticated() && request.auth.uid == userId;
       }
+
+      // Enrolled Events Subcollection
+      match /enrolledEvents/{eventId} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
+
+      // Participations & Certificates Subcollection
+      match /participations/{eventId} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
     }
 
     // Events Collection
@@ -57,6 +67,22 @@ service cloud.firestore {
       match /approvalHistory/{historyId} {
         allow read: if isAuthenticated();
         allow write: if false; // Only written by admin SDK
+      }
+
+      // Enrollments Subcollection (Part 1)
+      match /enrollments/{userId} {
+        allow read: if isAuthenticated() && (
+          request.auth.uid == userId || 
+          hasRole('CAMPUS_MANAGER') || 
+          get(/databases/$(database)/documents/events/$(eventId)).data.organizerId == request.auth.uid
+        );
+        allow write: if isAuthenticated() && request.auth.uid == userId;
+      }
+
+      // Participations Subcollection (Certificates & Wins) (Part 2)
+      match /participations/{userId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated() && request.auth.uid == userId;
       }
     }
   }

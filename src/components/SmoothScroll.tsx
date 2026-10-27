@@ -19,8 +19,18 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
       touchMultiplier: 1.5,
+      allowNestedScroll: true,
+      prevent: (node: any) => {
+        if (!node || node.nodeType !== 1) return false;
+        return Boolean(
+          node.closest?.(
+            "[data-lenis-prevent], [data-lenis-prevent-wheel], [role='dialog'], .modal-scroll-container, .overflow-y-auto, .overflow-auto"
+          )
+        );
+      },
     });
     lenisRef.current = lenis;
+    (window as any).__lenis = lenis;
 
     let rafId: number;
     function raf(time: number) {
@@ -30,6 +40,9 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     rafId = requestAnimationFrame(raf);
 
     return () => {
+      if ((window as any).__lenis === lenis) {
+        delete (window as any).__lenis;
+      }
       cancelAnimationFrame(rafId);
       lenis.destroy();
     };

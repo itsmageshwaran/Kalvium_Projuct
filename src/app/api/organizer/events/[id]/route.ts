@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth";
 import { invalidateApprovedEventsCache } from "@/lib/events-cache";
+import { logSecurityEvent } from "@/lib/audit-logger";
 
 export async function DELETE(
   req: NextRequest,
@@ -24,7 +25,21 @@ export async function DELETE(
 
     const eventData = existingEvent.data();
 
-    if (user.role !== "CAMPUS_MANAGER" && eventData?.organizerId !== user.userId) {
+    // 1. Campus Manager can delete ANY event directly (active, past, pending, or finished)
+    if (user.role === "CAMPUS_MANAGER") {
+      // Proceed to delete
+    } else if (eventData?.organizerId === user.userId) {
+      // 2. Organizers & Students can only directly delete unapproved PENDING proposals
+      if (eventData?.status === "APPROVED") {
+        return NextResponse.json(
+          {
+            error: "Approved events cannot be directly deleted by organizers. Please submit a Deletion Request for Campus Manager review.",
+            requiresRequest: true,
+          },
+          { status: 403 }
+        );
+      }
+    } else {
       return NextResponse.json(
         { error: "You don't have permission to delete this event." },
         { status: 403 }
@@ -32,10 +47,13 @@ export async function DELETE(
     }
 
     // Clean up subcollection documents to avoid orphaned records
-    const [analysesSnap, historySnap] = await Promise.all([
+    const [analysesSnap, historySnap, enrollmentsSnap, participationsSnap] = await Promise.all([
       eventRef.collection("analyses").get().catch(() => null),
       eventRef.collection("approvalHistory").get().catch(() => null),
+      eventRef.collection("enrollments").get().catch(() => null),
+      eventRef.collection("participations").get().catch(() => null),
     ]);
+
     const batch = adminDb.batch();
     if (analysesSnap && !analysesSnap.empty) {
       analysesSnap.docs.forEach((d: any) => batch.delete(d.ref));
@@ -43,12 +61,35 @@ export async function DELETE(
     if (historySnap && !historySnap.empty) {
       historySnap.docs.forEach((d: any) => batch.delete(d.ref));
     }
+    if (enrollmentsSnap && !enrollmentsSnap.empty) {
+      enrollmentsSnap.docs.forEach((d: any) => batch.delete(d.ref));
+    }
+    if (participationsSnap && !participationsSnap.empty) {
+      participationsSnap.docs.forEach((d: any) => batch.delete(d.ref));
+    }
     batch.delete(eventRef);
     await batch.commit();
 
     invalidateApprovedEventsCache();
 
-    return NextResponse.json({ success: true, message: "Event deleted successfully." });
+    logSecurityEvent({
+      action: "EVENT_DELETED",
+      actorId: user.userId,
+      actorRole: user.role,
+      targetId: eventId,
+      details: {
+        eventTitle: eventData?.title,
+        deletedBy: user.email,
+        wasApproved: eventData?.status === "APPROVED",
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: user.role === "CAMPUS_MANAGER"
+        ? "Event permanently deleted by Campus Manager."
+        : "Event proposal deleted successfully.",
+    });
   } catch (error) {
     console.error("Delete event error:", error);
     return NextResponse.json(
